@@ -5,3 +5,5 @@ authors = ["Federico Dolce <psykopear@gmail.com>"]
 edition = "2018"
 
 [dependencies]
+failure = "0.1.5"
+lazy_static = "1.3.0"
