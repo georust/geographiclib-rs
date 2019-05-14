@@ -497,12 +497,16 @@ class Geodesic:
                 o += m + 2
 
     def _A3f(self, eps):
-        """Private: return A3"""
+        """
+        PORTED
+        Private: return A3"""
         # Evaluate A3
         return Math.polyval(Geodesic.GEODESIC_ORDER - 1, self._A3x, 0, eps)
 
     def _C3f(self, eps, c):
-        """Private: return C3"""
+        """
+        PORTED
+        Private: return C3"""
         # Evaluate C3
         # Elements c[1] thru c[nC3_ - 1] are set
         mult = 1
@@ -514,7 +518,9 @@ class Geodesic:
             o += m + 1
 
     def _C4f(self, eps, c):
-        """Private: return C4"""
+        """
+        PORTED
+        Private: return C4"""
         # Evaluate C4 coeffs by Horner's method
         # Elements c[0] thru c[nC4_ - 1] are set
         mult = 1

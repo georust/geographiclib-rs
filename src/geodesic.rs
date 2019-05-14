@@ -246,11 +246,83 @@ impl Geodesic {
     pub fn _A3f(&self, eps: f64) -> f64 {
         geomath::polyval(self.GEODESIC_ORDER - 1, &self._A3x, 0, eps)
     }
+
+    pub fn _C3f(&self, eps: f64, c: Vec<f64>) -> Vec<f64> {
+        let mut c = c;
+        let mut mult = 1.0;
+        let mut o = 0.0;
+        for l in 1..self.GEODESIC_ORDER {
+            let m = self.GEODESIC_ORDER - l - 1;
+            mult *= eps;
+            c[l as usize] = mult * geomath::polyval(m, &self._C3x, o as usize, eps);
+            o += m as f64 + 1.0;
+        }
+        c
+    }
+
+    pub fn _C4f(&self, eps: f64, c: Vec<f64>) -> Vec<f64> {
+        let mut c = c;
+        let mut mult = 1.0;
+        let mut o = 0.0;
+        for l in 0..self.GEODESIC_ORDER {
+            let m = self.GEODESIC_ORDER - l - 1;
+            c[l as usize] = mult * geomath::polyval(m, &self._C4x, o as usize, eps);
+            o += m as f64 + 1.0;
+            mult *= eps;
+        }
+        c
+    }
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn test_goed__C4f() {
+        const WGS84_A: f64 = 6378137.0;
+        const WGS84_F: f64 = 1.0 / 298.257223563;
+        let geod = Geodesic::new(WGS84_A, WGS84_F);
+        assert_eq!(
+            geod._C4f(0.12, vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0]),
+            vec![
+                0.6420952961066771,
+                0.0023680700061156517,
+                9.96704067834604e-05,
+                5.778187189466089e-06,
+                3.9979026199316593e-07,
+                3.2140078103714466e-08,
+                7.0
+            ]
+        );
+    }
+
+    #[test]
+    fn test_goed__C3f() {
+        const WGS84_A: f64 = 6378137.0;
+        const WGS84_F: f64 = 1.0 / 298.257223563;
+        let geod = Geodesic::new(WGS84_A, WGS84_F);
+        assert_eq!(
+            geod._C3f(0.12, vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0]),
+            vec![
+                1.0,
+                0.031839442894193756,
+                0.0009839921354137713,
+                5.0055242248766214e-05,
+                3.1656788204092044e-06,
+                2.0412e-07,
+                7.0
+            ]
+        );
+    }
+
+    #[test]
+    fn test_goed__A3f() {
+        const WGS84_A: f64 = 6378137.0;
+        const WGS84_F: f64 = 1.0 / 298.257223563;
+        let geod = Geodesic::new(WGS84_A, WGS84_F);
+        assert_eq!(geod._A3f(0.12), 0.9363788874000158);
+    }
 
     #[test]
     fn test_geod_init() {
