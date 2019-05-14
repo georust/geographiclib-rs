@@ -1,5 +1,6 @@
 use crate::geodesiccapability;
 use crate::geomath;
+use std::f64::consts::PI;
 
 const WGS84_A: f64 = 6378137.0;
 const WGS84_F: f64 = 1.0 / 298.257223563;
@@ -359,6 +360,150 @@ impl Geodesic {
             }
         }
         (s12b, m12b, m0, M12, M21)
+    }
+
+    pub fn _InverseStart(
+        &self,
+        sbet1: f64,
+        cbet1: f64,
+        dn1: f64,
+        sbet2: f64,
+        cbet2: f64,
+        dn2: f64,
+        lam12: f64,
+        slam12: f64,
+        clam12: f64,
+        C1a: &mut Vec<f64>,
+        C2a: &mut Vec<f64>,
+    ) -> (f64, f64, f64, f64, f64, f64) {
+        let mut sig12 = -1.0;
+        let mut salp2 = std::f64::NAN;
+        let mut calp2 = std::f64::NAN;
+        let mut dnm = std::f64::NAN;
+
+        let mut somg12 = 0.0;
+        let mut comg12 = 0.0;
+
+        let sbet12 = sbet2 * cbet1 - cbet2 * sbet1;
+        let cbet12 = cbet2 * cbet1 + sbet2 * sbet1;
+
+        let mut sbet12a = sbet2 * cbet1;
+        sbet12a += cbet2 * sbet1;
+
+        let shortline = cbet12 >= 0.0 && sbet12 < 0.5 && cbet2 * lam12 < 0.5;
+        if shortline {
+            let mut sbetm2 = geomath::sq(sbet1 + sbet2);
+            sbetm2 /= sbetm2 + geomath::sq(cbet1 + cbet2);
+            dnm = (1.0 + self._ep2 * sbetm2).sqrt();
+            let omg12 = lam12 / (self._f1 * dnm);
+            somg12 = omg12.sin();
+            comg12 = omg12.cos();
+        } else {
+            somg12 = slam12;
+            comg12 = clam12;
+        }
+
+        let mut salp1 = cbet2 * somg12;
+
+        let mut calp1 = if comg12 >= 0.0 {
+            sbet12 + cbet12 * sbet1 * geomath::sq(somg12) / (1.0 + comg12)
+        } else {
+            sbet12a - cbet2 * sbet1 * geomath::sq(somg12) / (1.0 - comg12)
+        };
+
+        let mut ssig12 = salp1.hypot(calp1);
+        let mut csig12 = sbet1 * sbet2 + cbet1 * cbet2 * comg12;
+
+        if shortline && ssig12 < self._etol2 {
+            salp2 = cbet1 * somg12;
+            calp2 = sbet12
+                - cbet1
+                    * sbet2
+                    * (geomath::sq(somg12)
+                        / if comg12 >= 0.0 {
+                            1.0 + comg12
+                        } else {
+                            1.0 - comg12
+                        });
+            let res = geomath::norm(salp2, calp2);
+            salp2 = res.0;
+            calp2 = res.1;
+            sig12 = ssig12.atan2(csig12);
+        } else if self._n.abs() >= 0.1
+            || csig12 >= 0.0
+            || ssig12 >= 6.0 * self._n.abs() * PI * geomath::sq(cbet1)
+        {
+        } else {
+            let mut x = 0.0;
+            let mut y = 0.0;
+            let mut betscale = 0.0;
+            let mut lamscale = 0.0;
+            let lam12x = (-slam12).atan2(-clam12);
+            if self.f >= 0.0 {
+                let k2 = geomath::sq(sbet1) * self._ep2;
+                let eps = k2 / (2.0 * (1.0 + (1.0 + k2).sqrt()) + k2);
+                lamscale = self.f * cbet1 * self._A3f(eps) * PI;
+                betscale = lamscale * cbet1;
+                x = lam12x / lamscale;
+                y = sbet12a / betscale;
+            } else {
+                let cbet12a = cbet2 * cbet1 - sbet2 * sbet1;
+                let bet12a = sbet12a.atan2(cbet12a);
+                let (_, m12b, m0, _, _) = self._Lengths(
+                    self._n,
+                    PI + bet12a,
+                    sbet1,
+                    -cbet1,
+                    dn1,
+                    sbet2,
+                    cbet2,
+                    dn2,
+                    cbet1,
+                    cbet2,
+                    self.REDUCEDLENGTH,
+                    C1a,
+                    C2a,
+                );
+                x = -1.0 + m12b / (cbet1 * cbet2 * m0 * PI);
+                betscale = if x < -0.01 {
+                    sbet12a / x
+                } else {
+                    -self.f * geomath::sq(cbet1) * PI
+                };
+                lamscale = betscale / cbet1;
+                y = lam12x / lamscale;
+            }
+            if y > -self.tol1_ && x > -1.0 - self.xthresh_ {
+                if self.f >= 0.0 {
+                    salp1 = (-x).min(1.0);
+                    calp1 = -(1.0 - geomath::sq(salp1)).sqrt()
+                } else {
+                    calp1 = x.max(if x > -self.tol1_ { 0.0 } else { -1.0 });
+                    salp1 = (1.0 - geomath::sq(calp1)).sqrt();
+                }
+            } else {
+                let k = geomath::astroid(x, y);
+                let omg12a = lamscale
+                    * if self.f >= 0.0 {
+                        -x * k / (1.0 + k)
+                    } else {
+                        -y * (1.0 + k) / k
+                    };
+                somg12 = omg12a.sin();
+                comg12 = -(omg12a.cos());
+                salp1 = cbet2 * somg12;
+                calp1 = sbet12a - cbet2 * sbet1 * geomath::sq(somg12) / (1.0 - comg12);
+            }
+        }
+        if !(salp1 <= 0.0) {
+            let res = geomath::norm(salp1, calp1);
+            salp1 = res.0;
+            calp1 = res.1;
+        } else {
+            salp1 = 1.0;
+            calp1 = 0.0;
+        };
+        (sig12, salp1, calp1, salp2, calp2, dnm)
     }
 }
 

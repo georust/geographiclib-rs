@@ -548,7 +548,9 @@ class Geodesic:
         C1a,
         C2a,
     ):
-        """Private: return a bunch of lengths"""
+        """
+        PORTED not tested
+        Private: return a bunch of lengths"""
         # Return s12b, m12b, m0, M12, M21, where
         # m12b = (reduced length)/_b; s12b = distance/_b,
         # m0 = coefficient of secular term in expression for reduced length.
@@ -616,7 +618,9 @@ class Geodesic:
         C1a,
         C2a,
     ):
-        """Private: Find a starting value for Newton's method."""
+        """
+        PORTED not tested
+        Private: Find a starting value for Newton's method."""
         # Return a starting point for Newton's method in salp1 and calp1 (function
         # value is -1).  If Newton's method doesn't need to be used, return also
         # salp2 and calp2 and function value is sig12.
