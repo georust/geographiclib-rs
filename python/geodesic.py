@@ -68,6 +68,7 @@ class Geodesic:
     @staticmethod
     def _sin_cos_series(sinp, sinx, cosx, c):
         """
+        PORTED
         Private: Evaluate a trig series using Clenshaw summation.
         """
         # Evaluate
@@ -100,6 +101,7 @@ class Geodesic:
     @staticmethod
     def _astroid(x, y):
         """
+        PORTED
         Private: solve astroid equation.
         """
         # Solve k^4+2*k^3-(x^2+y^2-1)*k^2-2*y^2*k-y^2 = 0 for positive root k.
@@ -148,7 +150,9 @@ class Geodesic:
 
     @staticmethod
     def _A1m1f(eps):
-        """Private: return A1-1."""
+        """
+        PORTED
+        Private: return A1-1."""
         coeff = [1, 4, 64, 0, 256]
         m = Geodesic.GEODESIC_ORDER // 2
         t = Math.polyval(m, coeff, 0, Math.sq(eps)) / coeff[m + 1]
@@ -156,7 +160,9 @@ class Geodesic:
 
     @staticmethod
     def _C1f(eps, c):
-        """Private: return C1."""
+        """
+        PORTED
+        Private: return C1."""
         coeff = [
             -1,
             6,
@@ -188,7 +194,9 @@ class Geodesic:
 
     @staticmethod
     def _C1pf(eps, c):
-        """Private: return C1'"""
+        """
+        PORTED
+        Private: return C1'"""
         coeff = [
             205,
             -432,
@@ -220,7 +228,9 @@ class Geodesic:
 
     @staticmethod
     def _A2m1f(eps):
-        """Private: return A2-1"""
+        """
+        PORTED
+        Private: return A2-1"""
         coeff = [-11, -28, -192, 0, 256]
         m = Geodesic.GEODESIC_ORDER // 2
         t = Math.polyval(m, coeff, 0, Math.sq(eps)) / coeff[m + 1]
@@ -228,7 +238,9 @@ class Geodesic:
 
     @staticmethod
     def _C2f(eps, c):
-        """Private: return C2"""
+        """
+        PORTED
+        Private: return C2"""
         coeff = [
             1,
             2,
@@ -259,7 +271,9 @@ class Geodesic:
             d *= eps
 
     def __init__(self, a, f):
-        """Construct a Geodesic object
+        """
+        PORTED
+        Construct a Geodesic object
 
         :param a: the equatorial radius of the ellipsoid in meters
         :param f: the flattening of the ellipsoid
@@ -318,7 +332,9 @@ class Geodesic:
         self._C4coeff()
 
     def _A3coeff(self):
-        """Private: return coefficients for A3"""
+        """
+        PORTED
+        Private: return coefficients for A3"""
         coeff = [-3, 128, -2, -3, 64, -1, -3, -1, 16, 3, -1, -2, 8, 1, -1, 2, 1, 1]
         o = 0
         k = 0
@@ -329,7 +345,9 @@ class Geodesic:
             o += m + 2
 
     def _C3coeff(self):
-        """Private: return coefficients for C3"""
+        """
+        PORTED
+        Private: return coefficients for C3"""
         coeff = [
             3,
             128,
@@ -387,7 +405,9 @@ class Geodesic:
                 o += m + 2
 
     def _C4coeff(self):
-        """Private: return coefficients for C4"""
+        """
+        PORTED
+        Private: return coefficients for C4"""
         coeff = [
             97,
             15015,
