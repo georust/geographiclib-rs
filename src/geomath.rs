@@ -247,15 +247,14 @@ pub fn astroid(x: f64, y: f64) -> f64 {
     }
 }
 
-pub fn _A1m1f(eps: f64, geodesic_order: u64) -> f64 {
+pub fn _A1m1f(eps: f64, geodesic_order: i64) -> f64 {
     let coeff = vec![1.0, 4.0, 64.0, 0.0, 256.0];
-    let m: i64 = geodesic_order as i64 / 2;
+    let m: i64 = geodesic_order / 2;
     let t = polyval(m, &coeff, 0, sq(eps)) / coeff[(m + 1) as usize] as f64;
     (t + eps) / (1.0 - eps)
 }
 
-pub fn _C1f(eps: f64, c: Vec<f64>, geodesic_order: u64) -> Vec<f64> {
-    let mut c = c;
+pub fn _C1f(eps: f64, c: &mut Vec<f64>, geodesic_order: i64) {
     let coeff = vec![
         -1.0, 6.0, -16.0, 32.0, -9.0, 64.0, -128.0, 2048.0, 9.0, -16.0, 768.0, 3.0, -5.0, 512.0,
         -7.0, 1280.0, -7.0, 2048.0,
@@ -270,11 +269,9 @@ pub fn _C1f(eps: f64, c: Vec<f64>, geodesic_order: u64) -> Vec<f64> {
         o += m + 2;
         d *= eps;
     }
-    c
 }
 
-pub fn _C1pf(eps: f64, c: Vec<f64>, geodesic_order: u64) -> Vec<f64> {
-    let mut c = c;
+pub fn _C1pf(eps: f64, c: &mut Vec<f64>, geodesic_order: i64) {
     let coeff = vec![
         205.0, -432.0, 768.0, 1536.0, 4005.0, -4736.0, 3840.0, 12288.0, -225.0, 116.0, 384.0,
         -7173.0, 2695.0, 7680.0, 3467.0, 7680.0, 38081.0, 61440.0,
@@ -289,18 +286,16 @@ pub fn _C1pf(eps: f64, c: Vec<f64>, geodesic_order: u64) -> Vec<f64> {
         o += m + 2;
         d *= eps;
     }
-    c
 }
 
-pub fn _A2m1f(eps: f64, geodesic_order: u64) -> f64 {
+pub fn _A2m1f(eps: f64, geodesic_order: i64) -> f64 {
     let coeff = vec![-11.0, -28.0, -192.0, 0.0, 256.0];
-    let m: i64 = geodesic_order as i64 / 2;
+    let m: i64 = geodesic_order / 2;
     let t = polyval(m, &coeff, 0, sq(eps)) / coeff[(m + 1) as usize] as f64;
     (t - eps) / (1.0 + eps)
 }
 
-pub fn _C2f(eps: f64, c: Vec<f64>, geodesic_order: u64) -> Vec<f64> {
-    let mut c = c;
+pub fn _C2f(eps: f64, c: &mut Vec<f64>, geodesic_order: i64) {
     let coeff = vec![
         1.0, 2.0, 16.0, 32.0, 35.0, 64.0, 384.0, 2048.0, 15.0, 80.0, 768.0, 7.0, 35.0, 512.0, 63.0,
         1280.0, 77.0, 2048.0,
@@ -315,7 +310,6 @@ pub fn _C2f(eps: f64, c: Vec<f64>, geodesic_order: u64) -> Vec<f64> {
         o += m + 2;
         d *= eps;
     }
-    c
 }
 
 #[cfg(test)]
@@ -325,9 +319,10 @@ mod tests {
 
     #[test]
     fn test__C2f() {
-        let res = _C2f(0.12, vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0], 6);
+        let mut c = vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0];
+        _C2f(0.12, &mut c, 6);
         assert_eq!(
-            res,
+            c,
             vec![
                 1.0,
                 0.0601087776,
@@ -347,9 +342,10 @@ mod tests {
 
     #[test]
     fn test__C1pf() {
-        let res = _C1pf(0.12, vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0], 6);
+        let mut c = vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0];
+        _C1pf(0.12, &mut c, 6);
         assert_eq!(
-            res,
+            c,
             vec![
                 1.0,
                 0.059517321000000005,
@@ -364,9 +360,10 @@ mod tests {
 
     #[test]
     fn test__C1f() {
-        let res = _C1f(0.12, vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0], 6);
+        let mut c = vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0];
+        _C1f(0.12, &mut c, 6);
         assert_eq!(
-            res,
+            c,
             vec![
                 1.0,
                 -0.059676777599999994,

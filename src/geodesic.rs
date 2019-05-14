@@ -247,8 +247,7 @@ impl Geodesic {
         geomath::polyval(self.GEODESIC_ORDER - 1, &self._A3x, 0, eps)
     }
 
-    pub fn _C3f(&self, eps: f64, c: Vec<f64>) -> Vec<f64> {
-        let mut c = c;
+    pub fn _C3f(&self, eps: f64, c: &mut Vec<f64>) {
         let mut mult = 1.0;
         let mut o = 0.0;
         for l in 1..self.GEODESIC_ORDER {
@@ -257,11 +256,9 @@ impl Geodesic {
             c[l as usize] = mult * geomath::polyval(m, &self._C3x, o as usize, eps);
             o += m as f64 + 1.0;
         }
-        c
     }
 
-    pub fn _C4f(&self, eps: f64, c: Vec<f64>) -> Vec<f64> {
-        let mut c = c;
+    pub fn _C4f(&self, eps: f64, c: &mut Vec<f64>) {
         let mut mult = 1.0;
         let mut o = 0.0;
         for l in 0..self.GEODESIC_ORDER {
@@ -270,7 +267,35 @@ impl Geodesic {
             o += m as f64 + 1.0;
             mult *= eps;
         }
-        c
+    }
+
+    pub fn _Lengths(
+        &self,
+        eps: f64,
+        sig12: f64,
+        ssig1: f64,
+        csig1: f64,
+        dn1: f64,
+        ssig2: f64,
+        csig2: f64,
+        dn2: f64,
+        cbet1: f64,
+        cbet2: f64,
+        outmask: u64,
+        C1a: &mut Vec<f64>,
+        C2a: &mut Vec<f64>,
+    ) {
+        let outmask = outmask & self.OUT_MASK;
+        let s12b = std::f64::NAN;
+        let m12b = std::f64::NAN;
+        let m0 = std::f64::NAN;
+        let M12 = std::f64::NAN;
+        let M21 = std::f64::NAN;
+
+        let mut A1 = geomath::_A1m1f(eps, self.GEODESIC_ORDER);
+        if outmask & (self.DISTANCE | self.REDUCEDLENGTH | self.GEODESICSCALE) != 0 {
+            geomath::_C2f(eps, C2a, self.GEODESIC_ORDER);
+        }
     }
 }
 
@@ -283,8 +308,10 @@ mod tests {
         const WGS84_A: f64 = 6378137.0;
         const WGS84_F: f64 = 1.0 / 298.257223563;
         let geod = Geodesic::new(WGS84_A, WGS84_F);
+        let mut c = vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0];
+        geod._C4f(0.12, &mut c);
         assert_eq!(
-            geod._C4f(0.12, vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0]),
+            c,
             vec![
                 0.6420952961066771,
                 0.0023680700061156517,
@@ -302,8 +329,11 @@ mod tests {
         const WGS84_A: f64 = 6378137.0;
         const WGS84_F: f64 = 1.0 / 298.257223563;
         let geod = Geodesic::new(WGS84_A, WGS84_F);
+        let mut c = vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0];
+        geod._C3f(0.12, &mut c);
+
         assert_eq!(
-            geod._C3f(0.12, vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0]),
+            c,
             vec![
                 1.0,
                 0.031839442894193756,
