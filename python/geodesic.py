@@ -801,7 +801,9 @@ class Geodesic:
         C2a,
         C3a,
     ):
-        """Private: Solve hybrid problem"""
+        """
+        PORTED not tested
+        Private: Solve hybrid problem"""
         if sbet1 == 0 and calp1 == 0:
             # Break degeneracy of equatorial line.  This case has already been
             # handled.
@@ -911,7 +913,9 @@ class Geodesic:
         )
 
     def _GenInverse(self, lat1, lon1, lat2, lon2, outmask):
-        """Private: General version of the inverse problem"""
+        """
+        PORTED not tested
+        Private: General version of the inverse problem"""
         a12 = s12 = m12 = M12 = M21 = S12 = Math.NAN  # return vals
 
         outmask &= Geodesic.OUT_MASK
