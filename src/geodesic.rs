@@ -284,18 +284,81 @@ impl Geodesic {
         outmask: u64,
         C1a: &mut Vec<f64>,
         C2a: &mut Vec<f64>,
-    ) {
+    ) -> (f64, f64, f64, f64, f64) {
         let outmask = outmask & self.OUT_MASK;
-        let s12b = std::f64::NAN;
-        let m12b = std::f64::NAN;
-        let m0 = std::f64::NAN;
-        let M12 = std::f64::NAN;
-        let M21 = std::f64::NAN;
+        let mut s12b = std::f64::NAN;
+        let mut m12b = std::f64::NAN;
+        let mut m0 = std::f64::NAN;
+        let mut M12 = std::f64::NAN;
+        let mut M21 = std::f64::NAN;
 
-        let mut A1 = geomath::_A1m1f(eps, self.GEODESIC_ORDER);
+        let mut A1 = 0.0;
+        let mut A2 = 0.0;
+        let mut m0x = 0.0;
+        let mut J12 = 0.0;
         if outmask & (self.DISTANCE | self.REDUCEDLENGTH | self.GEODESICSCALE) != 0 {
-            geomath::_C2f(eps, C2a, self.GEODESIC_ORDER);
+            A1 = geomath::_A1m1f(eps, self.GEODESIC_ORDER);
+            geomath::_C1f(eps, C1a, self.GEODESIC_ORDER);
+            if outmask & (self.REDUCEDLENGTH | self.GEODESICSCALE) != 0 {
+                A2 = geomath::_A2m1f(eps, self.GEODESIC_ORDER);
+                geomath::_C2f(eps, C2a, self.GEODESIC_ORDER);
+                m0x = A1 - A2;
+                A2 = 1.0 + A2;
+            }
+            A1 = 1.0 + A1;
         }
+        let mut B1 =
+            geomath::sin_cos_series(true, ssig2, csig2, C1a.iter().map(|x| *x as i64).collect())
+                - geomath::sin_cos_series(
+                    true,
+                    ssig1,
+                    csig1,
+                    C1a.iter().map(|x| *x as i64).collect(),
+                );
+        if outmask & self.DISTANCE != 0 {
+            s12b = A1 * (sig12 + B1);
+            if outmask & (self.REDUCEDLENGTH | self.GEODESICSCALE) != 0 {
+                let B2 = geomath::sin_cos_series(
+                    true,
+                    ssig2,
+                    csig2,
+                    C2a.iter().map(|x| *x as i64).collect(),
+                ) - geomath::sin_cos_series(
+                    true,
+                    ssig1,
+                    csig1,
+                    C2a.iter().map(|x| *x as i64).collect(),
+                );
+                J12 = m0x * sig12 + (A1 * B1 - A2 * B2);
+            } else if outmask & (self.REDUCEDLENGTH | self.GEODESICSCALE) != 0 {
+                for l in 1..self.GEODESIC_ORDER {
+                    C2a[l as usize] = A1 * C1a[l as usize] - A2 * C2a[l as usize];
+                }
+                J12 = m0x * sig12
+                    + (geomath::sin_cos_series(
+                        true,
+                        ssig2,
+                        csig2,
+                        C2a.iter().map(|x| *x as i64).collect(),
+                    ) - geomath::sin_cos_series(
+                        true,
+                        ssig1,
+                        csig1,
+                        C2a.iter().map(|x| *x as i64).collect(),
+                    ))
+            }
+            if outmask & self.REDUCEDLENGTH != 0 {
+                m0 = m0x;
+                m12b = dn2 * (csig1 * ssig2) - dn1 * (ssig1 * csig2) - csig1 * csig2 * J12;
+            }
+            if outmask & self.GEODESICSCALE != 0 {
+                let csig12 = csig1 * csig2 + ssig1 * ssig2;
+                let t = self._ep2 * (cbet1 - cbet2) * (cbet1 + cbet2) / (dn1 + dn2);
+                M12 = csig12 + (t * ssig2 - csig2 * J12) * ssig1 / dn1;
+                M21 = csig12 - (t * ssig1 - csig1 * J12) * ssig2 / dn2;
+            }
+        }
+        (s12b, m12b, m0, M12, M21)
     }
 }
 
