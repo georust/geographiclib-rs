@@ -282,11 +282,11 @@ impl Geodesic {
         dn2: f64,
         cbet1: f64,
         cbet2: f64,
-        // outmask: u64,
+        outmask: u64,
         C1a: &mut Vec<f64>,
         C2a: &mut Vec<f64>,
     ) -> (f64, f64, f64, f64, f64) {
-        // let outmask = outmask & self.OUT_MASK;
+        let outmask = outmask & self.OUT_MASK;
         let mut s12b = std::f64::NAN;
         let mut m12b = std::f64::NAN;
         let mut m0 = std::f64::NAN;
@@ -297,44 +297,48 @@ impl Geodesic {
         let mut A2 = 0.0;
         let mut m0x = 0.0;
         let mut J12 = 0.0;
-        // if outmask & (self.DISTANCE | self.REDUCEDLENGTH | self.GEODESICSCALE) != 0 {
-        A1 = geomath::_A1m1f(eps, self.GEODESIC_ORDER);
-        geomath::_C1f(eps, C1a, self.GEODESIC_ORDER);
-        // if outmask & (self.REDUCEDLENGTH | self.GEODESICSCALE) != 0 {
-        A2 = geomath::_A2m1f(eps, self.GEODESIC_ORDER);
-        geomath::_C2f(eps, C2a, self.GEODESIC_ORDER);
-        m0x = A1 - A2;
-        A2 = 1.0 + A2;
-        // }
-        A1 = 1.0 + A1;
-        // }
-        let B1 = geomath::sin_cos_series(true, ssig2, csig2, C1a.clone())
-            - geomath::sin_cos_series(true, ssig1, csig1, C1a.clone());
-        // if outmask & self.DISTANCE != 0 {
-        s12b = A1 * (sig12 + B1);
-        // if outmask & (self.REDUCEDLENGTH | self.GEODESICSCALE) != 0 {
-        let B2 = geomath::sin_cos_series(true, ssig2, csig2, C2a.clone())
-            - geomath::sin_cos_series(true, ssig1, csig1, C2a.clone());
-        J12 = m0x * sig12 + (A1 * B1 - A2 * B2);
-        // } else if outmask & (self.REDUCEDLENGTH | self.GEODESICSCALE) != 0 {
-        for l in 1..self.GEODESIC_ORDER {
-            C2a[l as usize] = A1 * C1a[l as usize] - A2 * C2a[l as usize];
+
+        if outmask & (self.DISTANCE | self.REDUCEDLENGTH | self.GEODESICSCALE) != 0 {
+            A1 = geomath::_A1m1f(eps, self.GEODESIC_ORDER);
+            geomath::_C1f(eps, C1a, self.GEODESIC_ORDER);
+            if outmask & (self.REDUCEDLENGTH | self.GEODESICSCALE) != 0 {
+                A2 = geomath::_A2m1f(eps, self.GEODESIC_ORDER);
+                geomath::_C2f(eps, C2a, self.GEODESIC_ORDER);
+                m0x = A1 - A2;
+                A2 = 1.0 + A2;
+            }
+            A1 = 1.0 + A1;
         }
-        J12 = m0x * sig12
-            + (geomath::sin_cos_series(true, ssig2, csig2, C2a.clone())
-                - geomath::sin_cos_series(true, ssig1, csig1, C2a.clone()));
-        // }
-        // if outmask & self.REDUCEDLENGTH != 0 {
-        m0 = m0x;
-        m12b = dn2 * (csig1 * ssig2) - dn1 * (ssig1 * csig2) - csig1 * csig2 * J12;
-        // }
-        // if outmask & self.GEODESICSCALE != 0 {
-        let csig12 = csig1 * csig2 + ssig1 * ssig2;
-        let t = self._ep2 * (cbet1 - cbet2) * (cbet1 + cbet2) / (dn1 + dn2);
-        M12 = csig12 + (t * ssig2 - csig2 * J12) * ssig1 / dn1;
-        M21 = csig12 - (t * ssig1 - csig1 * J12) * ssig2 / dn2;
-        // }
-        // }
+        if outmask & self.DISTANCE != 0 {
+            let B1 = geomath::sin_cos_series(true, ssig2, csig2, C1a.clone())
+                - geomath::sin_cos_series(true, ssig1, csig1, C1a.clone());
+            s12b = A1 * (sig12 + B1);
+            if outmask & (self.REDUCEDLENGTH | self.GEODESICSCALE) != 0 {
+                let B2 = geomath::sin_cos_series(true, ssig2, csig2, C2a.clone())
+                    - geomath::sin_cos_series(true, ssig1, csig1, C2a.clone());
+                J12 = m0x * sig12 + (A1 * B1 - A2 * B2);
+            }
+        } else if outmask & (self.REDUCEDLENGTH | self.GEODESICSCALE) != 0 {
+            for l in 1..self.GEODESIC_ORDER {
+                C2a[l as usize] = A1 * C1a[l as usize] - A2 * C2a[l as usize];
+            }
+            let inter1 = geomath::sin_cos_series(true, ssig2, csig2, C2a.clone());
+            let inter2 = geomath::sin_cos_series(true, ssig1, csig1, C2a.clone());
+            J12 = m0x * sig12
+                + (geomath::sin_cos_series(true, ssig2, csig2, C2a.clone())
+                    - geomath::sin_cos_series(true, ssig1, csig1, C2a.clone()));
+        }
+        if outmask & self.REDUCEDLENGTH != 0 {
+            m0 = m0x;
+            // J12 is wrong
+            m12b = dn2 * (csig1 * ssig2) - dn1 * (ssig1 * csig2) - csig1 * csig2 * J12;
+        }
+        if outmask & self.GEODESICSCALE != 0 {
+            let csig12 = csig1 * csig2 + ssig1 * ssig2;
+            let t = self._ep2 * (cbet1 - cbet2) * (cbet1 + cbet2) / (dn1 + dn2);
+            M12 = csig12 + (t * ssig2 - csig2 * J12) * ssig1 / dn1;
+            M21 = csig12 - (t * ssig1 - csig1 * J12) * ssig2 / dn2;
+        }
         (s12b, m12b, m0, M12, M21)
     }
 
@@ -436,7 +440,7 @@ impl Geodesic {
                     dn2,
                     cbet1,
                     cbet2,
-                    // self.REDUCEDLENGTH,
+                    self.REDUCEDLENGTH,
                     C1a,
                     C2a,
                 );
@@ -554,9 +558,19 @@ impl Geodesic {
                 dlam12 = -2.0 * self._f1 * dn1 / sbet1;
             } else {
                 let res = self._Lengths(
-                    eps, sig12, ssig1, csig1, dn1, ssig2, csig2, dn2, cbet1, cbet2,
-                    // self.REDUCEDLENGTH,
-                    C1a, C2a,
+                    eps,
+                    sig12,
+                    ssig1,
+                    csig1,
+                    dn1,
+                    ssig2,
+                    csig2,
+                    dn2,
+                    cbet1,
+                    cbet2,
+                    self.REDUCEDLENGTH,
+                    C1a,
+                    C2a,
                 );
                 dlam12 = res.1;
 
@@ -576,7 +590,7 @@ impl Geodesic {
         lon1: f64,
         lat2: &mut f64,
         lon2: f64,
-        // outmask: &mut u64,
+        outmask: &mut u64,
     ) -> (f64, f64, f64, f64, f64, f64, f64, f64, f64, f64) {
         let mut a12 = std::f64::NAN;
         let mut s12 = std::f64::NAN;
@@ -584,7 +598,7 @@ impl Geodesic {
         let mut M12 = std::f64::NAN;
         let mut M21 = std::f64::NAN;
         let mut S12 = std::f64::NAN;
-        // *outmask &= self.OUT_MASK;
+        *outmask &= self.OUT_MASK;
 
         let (mut lon12, mut lon12s) = geomath::ang_diff(lon1, lon2);
         let mut lonsign = if lon12 >= 0.0 { 1.0 } else { -1.0 };
@@ -673,9 +687,19 @@ impl Geodesic {
 
             sig12 = ((csig1 * ssig2 - ssig1 * csig2).max(0.0)).atan2(csig1 * csig2 + ssig1 * ssig2);
             let res = self._Lengths(
-                self._n, sig12, ssig1, csig1, dn1, ssig2, csig2, dn1, cbet1, cbet2,
-                // *outmask | self.DISTANCE | self.REDUCEDLENGTH,
-                &mut C1a, &mut C2a,
+                self._n,
+                sig12,
+                ssig1,
+                csig1,
+                dn1,
+                ssig2,
+                csig2,
+                dn1,
+                cbet1,
+                cbet2,
+                *outmask | self.DISTANCE | self.REDUCEDLENGTH,
+                &mut C1a,
+                &mut C2a,
             );
             s12x = res.0;
             m12x = res.1;
@@ -711,10 +735,10 @@ impl Geodesic {
             sig12 = lam12 / self._f1;
             omg12 = lam12 / self._f1;
             m12x = self._b * sig12.sin();
-            // if *outmask & self.GEODESICSCALE != 0 {
-            M12 = sig12.cos();
-            M21 = sig12.cos();
-            // }
+            if *outmask & self.GEODESICSCALE != 0 {
+                M12 = sig12.cos();
+                M21 = sig12.cos();
+            }
             a12 = lon12 / self._f1;
         } else if !meridian {
             let res = self._InverseStart(
@@ -730,10 +754,10 @@ impl Geodesic {
             if sig12 >= 0.0 {
                 s12x = sig12 * self._b * dnm;
                 m12x = geomath::sq(dnm) * self._b * (sig12 / dnm).sin();
-                // if *outmask & self.GEODESICSCALE != 0 {
-                M12 = (sig12 / dnm).cos();
-                M21 = (sig12 / dnm).cos();
-                // }
+                if *outmask & self.GEODESICSCALE != 0 {
+                    M12 = (sig12 / dnm).cos();
+                    M21 = (sig12 / dnm).cos();
+                }
                 a12 = sig12.to_degrees();
                 omg12 = lam12 / (self._f1 * dnm);
             } else {
@@ -809,15 +833,14 @@ impl Geodesic {
                     tripb = ((salp1a - salp1).abs() + (calp1a - calp1) < self.tolb_)
                         || ((salp1 - salp1b).abs() + (calp1 - calp1b) < self.tolb_);
                 }
-                // let lengthmask = *outmask
-                //     | if *outmask & (self.REDUCEDLENGTH | self.GEODESICSCALE) != 0 {
-                //         self.DISTANCE
-                //     } else {
-                //         self.EMPTY
-                //     };
+                let lengthmask = *outmask
+                    | if *outmask & (self.REDUCEDLENGTH | self.GEODESICSCALE) != 0 {
+                        self.DISTANCE
+                    } else {
+                        self.EMPTY
+                    };
                 let res = self._Lengths(
-                    eps, sig12, ssig1, csig1, dn1, ssig2, csig2, dn2, cbet1,
-                    cbet2, //lengthmask,
+                    eps, sig12, ssig1, csig1, dn1, ssig2, csig2, dn2, cbet1, cbet2, lengthmask,
                     &mut C1a, &mut C2a,
                 );
                 s12x = res.0;
@@ -828,73 +851,73 @@ impl Geodesic {
                 m12x *= self._b;
                 s12x *= self._b;
                 a12 = sig12.to_degrees();
-                // if *outmask & self.AREA != 0 {
-                let sdomg12 = domg12.sin();
-                let cdomg12 = domg12.cos();
-                somg12 = slam12 * cdomg12 - clam12 * sdomg12;
-                comg12 = clam12 * cdomg12 + slam12 * sdomg12;
-                // }
+                if *outmask & self.AREA != 0 {
+                    let sdomg12 = domg12.sin();
+                    let cdomg12 = domg12.cos();
+                    somg12 = slam12 * cdomg12 - clam12 * sdomg12;
+                    comg12 = clam12 * cdomg12 + slam12 * sdomg12;
+                }
             }
         }
-        // if *outmask & self.DISTANCE != 0 {
-        s12 = 0.0 + s12x;
-        // }
-        // if *outmask & self.REDUCEDLENGTH != 0 {
-        m12 = 0.0 + m12x;
-        // }
-        // if *outmask & self.AREA != 0 {
-        let salp0 = salp1 * cbet1;
-        let calp0 = calp1.hypot(salp1 * sbet1);
-        if calp0 != 0.0 && salp0 != 0.0 {
-            ssig1 = sbet1;
-            csig1 = calp1 * cbet1;
-            ssig2 = sbet2;
-            csig2 = calp2 * cbet2;
-            let k2 = geomath::sq(calp0) * self._e2;
-            eps = k2 / (2.0 * (1.0 + (1.0 + k2).sqrt()) + k2);
-            let A4 = geomath::sq(self.a) * calp0 * salp0 * self._e2;
-            let res = geomath::norm(ssig1, csig1);
-            ssig1 = res.0;
-            csig1 = res.0;
-            let res = geomath::norm(ssig2, csig2);
-            ssig2 = res.0;
-            csig2 = res.1;
-            let mut C4a: Vec<f64> = (0..self.GEODESIC_ORDER).map(|x| x as f64).collect();
-            self._C4f(eps, &mut C4a);
-            let B41 = geomath::sin_cos_series(false, ssig1, csig1, C4a.clone());
-            let B42 = geomath::sin_cos_series(false, ssig2, csig2, C4a.clone());
-            S12 = A4 * (B42 - B41);
-        } else {
-            S12 = 0.0;
+        if *outmask & self.DISTANCE != 0 {
+            s12 = 0.0 + s12x;
         }
-
-        if !meridian && somg12 > 1.0 {
-            somg12 = omg12.sin();
-            comg12 = omg12.cos();
+        if *outmask & self.REDUCEDLENGTH != 0 {
+            m12 = 0.0 + m12x;
         }
-
-        let mut alp12 = 0.0;
-        if (!meridian && comg12 > -0.7071 && sbet2 - sbet1 < 1.75) {
-            let domg12 = 1.0 + comg12;
-            let dbet1 = 1.0 + cbet1;
-            let dbet2 = 1.0 + cbet2;
-            alp12 = 2.0
-                * (somg12 * (sbet1 * dbet2 + sbet2 * dbet1))
-                    .atan2(domg12 * (sbet1 * sbet2 + dbet1 * dbet2));
-        } else {
-            let mut salp12 = salp2 * calp1 - calp2 * salp1;
-            let mut calp12 = calp2 * calp1 + salp2 * salp1;
-
-            if salp12 == 0.0 && calp12 < 0.0 {
-                salp12 = self.tiny_ * calp1;
-                calp12 = -1.0;
+        if *outmask & self.AREA != 0 {
+            let salp0 = salp1 * cbet1;
+            let calp0 = calp1.hypot(salp1 * sbet1);
+            if calp0 != 0.0 && salp0 != 0.0 {
+                ssig1 = sbet1;
+                csig1 = calp1 * cbet1;
+                ssig2 = sbet2;
+                csig2 = calp2 * cbet2;
+                let k2 = geomath::sq(calp0) * self._e2;
+                eps = k2 / (2.0 * (1.0 + (1.0 + k2).sqrt()) + k2);
+                let A4 = geomath::sq(self.a) * calp0 * salp0 * self._e2;
+                let res = geomath::norm(ssig1, csig1);
+                ssig1 = res.0;
+                csig1 = res.0;
+                let res = geomath::norm(ssig2, csig2);
+                ssig2 = res.0;
+                csig2 = res.1;
+                let mut C4a: Vec<f64> = (0..self.GEODESIC_ORDER).map(|x| x as f64).collect();
+                self._C4f(eps, &mut C4a);
+                let B41 = geomath::sin_cos_series(false, ssig1, csig1, C4a.clone());
+                let B42 = geomath::sin_cos_series(false, ssig2, csig2, C4a.clone());
+                S12 = A4 * (B42 - B41);
+            } else {
+                S12 = 0.0;
             }
-            alp12 = salp12.atan2(calp12);
+
+            if !meridian && somg12 > 1.0 {
+                somg12 = omg12.sin();
+                comg12 = omg12.cos();
+            }
+
+            let mut alp12 = 0.0;
+            if (!meridian && comg12 > -0.7071 && sbet2 - sbet1 < 1.75) {
+                let domg12 = 1.0 + comg12;
+                let dbet1 = 1.0 + cbet1;
+                let dbet2 = 1.0 + cbet2;
+                alp12 = 2.0
+                    * (somg12 * (sbet1 * dbet2 + sbet2 * dbet1))
+                        .atan2(domg12 * (sbet1 * sbet2 + dbet1 * dbet2));
+            } else {
+                let mut salp12 = salp2 * calp1 - calp2 * salp1;
+                let mut calp12 = calp2 * calp1 + salp2 * salp1;
+
+                if salp12 == 0.0 && calp12 < 0.0 {
+                    salp12 = self.tiny_ * calp1;
+                    calp12 = -1.0;
+                }
+                alp12 = salp12.atan2(calp12);
+            }
+            S12 += self._c2 * alp12;
+            S12 *= swapp * lonsign * latsign;
+            S12 += 0.0;
         }
-        S12 += self._c2 * alp12;
-        S12 *= swapp * lonsign * latsign;
-        S12 += 0.0;
-        // }
 
         if swapp < 0.0 {
             let _s = salp2;
@@ -903,11 +926,11 @@ impl Geodesic {
             let _c = calp2;
             calp2 = calp1;
             calp1 = _c;
-            // if *outmask & self.GEODESICSCALE != 0 {
-            let _m = M21;
-            M21 = M12;
-            M12 = _m;
-            // }
+            if *outmask & self.GEODESICSCALE != 0 {
+                let _m = M21;
+                M21 = M12;
+                M12 = _m;
+            }
         }
         salp1 *= swapp * lonsign;
         calp1 *= swapp * latsign;
@@ -917,10 +940,10 @@ impl Geodesic {
     }
 
     pub fn Inverse(&self, lat1: f64, lon1: f64, lat2: f64, lon2: f64) -> f64 {
-        // let mut outmask = self.STANDARD;
+        let mut outmask = self.STANDARD;
         let mut lat1 = lat1;
         let mut lat2 = lat2;
-        let res = self._GenInverse(&mut lat1, lon1, &mut lat2, lon2); //, &mut outmask);
+        let res = self._GenInverse(&mut lat1, lon1, &mut lat2, lon2, &mut outmask);
         res.1
     }
 }
@@ -1043,23 +1066,20 @@ mod tests {
             &mut vec![0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0],
             &mut vec![0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0],
         );
-        assert_eq!(
-            res,
-            (
-                -1.0,
-                0.7095310092765433,
-                0.7046742132893822,
-                std::f64::NAN,
-                std::f64::NAN,
-                1.0000002548969817
-            )
-        );
+        assert_eq!(res.0, -1.0);
+        assert_eq!(res.1, 0.7095310092765433);
+        assert_eq!(res.2, 0.7046742132893822);
+        assert_eq!(res.3.is_nan(), true);
+        assert_eq!(res.4.is_nan(), true);
+        assert_eq!(res.5, 1.0000002548969817);
     }
 
     #[test]
     fn test_lengths() {
         // Results taken from the python implementation
         let geod = Geodesic::new(WGS84_A, WGS84_F);
+        let mut c1a = vec![0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0];
+        let mut c2a = vec![0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0];
         let res1 = geod._Lengths(
             0.0008355095326524276,
             0.024682339962725352,
@@ -1071,20 +1091,15 @@ mod tests {
             1.0,
             0.9998487145115275,
             1.0,
-            // 4101,
-            &mut vec![0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0],
-            &mut vec![0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0],
+            4101,
+            &mut c1a,
+            &mut c2a,
         );
-        assert_eq!(
-            res1,
-            (
-                std::f64::NAN,
-                0.024679842274314294,
-                0.0016717180169067588,
-                std::f64::NAN,
-                std::f64::NAN
-            )
-        );
+        assert_eq!(res1.0.is_nan(), true);
+        assert_eq!(res1.1, 0.024679842274314294);
+        assert_eq!(res1.2, 0.0016717180169067588);
+        assert_eq!(res1.3.is_nan(), true);
+        assert_eq!(res1.4.is_nan(), true);
 
         let res2 = geod._Lengths(
             0.0008355096040059597,
@@ -1097,7 +1112,7 @@ mod tests {
             1.0,
             0.9998487145115275,
             1.0,
-            // 4101,
+            4101,
             &mut vec![
                 0.0,
                 -0.00041775465696698233,
@@ -1117,16 +1132,11 @@ mod tests {
                 1.2789961247944744e-20,
             ],
         );
-        assert_eq!(
-            res2,
-            (
-                std::f64::NAN,
-                0.02467984121870759,
-                0.0016717181597332804,
-                std::f64::NAN,
-                std::f64::NAN
-            )
-        );
+        assert_eq!(res2.0.is_nan(), true);
+        assert_eq!(res2.1, 0.02467984121870759);
+        assert_eq!(res2.2, 0.0016717181597332804);
+        assert_eq!(res2.3.is_nan(), true);
+        assert_eq!(res2.4.is_nan(), true);
 
         let res3 = geod._Lengths(
             0.0008355096040059597,
@@ -1139,7 +1149,7 @@ mod tests {
             1.0,
             0.9998487145115275,
             1.0,
-            // 1920,
+            1920,
             &mut vec![
                 0.0,
                 -0.00041775469264372037,
@@ -1159,16 +1169,11 @@ mod tests {
                 1.2789967801615795e-20,
             ],
         );
-        assert_eq!(
-            res3,
-            (
-                0.024682347295447677,
-                std::f64::NAN,
-                std::f64::NAN,
-                std::f64::NAN,
-                std::f64::NAN
-            )
-        );
+        assert_eq!(res3.0, 0.024682347295447677);
+        assert_eq!(res3.1.is_nan(), true);
+        assert_eq!(res3.2.is_nan(), true);
+        assert_eq!(res3.3.is_nan(), true);
+        assert_eq!(res3.4.is_nan(), true);
     }
 
     #[test]

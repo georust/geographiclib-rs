@@ -198,10 +198,10 @@ pub fn isfinite(x: f64) -> bool {
 // Functions that used to be inside Geodesic
 pub fn sin_cos_series(sinp: bool, sinx: f64, cosx: f64, c: Vec<f64>) -> f64 {
     let mut k = c.len();
-    let mut n = k - if sinp { 1 } else { 0 };
+    let mut n: i64 = k as i64 - if sinp { 1 } else { 0 };
     let ar: f64 = 2.0 * (cosx - sinx) * (cosx + sinx);
     let mut y1 = 0.0;
-    let mut y0: f64 = if n != 0 {
+    let mut y0: f64 = if n & 1 != 0 {
         k -= 1;
         c[k]
     } else {
@@ -391,6 +391,23 @@ mod tests {
         assert_eq!(
             sin_cos_series(true, 0.12, 0.21, vec![1.0, 2.0]),
             0.10079999999999999
+        );
+        assert_eq!(
+            sin_cos_series(
+                true,
+                -0.024679833885152578,
+                0.9996954065111039,
+                vec![
+                    0.0,
+                    -0.0008355098973052918,
+                    -1.7444619952659748e-07,
+                    -7.286557795511902e-11,
+                    -3.80472772706481e-14,
+                    -2.2251271876594078e-17,
+                    1.2789961247944744e-20
+                ]
+            ),
+            4.124513511893872e-05
         );
     }
 }
