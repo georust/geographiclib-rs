@@ -386,7 +386,7 @@ impl Geodesic {
         let mut salp1 = cbet2 * somg12;
 
         let mut calp1 = if comg12 >= 0.0 {
-            sbet12 + cbet12 * sbet1 * geomath::sq(somg12) / (1.0 + comg12)
+            sbet12 + cbet2 * sbet1 * geomath::sq(somg12) / (1.0 + comg12)
         } else {
             sbet12a - cbet2 * sbet1 * geomath::sq(somg12) / (1.0 - comg12)
         };
@@ -602,7 +602,7 @@ impl Geodesic {
         let (mut lon12, mut lon12s) = geomath::ang_diff(lon1, lon2);
         let mut lonsign = if lon12 >= 0.0 { 1.0 } else { -1.0 };
 
-        lon12 = lonsign * geomath::ang_round((180.0 - lon12) - lonsign * lon12s);
+        lon12 = lonsign * geomath::ang_round(lon12);
         lon12s = geomath::ang_round((180.0 - lon12) - lonsign * lon12s);
         let lam12 = lon12.to_radians();
         let mut slam12 = 0.0;
@@ -638,7 +638,7 @@ impl Geodesic {
         cbet1 = cbet1.max(self.tiny_);
 
         let (mut sbet2, mut cbet2) = geomath::sincosd(*lat2);
-        sbet2 += self._f1;
+        sbet2 *= self._f1;
 
         let (mut sbet2, mut cbet2) = geomath::norm(sbet2, cbet2);
         cbet2 = cbet2.max(self.tiny_);
@@ -786,16 +786,17 @@ impl Geodesic {
                         &mut C3a,
                     );
                     let v = res.0;
-                    salp2 = res.0;
-                    calp2 = res.1;
-                    sig12 = res.2;
-                    ssig1 = res.3;
-                    csig1 = res.4;
-                    ssig2 = res.5;
-                    csig2 = res.6;
-                    eps = res.7;
-                    domg12 = res.8;
-                    let dv = res.9;
+                    salp2 = res.1;
+                    calp2 = res.2;
+                    sig12 = res.3;
+                    ssig1 = res.4;
+                    csig1 = res.5;
+                    ssig2 = res.6;
+                    csig2 = res.7;
+                    eps = res.8;
+                    domg12 = res.9;
+                    let dv = res.10;
+
                     if tripb || !(v.abs() >= if tripn { 8.0 } else { 1.0 } * self.tol0_) {
                         break;
                     };
@@ -829,8 +830,8 @@ impl Geodesic {
                     salp1 = res.0;
                     calp1 = res.1;
                     tripn = false;
-                    tripb = ((salp1a - salp1).abs() + (calp1a - calp1) < self.tolb_)
-                        || ((salp1 - salp1b).abs() + (calp1 - calp1b) < self.tolb_);
+                    tripb = (salp1a - salp1).abs() + (calp1a - calp1) < self.tolb_
+                        || (salp1 - salp1b).abs() + (calp1 - calp1b) < self.tolb_;
                 }
                 let lengthmask = *outmask
                     | if *outmask & (self.REDUCEDLENGTH | self.GEODESICSCALE) != 0 {
@@ -953,7 +954,67 @@ mod tests {
     #[test]
     fn test_inverse() {
         let geod = Geodesic::new(WGS84_A, WGS84_F);
-        assert_eq!(geod.Inverse(0.0, 0.0, 1.0, 1.0), 0.0);
+        assert_eq!(geod.Inverse(0.0, 0.0, 1.0, 1.0), 156899.56829134026);
+    }
+
+    #[test]
+    fn test_geninverse() {
+        let geod = Geodesic::new(WGS84_A, WGS84_F);
+        let res = geod._GenInverse(&mut 0.0, 0.0, &mut 1.0, 1.0, &mut geod.STANDARD.clone());
+        assert_eq!(res.0, 1.4141938478710363);
+        assert_eq!(res.1, 156899.56829134026);
+        assert_eq!(res.2, 0.7094236375834774);
+        assert_eq!(res.3, 0.7047823085448635);
+        assert_eq!(res.4, 0.7095309793242709);
+        assert_eq!(res.5, 0.7046742434480923);
+        assert_eq!(res.6.is_nan(), true);
+        assert_eq!(res.7.is_nan(), true);
+        assert_eq!(res.8.is_nan(), true);
+        assert_eq!(res.9.is_nan(), true);
+    }
+
+    #[test]
+    fn test_inverse_start() {
+        let geod = Geodesic::new(WGS84_A, WGS84_F);
+        let res = geod._InverseStart(
+            -0.017393909556108908,
+            0.9998487145115275,
+            1.0000010195104125,
+            -0.0,
+            1.0,
+            1.0,
+            0.017453292519943295,
+            0.01745240643728351,
+            0.9998476951563913,
+            &mut vec![0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0],
+            &mut vec![0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0],
+        );
+        assert_eq!(res.0, -1.0);
+        assert_eq!(res.1, 0.7095310092765433);
+        assert_eq!(res.2, 0.7046742132893822);
+        assert_eq!(res.3.is_nan(), true);
+        assert_eq!(res.4.is_nan(), true);
+        assert_eq!(res.5, 1.0000002548969817);
+
+        let res = geod._InverseStart(
+            -0.017393909556108908,
+            0.9998487145115275,
+            1.0000010195104125,
+            -0.0,
+            1.0,
+            1.0,
+            0.017453292519943295,
+            0.01745240643728351,
+            0.9998476951563913,
+            &mut vec![0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0],
+            &mut vec![0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0],
+        );
+        assert_eq!(res.0, -1.0);
+        assert_eq!(res.1, 0.7095310092765433);
+        assert_eq!(res.2, 0.7046742132893822);
+        assert_eq!(res.3.is_nan(), true);
+        assert_eq!(res.4.is_nan(), true);
+        assert_eq!(res.5, 1.0000002548969817);
     }
 
     #[test]
@@ -1037,30 +1098,6 @@ mod tests {
         assert_eq!(res2.8, 0.0008355096040059597);
         assert_eq!(res2.9, -5.870849152149326e-05);
         assert_eq!(res2.10, 0.03490027216297455);
-    }
-
-    #[test]
-    fn test_inverse_start() {
-        let geod = Geodesic::new(WGS84_A, WGS84_F);
-        let res = geod._InverseStart(
-            -0.017393909556108908,
-            0.9998487145115275,
-            1.0000010195104125,
-            -0.0,
-            1.0,
-            1.0,
-            0.017453292519943295,
-            0.01745240643728351,
-            0.9998476951563913,
-            &mut vec![0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0],
-            &mut vec![0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0],
-        );
-        assert_eq!(res.0, -1.0);
-        assert_eq!(res.1, 0.7095310092765433);
-        assert_eq!(res.2, 0.7046742132893822);
-        assert_eq!(res.3.is_nan(), true);
-        assert_eq!(res.4.is_nan(), true);
-        assert_eq!(res.5, 1.0000002548969817);
     }
 
     #[test]

@@ -94,7 +94,7 @@ pub fn ang_round(x: f64) -> f64 {
 
 // reduce angle to (-180,180]
 pub fn ang_normalize(x: f64) -> f64 {
-    let mut y = x % 2.0 * std::f64::consts::PI;
+    let mut y = fmod(x, 360.0);
     if x == 0.0 {
         y = x;
     };
@@ -129,9 +129,14 @@ pub fn ang_diff(x: f64, y: f64) -> (f64, f64) {
     }
 }
 
+pub fn fmod(x: f64, y: f64) -> f64 {
+    let rquot = (x / y).ceil();
+    x - rquot * y
+}
+
 // Compute sine and cosine of x in degrees
 pub fn sincosd(x: f64) -> (f64, f64) {
-    let mut r = x % 2.0 * std::f64::consts::PI;
+    let mut r = fmod(x, 360.0);
     let mut q = if r.is_nan() {
         std::f64::NAN
     } else {
@@ -316,6 +321,13 @@ pub fn _C2f(eps: f64, c: &mut Vec<f64>, geodesic_order: i64) {
 mod tests {
     use super::*;
     // Results for the assertions are taken by running the python implementation
+
+    #[test]
+    fn test_sincosd() {
+        let res = sincosd(-1.0);
+        assert_eq!(res.0, -0.01745240643728351);
+        assert_eq!(res.1, 0.9998476951563913);
+    }
 
     #[test]
     fn test__C2f() {
