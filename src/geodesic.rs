@@ -587,12 +587,14 @@ impl Geodesic {
 
     pub fn _GenInverse(
         &self,
-        lat1: &mut f64,
+        lat1: f64,
         lon1: f64,
-        lat2: &mut f64,
+        lat2: f64,
         lon2: f64,
         outmask: &mut u64,
     ) -> (f64, f64, f64, f64, f64, f64, f64, f64, f64, f64) {
+        let mut lat1 = lat1;
+        let mut lat2 = lat2;
         let mut a12 = std::f64::NAN;
         let mut s12 = std::f64::NAN;
         let mut m12 = std::f64::NAN;
@@ -619,27 +621,27 @@ impl Geodesic {
             slam12 = res.0;
             clam12 = res.1;
         };
-        *lat1 = geomath::ang_round(geomath::lat_fix(*lat1));
-        *lat2 = geomath::ang_round(geomath::lat_fix(*lat2));
+        lat1 = geomath::ang_round(geomath::lat_fix(lat1));
+        lat2 = geomath::ang_round(geomath::lat_fix(lat2));
 
         let swapp = if lat1.abs() < lat2.abs() { -1.0 } else { 1.0 };
         if swapp < 0.0 {
             lonsign *= -1.0;
-            let _l = *lat2;
-            *lat2 = *lat1;
-            *lat1 = _l;
+            let _l = lat2;
+            lat2 = lat1;
+            lat1 = _l;
         }
-        let latsign = if *lat1 < 0.0 { 1.0 } else { -1.0 };
-        *lat1 *= latsign;
-        *lat2 *= latsign;
+        let latsign = if lat1 < 0.0 { 1.0 } else { -1.0 };
+        lat1 *= latsign;
+        lat2 *= latsign;
 
-        let (mut sbet1, cbet1) = geomath::sincosd(*lat1);
+        let (mut sbet1, cbet1) = geomath::sincosd(lat1);
         sbet1 *= self._f1;
 
         let (mut sbet1, mut cbet1) = geomath::norm(sbet1, cbet1);
         cbet1 = cbet1.max(self.tiny_);
 
-        let (mut sbet2, mut cbet2) = geomath::sincosd(*lat2);
+        let (mut sbet2, mut cbet2) = geomath::sincosd(lat2);
         sbet2 *= self._f1;
 
         let (mut sbet2, mut cbet2) = geomath::norm(sbet2, cbet2);
@@ -662,7 +664,7 @@ impl Geodesic {
         let mut C2a: Vec<f64> = (0..=self.GEODESIC_ORDER).map(|x| x as f64).collect();
         let mut C3a: Vec<f64> = (0..self.GEODESIC_ORDER).map(|x| x as f64).collect();
 
-        let mut meridian = *lat1 == -90.0 || slam12 == 0.0;
+        let mut meridian = lat1 == -90.0 || slam12 == 0.0;
         let mut calp1 = 0.0;
         let mut salp1 = 0.0;
         let mut calp2 = 0.0;
@@ -953,7 +955,7 @@ impl Geodesic {
         let mut lat2 = lat2;
         let mut outmask = outmask;
         let (a12, s12, salp1, calp1, salp2, calp2, m12, M12, M21, S12) =
-            self._GenInverse(&mut lat1, lon1, &mut lat2, lon2, &mut outmask);
+            self._GenInverse(lat1, lon1, lat2, lon2, &mut outmask);
 
         let mut lon2 = lon2;
         outmask &= self.OUT_MASK;
@@ -1004,13 +1006,13 @@ mod tests {
     #[test]
     fn test_inverse() {
         let geod = Geodesic::new(WGS84_A, WGS84_F);
-        // assert_eq!(
-        //     *geod
-        //         .Inverse(0.0, 0.0, 1.0, 1.0, geod.STANDARD)
-        //         .get("s12")
-        //         .expect("HEY"),
-        //     156899.56829134026
-        // );
+        assert_eq!(
+            *geod
+                .Inverse(0.0, 0.0, 1.0, 1.0, geod.STANDARD)
+                .get("s12")
+                .expect("HEY"),
+            156899.56829134026
+        );
         let testcases = vec![
             (
                 55.52454,
@@ -1327,7 +1329,7 @@ mod tests {
     #[test]
     fn test_geninverse() {
         let geod = Geodesic::new(WGS84_A, WGS84_F);
-        let res = geod._GenInverse(&mut 0.0, 0.0, &mut 1.0, 1.0, &mut geod.STANDARD.clone());
+        let res = geod._GenInverse(0.0, 0.0, 1.0, 1.0, &mut geod.STANDARD.clone());
         assert_eq!(res.0, 1.4141938478710363);
         assert_eq!(res.1, 156899.56829134026);
         assert_eq!(res.2, 0.7094236375834774);

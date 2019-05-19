@@ -148,6 +148,7 @@ pub fn sincosd(x: f64) -> (f64, f64) {
     let mut s = r.sin();
     let mut c = r.cos();
     q = q % 4.0;
+    q = if q < 0.0 { q + 4.0 } else { q };
     if q == 1.0 {
         let _s = s;
         s = c;
@@ -329,6 +330,10 @@ mod tests {
 
     #[test]
     fn test_sincosd() {
+        let res = sincosd(-77.03196);
+        assert_eq!(res.0, -0.9744953925159129);
+        assert_eq!(res.1, 0.22440750870961693);
+
         let res = sincosd(69.48894);
         assert_eq!(res.0, 0.9366045700708676);
         assert_eq!(res.1, 0.3503881837653281);

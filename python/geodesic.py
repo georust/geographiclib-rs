@@ -3,6 +3,14 @@ import math
 from geomath import Math
 from geodesiccapability import GeodesicCapability
 
+def print_args_and_res(func):
+    def wrapper(*args, **kwargs):
+        print("args: ", *args[1:])
+        res = func(*args, **kwargs)
+        print("res: ", res)
+        return res
+    return wrapper
+
 
 class Constants:
     # the equatorial radius in meters of the WGS84 ellipsoid in meters
@@ -804,7 +812,6 @@ class Geodesic:
         """
         PORTED not tested
         Private: Solve hybrid problem"""
-        print("args: ", [sbet1, cbet1, dn1, sbet2, cbet2, dn2, salp1, calp1, slam120, clam120, diffp, C1a, C2a, C3a].join(', '))
 
         if sbet1 == 0 and calp1 == 0:
             # Break degeneracy of equatorial line.  This case has already been
@@ -900,8 +907,6 @@ class Geodesic:
         else:
             dlam12 = Math.NAN
 
-        print("res: ", [lam12, salp2, calp2, sig12, ssig1, csig1, ssig2, csig2, eps, domg12, dlam12].join(', '))
-        print()
         return (
             lam12,
             salp2,
@@ -918,7 +923,7 @@ class Geodesic:
 
     def _GenInverse(self, lat1, lon1, lat2, lon2, outmask):
         """
-        PORTED not tested
+        PORTED tested
         Private: General version of the inverse problem"""
         a12 = s12 = m12 = M12 = M21 = S12 = Math.NAN  # return vals
 
