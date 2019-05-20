@@ -50,7 +50,7 @@ pub struct Geodesic {
     LATITUDE: u64,
     LONGITUDE: u64,
     AZIMUTH: u64,
-    DISTANCE: u64,
+    pub DISTANCE: u64,
     pub STANDARD: u64,
     DISTANCE_IN: u64,
     REDUCEDLENGTH: u64,

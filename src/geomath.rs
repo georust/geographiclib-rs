@@ -130,8 +130,6 @@ pub fn ang_diff(x: f64, y: f64) -> (f64, f64) {
 }
 
 pub fn fmod(x: f64, y: f64) -> f64 {
-    // let rquot = (x / y).ceil();
-    // x - rquot * y
     x % y
 }
 
