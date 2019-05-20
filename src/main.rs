@@ -298,6 +298,7 @@ fn main() {
     .map(|t| (t.0, t.1, t.3, t.4))
     .collect();
 
+    println!("Running inverse...");
     let start_rs = Instant::now();
     for _ in 0..10000 {
         for (lat1, lat2, lon1, lon2) in data.iter() {
@@ -314,6 +315,6 @@ fn main() {
     }
     let elapsed_c = start_c.elapsed().as_millis();
 
-    println!("Elapsed rs: {}", elapsed_rs);
-    println!("Elapsed c:  {}", elapsed_c);
+    println!("Rust implementation:  {}ms", elapsed_rs);
+    println!("C bindings:           {}ms", elapsed_c);
 }
