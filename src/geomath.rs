@@ -1,15 +1,5 @@
-use lazy_static::lazy_static;
-
 pub const DIGITS: u64 = 53;
 pub const TWO: f64 = 2.0;
-
-lazy_static! {
-    pub static ref EPSILON: f64 = TWO.powi(1 - DIGITS as i32);
-    pub static ref MINVAL: f64 = TWO.powi(-1022);
-    pub static ref MAXVAL: f64 = TWO.powi(1023) * (2.0 - TWO.powi(1 - DIGITS as i32));
-    pub static ref INF: f64 = std::f64::INFINITY;
-    pub static ref NAN: f64 = std::f64::NAN;
-}
 
 pub fn get_epsilon() -> f64 {
     TWO.powi(1 - DIGITS as i32)

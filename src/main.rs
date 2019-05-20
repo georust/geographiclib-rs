@@ -2,6 +2,7 @@ mod geodesic;
 mod geodesiccapability;
 mod geomath;
 use geographiclib;
+
 use std::time::{Duration, Instant};
 
 fn main() {

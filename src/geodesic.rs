@@ -1,6 +1,5 @@
 use crate::geodesiccapability;
 use crate::geomath;
-use assert_approx_eq::assert_approx_eq;
 use std::collections::HashMap;
 use std::f64::consts::PI;
 
@@ -67,7 +66,7 @@ impl Geodesic {
         let nC4x_ = 21;
         let maxit1_ = 20;
         let maxit2_ = maxit1_ + geomath::DIGITS + 10;
-        let tiny_ = geomath::MINVAL.sqrt();
+        let tiny_ = geomath::get_min_val().sqrt();
         let tol0_ = geomath::get_epsilon();
         let tol1_ = 200.0 * tol0_;
         let tol2_ = tol0_.sqrt();
@@ -1003,6 +1002,8 @@ impl Geodesic {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use assert_approx_eq::assert_approx_eq;
+
     #[test]
     fn test_inverse() {
         let geod = Geodesic::new(WGS84_A, WGS84_F);
