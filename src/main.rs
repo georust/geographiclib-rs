@@ -1,5 +1,6 @@
 mod geodesic;
 mod geodesiccapability;
+mod geodesicline;
 mod geomath;
 use geographiclib;
 
@@ -302,7 +303,7 @@ fn main() {
     let start_rs = Instant::now();
     for _ in 0..10000 {
         for (lat1, lat2, lon1, lon2) in data.iter() {
-            geod.Inverse(*lat1, *lon1, *lat2, *lon2, geod.DISTANCE);
+            geod.Inverse(*lat1, *lon1, *lat2, *lon2, geodesiccapability::DISTANCE);
         }
     }
     let elapsed_rs = start_rs.elapsed().as_millis();

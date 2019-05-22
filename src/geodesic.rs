@@ -1,62 +1,39 @@
-use crate::geodesiccapability;
+use crate::geodesiccapability as caps;
+use crate::geodesicline;
 use crate::geomath;
 use std::collections::HashMap;
 use std::f64::consts::PI;
 
-const WGS84_A: f64 = 6378137.0;
-const WGS84_F: f64 = 1.0 / 298.257223563;
+pub const WGS84_A: f64 = 6378137.0;
+pub const WGS84_F: f64 = 1.0 / 298.257223563;
 
 #[derive(Debug)]
 pub struct Geodesic {
-    a: f64,
-    f: f64,
-    _f1: f64,
-    _e2: f64,
-    _ep2: f64,
+    pub a: f64,
+    pub f: f64,
+    pub _f1: f64,
+    pub _e2: f64,
+    pub _ep2: f64,
     _n: f64,
-    _b: f64,
-    _c2: f64,
+    pub _b: f64,
+    pub _c2: f64,
     _etol2: f64,
     _A3x: Vec<f64>,
     _C3x: Vec<f64>,
     _C4x: Vec<f64>,
 
-    GEODESIC_ORDER: i64,
+    pub GEODESIC_ORDER: i64,
     nC3x_: i64,
     nC4x_: i64,
     maxit1_: u64,
     maxit2_: u64,
 
-    tiny_: f64,
+    pub tiny_: f64,
     tol0_: f64,
     tol1_: f64,
     tol2_: f64,
     tolb_: f64,
     xthresh_: f64,
-
-    CAP_NONE: u64,
-    CAP_C1: u64,
-    CAP_C1p: u64,
-    CAP_C2: u64,
-    CAP_C3: u64,
-    CAP_C4: u64,
-    CAP_ALL: u64,
-    CAP_MASK: u64,
-    OUT_ALL: u64,
-    OUT_MASK: u64,
-
-    EMPTY: u64,
-    LATITUDE: u64,
-    LONGITUDE: u64,
-    AZIMUTH: u64,
-    pub DISTANCE: u64,
-    pub STANDARD: u64,
-    DISTANCE_IN: u64,
-    REDUCEDLENGTH: u64,
-    GEODESICSCALE: u64,
-    AREA: u64,
-    ALL: u64,
-    LONG_UNROLL: u64,
 }
 
 impl Geodesic {
@@ -72,42 +49,6 @@ impl Geodesic {
         let tol2_ = tol0_.sqrt();
         let tolb_ = tol0_ * tol2_;
         let xthresh_ = 1000.0 * tol2_;
-
-        let CAP_NONE = geodesiccapability::CAP_NONE;
-        let CAP_C1 = geodesiccapability::CAP_C1;
-        let CAP_C1p = geodesiccapability::CAP_C1p;
-        let CAP_C2 = geodesiccapability::CAP_C2;
-        let CAP_C3 = geodesiccapability::CAP_C3;
-        let CAP_C4 = geodesiccapability::CAP_C4;
-        let CAP_ALL = geodesiccapability::CAP_ALL;
-        let CAP_MASK = geodesiccapability::CAP_MASK;
-        let OUT_ALL = geodesiccapability::OUT_ALL;
-        let OUT_MASK = geodesiccapability::OUT_MASK;
-
-        // No capabilities, no output.
-        let EMPTY = geodesiccapability::EMPTY;
-        // Calculate latitude *lat2*.
-        let LATITUDE = geodesiccapability::LATITUDE;
-        // Calculate longitude *lon2*.
-        let LONGITUDE = geodesiccapability::LONGITUDE;
-        // Calculate azimuths *azi1* and *azi2*.
-        let AZIMUTH = geodesiccapability::AZIMUTH;
-        // Calculate distance *s12*.
-        let DISTANCE = geodesiccapability::DISTANCE;
-        // All of the above.
-        let STANDARD = geodesiccapability::STANDARD;
-        // Allow distance *s12* to be used as input in the direct geodesic problem.
-        let DISTANCE_IN = geodesiccapability::DISTANCE_IN;
-        // Calculate reduced length *m12*.
-        let REDUCEDLENGTH = geodesiccapability::REDUCEDLENGTH;
-        // Calculate geodesic scales *M12* and *M21*.
-        let GEODESICSCALE = geodesiccapability::GEODESICSCALE;
-        // Calculate area *S12*.
-        let AREA = geodesiccapability::AREA;
-        // All of the above.
-        let ALL = geodesiccapability::ALL;
-        // Unroll longitudes, rather than reducing them to the range [-180d,180d].
-        let LONG_UNROLL = geodesiccapability::LONG_UNROLL;
 
         let _f1 = 1.0 - f;
         let _e2 = f * (2.0 - f);
@@ -218,30 +159,6 @@ impl Geodesic {
             tol2_,
             tolb_,
             xthresh_,
-
-            CAP_NONE,
-            CAP_C1,
-            CAP_C1p,
-            CAP_C2,
-            CAP_C3,
-            CAP_C4,
-            CAP_ALL,
-            CAP_MASK,
-            OUT_ALL,
-            OUT_MASK,
-
-            EMPTY,
-            LATITUDE,
-            LONGITUDE,
-            AZIMUTH,
-            DISTANCE,
-            STANDARD,
-            DISTANCE_IN,
-            REDUCEDLENGTH,
-            GEODESICSCALE,
-            AREA,
-            ALL,
-            LONG_UNROLL,
         }
     }
 
@@ -287,7 +204,7 @@ impl Geodesic {
         C1a: &mut Vec<f64>,
         C2a: &mut Vec<f64>,
     ) -> (f64, f64, f64, f64, f64) {
-        let outmask = outmask & self.OUT_MASK;
+        let outmask = outmask & caps::OUT_MASK;
         let mut s12b = std::f64::NAN;
         let mut m12b = std::f64::NAN;
         let mut m0 = std::f64::NAN;
@@ -299,10 +216,10 @@ impl Geodesic {
         let mut m0x = 0.0;
         let mut J12 = 0.0;
 
-        if outmask & (self.DISTANCE | self.REDUCEDLENGTH | self.GEODESICSCALE) != 0 {
+        if outmask & (caps::DISTANCE | caps::REDUCEDLENGTH | caps::GEODESICSCALE) != 0 {
             A1 = geomath::_A1m1f(eps, self.GEODESIC_ORDER);
             geomath::_C1f(eps, C1a, self.GEODESIC_ORDER);
-            if outmask & (self.REDUCEDLENGTH | self.GEODESICSCALE) != 0 {
+            if outmask & (caps::REDUCEDLENGTH | caps::GEODESICSCALE) != 0 {
                 A2 = geomath::_A2m1f(eps, self.GEODESIC_ORDER);
                 geomath::_C2f(eps, C2a, self.GEODESIC_ORDER);
                 m0x = A1 - A2;
@@ -310,31 +227,29 @@ impl Geodesic {
             }
             A1 = 1.0 + A1;
         }
-        if outmask & self.DISTANCE != 0 {
+        if outmask & caps::DISTANCE != 0 {
             let B1 = geomath::sin_cos_series(true, ssig2, csig2, C1a.clone())
                 - geomath::sin_cos_series(true, ssig1, csig1, C1a.clone());
             s12b = A1 * (sig12 + B1);
-            if outmask & (self.REDUCEDLENGTH | self.GEODESICSCALE) != 0 {
+            if outmask & (caps::REDUCEDLENGTH | caps::GEODESICSCALE) != 0 {
                 let B2 = geomath::sin_cos_series(true, ssig2, csig2, C2a.clone())
                     - geomath::sin_cos_series(true, ssig1, csig1, C2a.clone());
                 J12 = m0x * sig12 + (A1 * B1 - A2 * B2);
             }
-        } else if outmask & (self.REDUCEDLENGTH | self.GEODESICSCALE) != 0 {
+        } else if outmask & (caps::REDUCEDLENGTH | caps::GEODESICSCALE) != 0 {
             for l in 1..self.GEODESIC_ORDER {
                 C2a[l as usize] = A1 * C1a[l as usize] - A2 * C2a[l as usize];
             }
-            let inter1 = geomath::sin_cos_series(true, ssig2, csig2, C2a.clone());
-            let inter2 = geomath::sin_cos_series(true, ssig1, csig1, C2a.clone());
             J12 = m0x * sig12
                 + (geomath::sin_cos_series(true, ssig2, csig2, C2a.clone())
                     - geomath::sin_cos_series(true, ssig1, csig1, C2a.clone()));
         }
-        if outmask & self.REDUCEDLENGTH != 0 {
+        if outmask & caps::REDUCEDLENGTH != 0 {
             m0 = m0x;
             // J12 is wrong
             m12b = dn2 * (csig1 * ssig2) - dn1 * (ssig1 * csig2) - csig1 * csig2 * J12;
         }
-        if outmask & self.GEODESICSCALE != 0 {
+        if outmask & caps::GEODESICSCALE != 0 {
             let csig12 = csig1 * csig2 + ssig1 * ssig2;
             let t = self._ep2 * (cbet1 - cbet2) * (cbet1 + cbet2) / (dn1 + dn2);
             M12 = csig12 + (t * ssig2 - csig2 * J12) * ssig1 / dn1;
@@ -441,7 +356,7 @@ impl Geodesic {
                     dn2,
                     cbet1,
                     cbet2,
-                    self.REDUCEDLENGTH,
+                    caps::REDUCEDLENGTH,
                     C1a,
                     C2a,
                 );
@@ -569,7 +484,7 @@ impl Geodesic {
                     dn2,
                     cbet1,
                     cbet2,
-                    self.REDUCEDLENGTH,
+                    caps::REDUCEDLENGTH,
                     C1a,
                     C2a,
                 );
@@ -600,7 +515,7 @@ impl Geodesic {
         let mut M12 = std::f64::NAN;
         let mut M21 = std::f64::NAN;
         let mut S12 = std::f64::NAN;
-        *outmask &= self.OUT_MASK;
+        *outmask &= caps::OUT_MASK;
 
         let (mut lon12, mut lon12s) = geomath::ang_diff(lon1, lon2);
         let mut lonsign = if lon12 >= 0.0 { 1.0 } else { -1.0 };
@@ -699,7 +614,7 @@ impl Geodesic {
                 dn1,
                 cbet1,
                 cbet2,
-                *outmask | self.DISTANCE | self.REDUCEDLENGTH,
+                *outmask | caps::DISTANCE | caps::REDUCEDLENGTH,
                 &mut C1a,
                 &mut C2a,
             );
@@ -737,7 +652,7 @@ impl Geodesic {
             sig12 = lam12 / self._f1;
             omg12 = lam12 / self._f1;
             m12x = self._b * sig12.sin();
-            if *outmask & self.GEODESICSCALE != 0 {
+            if *outmask & caps::GEODESICSCALE != 0 {
                 M12 = sig12.cos();
                 M21 = sig12.cos();
             }
@@ -756,7 +671,7 @@ impl Geodesic {
             if sig12 >= 0.0 {
                 s12x = sig12 * self._b * dnm;
                 m12x = geomath::sq(dnm) * self._b * (sig12 / dnm).sin();
-                if *outmask & self.GEODESICSCALE != 0 {
+                if *outmask & caps::GEODESICSCALE != 0 {
                     M12 = (sig12 / dnm).cos();
                     M21 = (sig12 / dnm).cos();
                 }
@@ -837,10 +752,10 @@ impl Geodesic {
                         || (salp1 - salp1b).abs() + (calp1 - calp1b) < self.tolb_;
                 }
                 let lengthmask = *outmask
-                    | if *outmask & (self.REDUCEDLENGTH | self.GEODESICSCALE) != 0 {
-                        self.DISTANCE
+                    | if *outmask & (caps::REDUCEDLENGTH | caps::GEODESICSCALE) != 0 {
+                        caps::DISTANCE
                     } else {
-                        self.EMPTY
+                        caps::EMPTY
                     };
                 let res = self._Lengths(
                     eps, sig12, ssig1, csig1, dn1, ssig2, csig2, dn2, cbet1, cbet2, lengthmask,
@@ -854,7 +769,7 @@ impl Geodesic {
                 m12x *= self._b;
                 s12x *= self._b;
                 a12 = sig12.to_degrees();
-                if *outmask & self.AREA != 0 {
+                if *outmask & caps::AREA != 0 {
                     let sdomg12 = domg12.sin();
                     let cdomg12 = domg12.cos();
                     somg12 = slam12 * cdomg12 - clam12 * sdomg12;
@@ -862,13 +777,13 @@ impl Geodesic {
                 }
             }
         }
-        if *outmask & self.DISTANCE != 0 {
+        if *outmask & caps::DISTANCE != 0 {
             s12 = 0.0 + s12x;
         }
-        if *outmask & self.REDUCEDLENGTH != 0 {
+        if *outmask & caps::REDUCEDLENGTH != 0 {
             m12 = 0.0 + m12x;
         }
-        if *outmask & self.AREA != 0 {
+        if *outmask & caps::AREA != 0 {
             let salp0 = salp1 * cbet1;
             let calp0 = calp1.hypot(salp1 * sbet1);
             if calp0 != 0.0 && salp0 != 0.0 {
@@ -929,7 +844,7 @@ impl Geodesic {
             let _c = calp2;
             calp2 = calp1;
             calp1 = _c;
-            if *outmask & self.GEODESICSCALE != 0 {
+            if *outmask & caps::GEODESICSCALE != 0 {
                 let _m = M21;
                 M21 = M12;
                 M12 = _m;
@@ -957,8 +872,8 @@ impl Geodesic {
             self._GenInverse(lat1, lon1, lat2, lon2, &mut outmask);
 
         let mut lon2 = lon2;
-        outmask &= self.OUT_MASK;
-        if outmask & self.LONG_UNROLL != 0 {
+        outmask &= caps::OUT_MASK;
+        if outmask & caps::LONG_UNROLL != 0 {
             let (lon12, e) = geomath::ang_diff(lon1, lon2);
             lon2 = (lon1 + lon12) + e;
         } else {
@@ -969,7 +884,7 @@ impl Geodesic {
         result.insert("lat1".to_string(), geomath::lat_fix(lat1));
         result.insert(
             "lon1".to_string(),
-            if outmask & self.LONG_UNROLL != 0 {
+            if outmask & caps::LONG_UNROLL != 0 {
                 lon1
             } else {
                 geomath::ang_normalize(lon1)
@@ -978,21 +893,21 @@ impl Geodesic {
         result.insert("lat2".to_string(), geomath::lat_fix(lat2));
         result.insert("lon2".to_string(), lon2);
         result.insert("a12".to_string(), a12);
-        if outmask & self.DISTANCE != 0 {
+        if outmask & caps::DISTANCE != 0 {
             result.insert("s12".to_string(), s12);
         }
-        if outmask & self.AZIMUTH != 0 {
+        if outmask & caps::AZIMUTH != 0 {
             result.insert("azi1".to_string(), geomath::atan2d(salp1, calp1));
             result.insert("azi2".to_string(), geomath::atan2d(salp2, calp2));
         }
-        if outmask & self.REDUCEDLENGTH != 0 {
+        if outmask & caps::REDUCEDLENGTH != 0 {
             result.insert("m12".to_string(), m12);
         }
-        if outmask & self.GEODESICSCALE != 0 {
+        if outmask & caps::GEODESICSCALE != 0 {
             result.insert("M12".to_string(), M12);
             result.insert("M21".to_string(), M21);
         }
-        if outmask & self.AREA != 0 {
+        if outmask & caps::AREA != 0 {
             result.insert("S12".to_string(), S12);
         }
         result
@@ -1009,7 +924,7 @@ mod tests {
         let geod = Geodesic::new(WGS84_A, WGS84_F);
         assert_eq!(
             *geod
-                .Inverse(0.0, 0.0, 1.0, 1.0, geod.STANDARD)
+                .Inverse(0.0, 0.0, 1.0, 1.0, caps::STANDARD)
                 .get("s12")
                 .expect("HEY"),
             156899.56829134026
@@ -1143,7 +1058,7 @@ mod tests {
             ),
         ];
         for (lat1, lon1, azi1, lat2, lon2, azi2, s12, a12, m12, M12, M21, S12) in testcases {
-            let inv = geod.Inverse(lat1, lon1, lat2, lon2, geod.ALL | geod.LONG_UNROLL);
+            let inv = geod.Inverse(lat1, lon1, lat2, lon2, caps::ALL | caps::LONG_UNROLL);
             assert_approx_eq!(*inv.get("lon2").expect("HEY"), lon2, 1e-13f64);
             assert_approx_eq!(*inv.get("azi1").expect("HEY"), azi1, 1e-13f64);
             assert_approx_eq!(*inv.get("azi2").expect("HEY"), azi2, 1e-13f64);
@@ -1314,7 +1229,7 @@ mod tests {
         ];
 
         for (lat1, lon1, azi1, lat2, lon2, azi2, s12, a12, m12, M12, M21, S12) in testcases {
-            let inv = geod.Inverse(lat1, lon1, lat2, lon2, geod.ALL | geod.LONG_UNROLL);
+            let inv = geod.Inverse(lat1, lon1, lat2, lon2, caps::ALL | caps::LONG_UNROLL);
             assert_approx_eq!(*inv.get("lon2").expect("HEY"), lon2, 1e-13f64);
             assert_approx_eq!(*inv.get("azi1").expect("HEY"), azi1, 1e-13f64);
             assert_approx_eq!(*inv.get("azi2").expect("HEY"), azi2, 1e-13f64);
@@ -1330,7 +1245,7 @@ mod tests {
     #[test]
     fn test_geninverse() {
         let geod = Geodesic::new(WGS84_A, WGS84_F);
-        let res = geod._GenInverse(0.0, 0.0, 1.0, 1.0, &mut geod.STANDARD.clone());
+        let res = geod._GenInverse(0.0, 0.0, 1.0, 1.0, &mut caps::STANDARD.clone());
         assert_eq!(res.0, 1.4141938478710363);
         assert_eq!(res.1, 156899.56829134026);
         assert_eq!(res.2, 0.7094236375834774);
