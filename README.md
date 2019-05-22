@@ -1,5 +1,5 @@
 # geodesic-rs
-A port of geograpchilib in Rust
+A port of geographiclib in Rust
 
 This is still an early stage work in progress, if you need something that works I
 found [these bindings](https://github.com/savage13/geographiclib) to be usable and fast.
@@ -18,15 +18,6 @@ reintroduce them sooner or later.
 # Roadmap
 - [x] Inverse
 - [ ] Direct
-
-Those functions are in the implementation, but I never really used them.
-
-- [ ] ArcDirect (?)
-- [ ] Line (?)
-- [ ] DirectLine (?)
-- [ ] ArcDirectLine (?)
-- [ ] InverseLine (?)
-- [ ] Polygon (?)
 
 # Try it
 If you really want to try it, run
