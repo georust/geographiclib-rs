@@ -9,15 +9,14 @@ I think it will stay like this until the port is complete and fully tested, so t
 
 Then it could be refactored into more idiomatic code, but I'm more concerned about performances.
 
-Right now the inverse algorithm is implemented, but (on my machine) it's 3 times slower than the rust bindings of the C implementation,
+The inverse algorithm is implemented, but (on my machine) it's 3 times slower than the rust bindings of the C implementation,
 and if I want to be able to use it, this should be at least as fast as the bindings. Anyway I think there is room for improvements.
 
-Right now the implementation is missing all the comments, I should be able to
-reintroduce them sooner or later.
+Same for the direct algorithm.
 
 # Roadmap
 - [x] Inverse
-- [ ] Direct
+- [x] Direct
 
 # Try it
 If you really want to try it, run

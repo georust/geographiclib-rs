@@ -1,6 +1,7 @@
 use crate::geodesic;
 use crate::geodesiccapability as caps;
 use crate::geomath;
+use std::collections::HashMap;
 use std::f64::NAN;
 
 #[derive(Debug)]
@@ -46,7 +47,7 @@ pub struct GeodesicLine {
 
 impl GeodesicLine {
     pub fn new(
-        geod: geodesic::Geodesic,
+        geod: &geodesic::Geodesic,
         lat1: f64,
         lon1: f64,
         azi1: f64,
@@ -196,7 +197,7 @@ impl GeodesicLine {
         }
     }
 
-    fn _gen_position(
+    pub fn _gen_position(
         &self,
         arcmode: bool,
         s12_a12: f64,
@@ -211,7 +212,7 @@ impl GeodesicLine {
         let mut M12 = NAN;
         let mut M21 = NAN;
         let mut S12 = NAN;
-        let outmask = outmask & self.caps & caps::OUT_MASK;
+        let outmask = outmask & (self.caps & caps::OUT_MASK);
         if !(arcmode || (self.caps & (caps::OUT_MASK & caps::DISTANCE_IN) != 0)) {
             return (a12, lat2, lon2, azi2, s12, m12, M12, M21, S12);
         }
@@ -254,7 +255,7 @@ impl GeodesicLine {
         };
         ssig2 = self._ssig1 * csig12 + self._csig1 * ssig12;
         csig2 = self._csig1 * csig12 - self._ssig1 * ssig12;
-        let dn2 = (1.0 + self._k2 * ssig2.sqrt()).sqrt();
+        let dn2 = (1.0 + self._k2 * geomath::sq(ssig2)).sqrt();
         if outmask & (caps::DISTANCE | caps::REDUCEDLENGTH | caps::GEODESICSCALE) != 0 {
             if arcmode || self.f.abs() > 0.01 {
                 B12 = geomath::sin_cos_series(true, ssig2, csig2, self._C1a.clone());
@@ -295,12 +296,12 @@ impl GeodesicLine {
                             - self._B31));
             let lon12 = lam12.to_degrees();
             lon2 = if outmask & caps::LONG_UNROLL != 0 {
-                self.lon1 + lon2
+                self.lon1 + lon12
             } else {
                 geomath::ang_normalize(
                     geomath::ang_normalize(self.lon1) + geomath::ang_normalize(lon12),
                 )
-            }
+            };
         };
 
         if outmask & caps::LATITUDE != 0 {
@@ -316,7 +317,7 @@ impl GeodesicLine {
             if outmask & caps::REDUCEDLENGTH != 0 {
                 m12 = self._b
                     * ((dn2 * (self._csig1 * ssig2) - self._dn1 * (self._ssig1 * csig2))
-                        - self._csig1 * csig2 * J12)
+                        - self._csig1 * csig2 * J12);
             }
             if outmask & caps::GEODESICSCALE != 0 {
                 let t =
@@ -340,12 +341,108 @@ impl GeodesicLine {
                     } else {
                         ssig12 * (self._csig1 * ssig12 / (1.0 + csig12) + self._ssig1)
                     });
-                calp12 = self._salp0.sqrt() + self._calp0.sqrt() * self._csig1 * csig2;
+                calp12 = geomath::sq(self._salp0) + geomath::sq(self._calp0) * self._csig1 * csig2;
             }
             S12 = self._c2 * salp12.atan2(calp12) + self._A4 * (B42 - self._B41);
         }
         a12 = if arcmode { s12_a12 } else { sig12.to_degrees() };
         (a12, lat2, lon2, azi2, s12, m12, M12, M21, S12)
+    }
+
+    pub fn Position(&self, s12: f64, outmask: Option<u64>) -> HashMap<String, f64> {
+        let outmask = match outmask {
+            Some(outmask) => outmask,
+            None => caps::STANDARD,
+        };
+        let mut result: HashMap<String, f64> = HashMap::new();
+        result.insert("lat1".to_string(), self.lat1);
+        result.insert("azi1".to_string(), self.azi1);
+        result.insert("s12".to_string(), s12);
+        let lon1 = if outmask & caps::LONG_UNROLL != 0 {
+            self.lon1
+        } else {
+            geomath::ang_normalize(self.lon1)
+        };
+        result.insert("lon1".to_string(), lon1);
+
+        let (a12, lat2, lon2, azi2, s12, m12, M12, M21, S12) =
+            self._gen_position(false, s12, outmask);
+        let outmask = outmask & caps::OUT_MASK;
+        result.insert("a12".to_string(), a12);
+        if outmask & caps::LATITUDE != 0 {
+            result.insert("lat2".to_string(), lat2);
+        }
+        if outmask & caps::LONGITUDE != 0 {
+            result.insert("lon2".to_string(), lon2);
+        }
+        if outmask & caps::AZIMUTH != 0 {
+            result.insert("azi2".to_string(), azi2);
+        }
+        if outmask & caps::REDUCEDLENGTH != 0 {
+            result.insert("m12".to_string(), m12);
+        }
+        if outmask & caps::GEODESICSCALE != 0 {
+            result.insert("M12".to_string(), M12);
+            result.insert("M21".to_string(), M21);
+        }
+        if outmask & caps::AREA != 0 {
+            result.insert("S12".to_string(), S12);
+        }
+        result
+    }
+
+    pub fn ArcPosition(&self, a12: f64, outmask: Option<u64>) -> HashMap<String, f64> {
+        let outmask = match outmask {
+            Some(outmask) => outmask,
+            None => caps::STANDARD,
+        };
+        let mut result: HashMap<String, f64> = HashMap::new();
+        result.insert("lat1".to_string(), self.lat1);
+        result.insert("azi1".to_string(), self.azi1);
+        result.insert("a12".to_string(), a12);
+        let lon1 = if outmask & caps::LONG_UNROLL != 0 {
+            self.lon1
+        } else {
+            geomath::ang_normalize(self.lon1)
+        };
+        result.insert("lon1".to_string(), lon1);
+
+        let (a12, lat2, lon2, azi2, s12, m12, M12, M21, S12) =
+            self._gen_position(true, a12, outmask);
+        let outmask = outmask & caps::OUT_MASK;
+        if outmask & caps::DISTANCE != 0 {
+            result.insert("s12".to_string(), s12);
+        }
+        if outmask & caps::LATITUDE != 0 {
+            result.insert("lat2".to_string(), lat2);
+        }
+        if outmask & caps::LONGITUDE != 0 {
+            result.insert("lon2".to_string(), lon2);
+        }
+        if outmask & caps::AZIMUTH != 0 {
+            result.insert("azi2".to_string(), azi2);
+        }
+        if outmask & caps::REDUCEDLENGTH != 0 {
+            result.insert("m12".to_string(), m12);
+        }
+        if outmask & caps::GEODESICSCALE != 0 {
+            result.insert("M12".to_string(), M12);
+            result.insert("M21".to_string(), M21);
+        }
+        if outmask & caps::AREA != 0 {
+            result.insert("S12".to_string(), S12);
+        }
+        result
+    }
+
+    pub fn SetDistance(&mut self, s13: f64) {
+        self.s13 = s13;
+        self.a13 = self._gen_position(false, self.s13, 0).0;
+    }
+
+    pub fn SetArc(&mut self, a13: f64) {
+        self.a13 = a13;
+        self.s13 = self._gen_position(true, self.a13, caps::DISTANCE).4;
     }
 }
 
@@ -357,7 +454,7 @@ mod tests {
     #[test]
     fn test_gen_position() {
         let geod = Geodesic::new(WGS84_A, WGS84_F);
-        let gl = GeodesicLine::new(geod, 0.0, 0.0, 10.0, None, None, None);
+        let gl = GeodesicLine::new(&geod, 0.0, 0.0, 10.0, None, None, None);
         let res = gl._gen_position(false, 150.0, 3979);
         assert_eq!(res.0, 0.0013520059461334633);
         assert_eq!(res.1, 0.0013359451088740494);
@@ -373,7 +470,7 @@ mod tests {
     #[test]
     fn test_init() {
         let geod = Geodesic::new(WGS84_A, WGS84_F);
-        let gl = GeodesicLine::new(geod, 0.0, 0.0, 0.0, None, None, None);
+        let gl = GeodesicLine::new(&geod, 0.0, 0.0, 0.0, None, None, None);
         assert_eq!(gl.a, 6378137.0);
         assert_eq!(gl.f, 0.0033528106647474805);
         assert_eq!(gl._b, 6356752.314245179);

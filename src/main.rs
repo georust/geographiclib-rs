@@ -13,9 +13,9 @@ fn main() {
     let geod_in_c = geographiclib::Geodesic::wgs84();
 
     let geod2 = geodesic::Geodesic::new(WGS84_A, WGS84_F);
-    let gl = geodesicline::GeodesicLine::new(geod2, 0.0, 0.0, 0.0, None, None, None);
+    let gl = geodesicline::GeodesicLine::new(&geod2, 0.0, 0.0, 0.0, None, None, None);
 
-    let data: Vec<(f64, f64, f64, f64)> = vec![
+    let data = vec![
         (
             55.52454,
             106.05087,
@@ -297,15 +297,13 @@ fn main() {
             -0.51556587964721788,
             104679964020340.318,
         ),
-    ]
-    .iter()
-    .map(|t| (t.0, t.1, t.3, t.4))
-    .collect();
+    ];
+    let inv_data: Vec<(f64, f64, f64, f64)> = data.iter().map(|t| (t.0, t.1, t.3, t.4)).collect();
 
     println!("Running inverse...");
     let start_rs = Instant::now();
     for _ in 0..10000 {
-        for (lat1, lat2, lon1, lon2) in data.iter() {
+        for (lat1, lat2, lon1, lon2) in inv_data.iter() {
             geod.Inverse(*lat1, *lon1, *lat2, *lon2, geodesiccapability::DISTANCE);
         }
     }
@@ -313,8 +311,31 @@ fn main() {
 
     let start_c = Instant::now();
     for _ in 0..10000 {
-        for (lat1, lat2, lon1, lon2) in data.iter() {
+        for (lat1, lat2, lon1, lon2) in inv_data.iter() {
             geod_in_c.inverse(*lat1, *lon1, *lat2, *lon2);
+        }
+    }
+    let elapsed_c = start_c.elapsed().as_millis();
+
+    println!("Rust implementation:  {}ms", elapsed_rs);
+    println!("C bindings:           {}ms", elapsed_c);
+
+    let direct_data: Vec<(f64, f64, f64, f64)> =
+        data.iter().map(|t| (t.0, t.1, t.2, t.6)).collect();
+    println!("");
+    println!("Running direct...");
+    let start_rs = Instant::now();
+    for _ in 0..10000 {
+        for (lat1, lon1, azi1, s12) in direct_data.iter() {
+            geod.Direct(*lat1, *lon1, *azi1, *s12, None);
+        }
+    }
+    let elapsed_rs = start_rs.elapsed().as_millis();
+
+    let start_c = Instant::now();
+    for _ in 0..10000 {
+        for (lat1, lon1, azi1, s12) in direct_data.iter() {
+            geod_in_c.direct(*lat1, *lon1, *azi1, *s12);
         }
     }
     let elapsed_c = start_c.elapsed().as_millis();

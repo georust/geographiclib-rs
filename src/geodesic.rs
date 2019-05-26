@@ -912,6 +912,76 @@ impl Geodesic {
         }
         result
     }
+
+    pub fn _GenDirect(
+        &self,
+        lat1: f64,
+        lon1: f64,
+        azi1: f64,
+        arcmode: bool,
+        s12_a12: f64,
+        outmask: u64,
+    ) -> (f64, f64, f64, f64, f64, f64, f64, f64, f64) {
+        let mut outmask = outmask;
+        // TODO HELP
+        // if !arcmode {
+        //     outmask = outmask | caps::DISTANCE_IN;
+        // };
+        let line =
+            geodesicline::GeodesicLine::new(self, lat1, lon1, azi1, Some(outmask), None, None);
+        line._gen_position(arcmode, s12_a12, outmask)
+    }
+
+    pub fn Direct(
+        &self,
+        lat1: f64,
+        lon1: f64,
+        azi1: f64,
+        s12: f64,
+        outmask: Option<u64>,
+    ) -> HashMap<String, f64> {
+        let mut outmask = match outmask {
+            Some(outmask) => outmask,
+            None => caps::STANDARD,
+        };
+        // TODO IS THIS NEEDED?
+        // outmask &= caps::OUT_MASK;
+        let (a12, lat2, lon2, azi2, s12, m12, M12, M21, S12) =
+            self._GenDirect(lat1, lon1, azi1, false, s12, outmask);
+        let mut result: HashMap<String, f64> = HashMap::new();
+        result.insert("lat1".to_string(), geomath::lat_fix(lat1));
+        result.insert(
+            "lon1".to_string(),
+            if outmask & caps::LONG_UNROLL != 0 {
+                lon1
+            } else {
+                geomath::ang_normalize(lon1)
+            },
+        );
+        result.insert("azi1".to_string(), geomath::lat_fix(azi1));
+        result.insert("s12".to_string(), s12);
+        result.insert("a12".to_string(), a12);
+        if outmask & caps::LATITUDE != 0 {
+            result.insert("lat2".to_string(), lat2);
+        }
+        if outmask & caps::LONGITUDE != 0 {
+            result.insert("lon2".to_string(), lon2);
+        }
+        if outmask & caps::AZIMUTH != 0 {
+            result.insert("azi2".to_string(), azi2);
+        }
+        if outmask & caps::REDUCEDLENGTH != 0 {
+            result.insert("m12".to_string(), m12);
+        }
+        if outmask & caps::GEODESICSCALE != 0 {
+            result.insert("M12".to_string(), M12);
+            result.insert("M21".to_string(), M21);
+        }
+        if outmask & caps::AREA != 0 {
+            result.insert("S12".to_string(), S12);
+        }
+        result
+    }
 }
 
 #[cfg(test)]
@@ -1056,21 +1126,6 @@ mod tests {
                 0.09737058264766572,
                 74515122850712.444,
             ),
-        ];
-        for (lat1, lon1, azi1, lat2, lon2, azi2, s12, a12, m12, M12, M21, S12) in testcases {
-            let inv = geod.Inverse(lat1, lon1, lat2, lon2, caps::ALL | caps::LONG_UNROLL);
-            assert_approx_eq!(*inv.get("lon2").expect("HEY"), lon2, 1e-13f64);
-            assert_approx_eq!(*inv.get("azi1").expect("HEY"), azi1, 1e-13f64);
-            assert_approx_eq!(*inv.get("azi2").expect("HEY"), azi2, 1e-13f64);
-            assert_approx_eq!(*inv.get("s12").expect("HEY"), s12, 1e-8f64);
-            assert_approx_eq!(*inv.get("a12").expect("HEY"), a12, 1e-13f64);
-            assert_approx_eq!(*inv.get("m12").expect("HEY"), m12, 1e-8f64);
-            assert_approx_eq!(*inv.get("M12").expect("HEY"), M12, 1e-15f64);
-            assert_approx_eq!(*inv.get("M21").expect("HEY"), M21, 1e-15f64);
-            assert_approx_eq!(*inv.get("S12").expect("HEY"), S12, 0.1f64);
-        }
-
-        let testcases = vec![
             (
                 35.60777,
                 -139.44815,
@@ -1228,8 +1283,8 @@ mod tests {
             ),
         ];
 
-        for (lat1, lon1, azi1, lat2, lon2, azi2, s12, a12, m12, M12, M21, S12) in testcases {
-            let inv = geod.Inverse(lat1, lon1, lat2, lon2, caps::ALL | caps::LONG_UNROLL);
+        for (lat1, lon1, azi1, lat2, lon2, azi2, s12, a12, m12, M12, M21, S12) in testcases.iter() {
+            let inv = geod.Inverse(*lat1, *lon1, *lat2, *lon2, caps::ALL | caps::LONG_UNROLL);
             assert_approx_eq!(*inv.get("lon2").expect("HEY"), lon2, 1e-13f64);
             assert_approx_eq!(*inv.get("azi1").expect("HEY"), azi1, 1e-13f64);
             assert_approx_eq!(*inv.get("azi2").expect("HEY"), azi2, 1e-13f64);
@@ -1239,6 +1294,25 @@ mod tests {
             assert_approx_eq!(*inv.get("M12").expect("HEY"), M12, 1e-15f64);
             assert_approx_eq!(*inv.get("M21").expect("HEY"), M21, 1e-15f64);
             assert_approx_eq!(*inv.get("S12").expect("HEY"), S12, 0.1f64);
+        }
+        // Also test direct
+        let mut count = 0;
+        for (lat1, lon1, azi1, lat2, lon2, azi2, s12, a12, m12, M12, M21, S12) in testcases.iter() {
+            let fwd = geod.Direct(
+                *lat1,
+                *lon1,
+                *azi1,
+                *s12,
+                Some(caps::ALL | caps::LONG_UNROLL),
+            );
+            assert_approx_eq!(*fwd.get("lat2").expect("HEY"), lat2, 1e-13f64);
+            assert_approx_eq!(*fwd.get("lon2").expect("HEY"), lon2, 1e-13f64);
+            assert_approx_eq!(*fwd.get("azi2").expect("HEY"), azi2, 1e-13f64);
+            assert_approx_eq!(*fwd.get("a12").expect("HEY"), a12, 1e-13f64);
+            assert_approx_eq!(*fwd.get("m12").expect("HEY"), m12, 1e-8f64);
+            assert_approx_eq!(*fwd.get("M12").expect("HEY"), M12, 1e-15f64);
+            assert_approx_eq!(*fwd.get("M21").expect("HEY"), M21, 1e-15f64);
+            assert_approx_eq!(*fwd.get("S12").expect("HEY"), S12, 0.1f64);
         }
     }
 
