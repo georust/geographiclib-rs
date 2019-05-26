@@ -1,6 +1,7 @@
 from geodesic import Geodesic
 from geomath import Math
-print(Math.sincosd(-77.03196))
+Geodesic.WGS84.Direct(0, 0, 10, 150)
+# print(Math.sincosd(-77.03196))
 # print(Geodesic.WGS84.Inverse(55.52454, 106.05087, 77.03196, 197.18234,Geodesic.ALL | Geodesic.LONG_UNROLL))
 # Geodesic.WGS84._Lengths(
 #             0.0007122620325664751,

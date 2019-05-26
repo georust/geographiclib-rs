@@ -3,10 +3,16 @@ import math
 from geodesiccapability import GeodesicCapability
 from geomath import Math
 
+def print_args_and_res(func):
+    def wrapper(*args, **kwargs):
+        print("args: ", *args[1:])
+        res = func(*args, **kwargs)
+        print("res: ", res)
+        return res
+    return wrapper
 
 class GeodesicLine(object):
     """Points on a geodesic path"""
-
     def __init__(
         self,
         geod,
@@ -143,6 +149,7 @@ class GeodesicLine(object):
         """the arc length between point 1 and point 3 in degrees (readonly)"""
         self.a13 = Math.NAN
 
+    @print_args_and_res
     def _gen_position(self, arcmode, s12_a12, outmask):
         """Private: General solution of position along geodesic"""
         from geodesic import Geodesic

@@ -6,7 +6,7 @@ pub fn get_epsilon() -> f64 {
 }
 
 pub fn get_min_val() -> f64 {
-    TWO.powi(1023) * (2.0 - TWO.powi(1 - DIGITS as i32))
+    TWO.powi(-1022)
 }
 
 pub fn get_max_val() -> f64 {

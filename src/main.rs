@@ -12,6 +12,9 @@ fn main() {
     let geod = geodesic::Geodesic::new(WGS84_A, WGS84_F);
     let geod_in_c = geographiclib::Geodesic::wgs84();
 
+    let geod2 = geodesic::Geodesic::new(WGS84_A, WGS84_F);
+    let gl = geodesicline::GeodesicLine::new(geod2, 0.0, 0.0, 0.0, None, None, None);
+
     let data: Vec<(f64, f64, f64, f64)> = vec![
         (
             55.52454,

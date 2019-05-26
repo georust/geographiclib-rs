@@ -1,9 +1,11 @@
 use crate::geodesic;
 use crate::geodesiccapability as caps;
 use crate::geomath;
+use std::f64::NAN;
 
 #[derive(Debug)]
-struct GeodesicLine {
+pub struct GeodesicLine {
+    tiny_: f64, // This should be moved to consts
     _A1m1: f64,
     _A2m1: f64,
     _A3c: f64,
@@ -48,10 +50,26 @@ impl GeodesicLine {
         lat1: f64,
         lon1: f64,
         azi1: f64,
-        caps: u64,
-        salp1: f64,
-        calp1: f64,
+        caps: Option<u64>,
+        salp1: Option<f64>,
+        calp1: Option<f64>,
     ) -> Self {
+        let caps = match caps {
+            None => caps::STANDARD | caps::DISTANCE_IN,
+            Some(caps) => caps,
+        };
+        let salp1 = match salp1 {
+            None => NAN,
+            Some(salp1) => salp1,
+        };
+        let calp1 = match calp1 {
+            None => NAN,
+            Some(calp1) => calp1,
+        };
+
+        // This was taken from geodesic, putting it here for convenience
+        let tiny_ = geomath::get_min_val().sqrt();
+
         let a = geod.a;
         let f = geod.f;
         let _b = geod._b;
@@ -61,8 +79,9 @@ impl GeodesicLine {
         let lat1 = geomath::lat_fix(lat1);
         let lon1 = lon1;
         let (azi1, salp1, calp1) = if salp1.is_nan() || calp1.is_nan() {
-            let res = geomath::sincosd(geomath::ang_round(azi1));
-            (geomath::ang_normalize(azi1), res.0, res.1)
+            let (salp1, calp1) = geomath::sincosd(geomath::ang_round(azi1));
+            let azi1 = geomath::ang_normalize(azi1);
+            (azi1, salp1, calp1)
         } else {
             (azi1, salp1, calp1)
         };
@@ -70,7 +89,7 @@ impl GeodesicLine {
         let (mut sbet1, cbet1) = geomath::sincosd(geomath::ang_round(lat1));
         sbet1 *= _f1;
         let (sbet1, mut cbet1) = geomath::norm(sbet1, cbet1);
-        cbet1 = geod.tiny_.max(cbet1);
+        cbet1 = tiny_.max(cbet1);
         let _dn1 = (1.0 + geod._ep2 * geomath::sq(sbet1)).sqrt();
         let _salp0 = salp1 * cbet1;
         let _calp0 = calp1.hypot(salp1 * sbet1);
@@ -87,7 +106,7 @@ impl GeodesicLine {
         let eps = _k2 / (2.0 * (1.0 + (1.0 + _k2).sqrt()) + _k2);
 
         let mut _A1m1 = 0.0;
-        let mut _C1a = (0..geod.GEODESIC_ORDER).map(|x| x as f64).collect();
+        let mut _C1a = (0..=geod.GEODESIC_ORDER).map(|x| x as f64).collect();
         let mut _B11 = 0.0;
         let mut _stau1 = 0.0;
         let mut _ctau1 = 0.0;
@@ -137,6 +156,7 @@ impl GeodesicLine {
         let a13 = std::f64::NAN;
 
         GeodesicLine {
+            tiny_,
             _A1m1,
             _A2m1,
             _A3c,
@@ -175,6 +195,158 @@ impl GeodesicLine {
             salp1,
         }
     }
+
+    fn _gen_position(
+        &self,
+        arcmode: bool,
+        s12_a12: f64,
+        outmask: u64,
+    ) -> (f64, f64, f64, f64, f64, f64, f64, f64, f64) {
+        let mut a12 = NAN;
+        let mut lat2 = NAN;
+        let mut lon2 = NAN;
+        let mut azi2 = NAN;
+        let mut s12 = NAN;
+        let mut m12 = NAN;
+        let mut M12 = NAN;
+        let mut M21 = NAN;
+        let mut S12 = NAN;
+        let outmask = outmask & self.caps & caps::OUT_MASK;
+        if !(arcmode || (self.caps & (caps::OUT_MASK & caps::DISTANCE_IN) != 0)) {
+            return (a12, lat2, lon2, azi2, s12, m12, M12, M21, S12);
+        }
+
+        let mut B12 = 0.0;
+        let mut AB1 = 0.0;
+        let mut sig12 = 0.0;
+        let mut ssig12 = 0.0;
+        let mut csig12 = 0.0;
+        let mut ssig2 = 0.0;
+        let mut csig2 = 0.0;
+        if arcmode {
+            sig12 = s12_a12.to_radians();
+            let res = geomath::sincosd(s12_a12);
+            ssig12 = res.0;
+            csig12 = res.0;
+        } else {
+            let tau12 = s12_a12 / (self._b * (1.0 + self._A1m1));
+            let s = tau12.sin();
+            let c = tau12.cos();
+
+            B12 = -geomath::sin_cos_series(
+                true,
+                self._stau1 * c + self._ctau1 * s,
+                self._ctau1 * c - self._stau1 * s,
+                self._C1pa.clone(),
+            );
+            sig12 = tau12 - (B12 - self._B11);
+            ssig12 = sig12.sin();
+            csig12 = sig12.cos();
+            if self.f.abs() > 0.01 {
+                ssig2 = self._ssig1 * csig12 + self._csig1 * ssig12;
+                csig2 = self._csig1 * csig12 - self._ssig1 * ssig12;
+                B12 = geomath::sin_cos_series(true, ssig2, csig2, self._C1a.clone());
+                let serr = (1.0 + self._A1m1) * (sig12 + (B12 - self._B11)) - s12_a12 / self._b;
+                sig12 = sig12 - serr / (1.0 + self._k2 * ssig2.sqrt()).sqrt();
+                ssig12 = sig12.sin();
+                csig12 = sig12.cos();
+            }
+        };
+        ssig2 = self._ssig1 * csig12 + self._csig1 * ssig12;
+        csig2 = self._csig1 * csig12 - self._ssig1 * ssig12;
+        let dn2 = (1.0 + self._k2 * ssig2.sqrt()).sqrt();
+        if outmask & (caps::DISTANCE | caps::REDUCEDLENGTH | caps::GEODESICSCALE) != 0 {
+            if arcmode || self.f.abs() > 0.01 {
+                B12 = geomath::sin_cos_series(true, ssig2, csig2, self._C1a.clone());
+            }
+            AB1 = (1.0 + self._A1m1) * (B12 - self._B11);
+        }
+
+        let sbet2 = self._calp0 * ssig2;
+        let mut cbet2 = self._salp0.hypot(self._calp0 * csig2);
+        if cbet2 == 0.0 {
+            cbet2 = self.tiny_;
+            csig2 = self.tiny_;
+        }
+        let salp2 = self._salp0;
+        let calp2 = self._calp0 * csig2;
+        if outmask & caps::DISTANCE != 0 {
+            s12 = if arcmode {
+                self._b * ((1.0 + self._A1m1) * sig12 + AB1)
+            } else {
+                s12_a12
+            }
+        }
+        if outmask & caps::LONGITUDE != 0 {
+            let somg2 = self._salp0 * ssig2;
+            let comg2 = csig2;
+            let E = (1.0 as f64).copysign(self._salp0);
+            let omg12 = if outmask & caps::LONG_UNROLL != 0 {
+                E * (sig12 - (ssig2.atan2(csig2) - self._ssig1.atan2(self._csig1))
+                    + ((E * somg2).atan2(comg2) - (E * self._somg1).atan2(self._comg1)))
+            } else {
+                (somg2 * self._comg1 - comg2 * self._somg1)
+                    .atan2(comg2 * self._comg1 + somg2 * self._somg1)
+            };
+            let lam12 = omg12
+                + self._A3c
+                    * (sig12
+                        + (geomath::sin_cos_series(true, ssig2, csig2, self._C3a.clone())
+                            - self._B31));
+            let lon12 = lam12.to_degrees();
+            lon2 = if outmask & caps::LONG_UNROLL != 0 {
+                self.lon1 + lon2
+            } else {
+                geomath::ang_normalize(
+                    geomath::ang_normalize(self.lon1) + geomath::ang_normalize(lon12),
+                )
+            }
+        };
+
+        if outmask & caps::LATITUDE != 0 {
+            lat2 = geomath::atan2d(sbet2, self._f1 * cbet2);
+        }
+        if outmask & caps::AZIMUTH != 0 {
+            azi2 = geomath::atan2d(salp2, calp2);
+        }
+        if outmask & (caps::REDUCEDLENGTH | caps::GEODESICSCALE) != 0 {
+            let B22 = geomath::sin_cos_series(true, ssig2, csig2, self._C2a.clone());
+            let AB2 = (1.0 + self._A2m1) * (B22 - self._B21);
+            let J12 = (self._A1m1 - self._A2m1) * sig12 + (AB1 - AB2);
+            if outmask & caps::REDUCEDLENGTH != 0 {
+                m12 = self._b
+                    * ((dn2 * (self._csig1 * ssig2) - self._dn1 * (self._ssig1 * csig2))
+                        - self._csig1 * csig2 * J12)
+            }
+            if outmask & caps::GEODESICSCALE != 0 {
+                let t =
+                    self._k2 * (ssig2 - self._ssig1) * (ssig2 + self._ssig1) / (self._dn1 + dn2);
+                M12 = csig12 + (t * ssig2 - csig2 * J12) * self._ssig1 / self._dn1;
+                M21 = csig12 - (t * self._ssig1 - self._csig1 * J12) * ssig2 / dn2;
+            }
+        }
+        if outmask & caps::AREA != 0 {
+            let B42 = geomath::sin_cos_series(false, ssig2, csig2, self._C4a.clone());
+            let mut salp12 = 0.0;
+            let mut calp12 = 0.0;
+            if self._calp0 == 0.0 || self._salp0 == 0.0 {
+                salp12 = salp2 * self.calp1 - calp2 * self.salp1;
+                calp12 = calp2 * self.calp1 + salp2 * self.salp1;
+            } else {
+                salp12 = self._calp0
+                    * self._salp0
+                    * (if csig12 <= 0.0 {
+                        self._csig1 * (1.0 - csig12) + ssig12 * self._ssig1
+                    } else {
+                        ssig12 * (self._csig1 * ssig12 / (1.0 + csig12) + self._ssig1)
+                    });
+                calp12 = self._salp0.sqrt() + self._calp0.sqrt() * self._csig1 * csig2;
+            }
+            S12 = self._c2 * salp12.atan2(calp12) + self._A4 * (B42 - self._B41);
+        }
+        a12 = if arcmode { s12_a12 } else { sig12.to_degrees() };
+        (a12, lat2, lon2, azi2, s12, m12, M12, M21, S12)
+    }
 }
 
 #[cfg(test)]
@@ -183,9 +355,25 @@ mod tests {
     use geodesic::{Geodesic, WGS84_A, WGS84_F};
 
     #[test]
+    fn test_gen_position() {
+        let geod = Geodesic::new(WGS84_A, WGS84_F);
+        let gl = GeodesicLine::new(geod, 0.0, 0.0, 10.0, None, None, None);
+        let res = gl._gen_position(false, 150.0, 3979);
+        assert_eq!(res.0, 0.0013520059461334633);
+        assert_eq!(res.1, 0.0013359451088740494);
+        assert_eq!(res.2, 0.00023398621812867812);
+        assert_eq!(res.3, 10.000000002727887);
+        assert_eq!(res.4, 150.0);
+        assert_eq!(res.5.is_nan(), true);
+        assert_eq!(res.6.is_nan(), true);
+        assert_eq!(res.7.is_nan(), true);
+        assert_eq!(res.8.is_nan(), true);
+    }
+
+    #[test]
     fn test_init() {
         let geod = Geodesic::new(WGS84_A, WGS84_F);
-        let gl = GeodesicLine::new(geod, 0.0, 0.0, 0.0, 0, 0.0, 0.0);
+        let gl = GeodesicLine::new(geod, 0.0, 0.0, 0.0, None, None, None);
         assert_eq!(gl.a, 6378137.0);
         assert_eq!(gl.f, 0.0033528106647474805);
         assert_eq!(gl._b, 6356752.314245179);
