@@ -9,10 +9,6 @@ This is a 1:1 port of the python implementation, which strictly resembles the C+
 Both the `inverse` and `direct` algorithms are implemented, but they seems to be 3 times slower than the rust bindings
 of the C implementation on my machine, but I think there is room for improvements.
 
-# Roadmap
-- [x] Inverse
-- [x] Direct
-
 # Try it
 Since this is mostly a proof of work, the `main.rs` just runs both the
 aforementioned geographiclib bindings and the ones implemented in this crate a lot of times with the same parameters,
@@ -24,4 +20,5 @@ cargo run --release
 ```
 
 Results on my pc:
+
 ![Screenshot](images/bench.png)
