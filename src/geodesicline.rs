@@ -219,11 +219,11 @@ impl GeodesicLine {
 
         let mut B12 = 0.0;
         let mut AB1 = 0.0;
-        let mut sig12 = 0.0;
-        let mut ssig12 = 0.0;
-        let mut csig12 = 0.0;
-        let mut ssig2 = 0.0;
-        let mut csig2 = 0.0;
+        let mut sig12: f64;
+        let mut ssig12: f64;
+        let mut csig12: f64;
+        let mut ssig2: f64;
+        let mut csig2: f64;
         if arcmode {
             sig12 = s12_a12.to_radians();
             let res = geomath::sincosd(s12_a12);
@@ -328,8 +328,8 @@ impl GeodesicLine {
         }
         if outmask & caps::AREA != 0 {
             let B42 = geomath::sin_cos_series(false, ssig2, csig2, self._C4a.clone());
-            let mut salp12 = 0.0;
-            let mut calp12 = 0.0;
+            let salp12: f64;
+            let calp12: f64;
             if self._calp0 == 0.0 || self._salp0 == 0.0 {
                 salp12 = salp2 * self.calp1 - calp2 * self.salp1;
                 calp12 = calp2 * self.calp1 + salp2 * self.salp1;
@@ -365,7 +365,7 @@ impl GeodesicLine {
         };
         result.insert("lon1".to_string(), lon1);
 
-        let (a12, lat2, lon2, azi2, s12, m12, M12, M21, S12) =
+        let (a12, lat2, lon2, azi2, _s12, m12, M12, M21, S12) =
             self._gen_position(false, s12, outmask);
         let outmask = outmask & caps::OUT_MASK;
         result.insert("a12".to_string(), a12);

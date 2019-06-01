@@ -277,8 +277,8 @@ impl Geodesic {
         let mut calp2 = std::f64::NAN;
         let mut dnm = std::f64::NAN;
 
-        let mut somg12 = 0.0;
-        let mut comg12 = 0.0;
+        let mut somg12: f64;
+        let mut comg12: f64;
 
         let sbet12 = sbet2 * cbet1 - cbet2 * sbet1;
         let cbet12 = cbet2 * cbet1 + sbet2 * sbet1;
@@ -330,10 +330,10 @@ impl Geodesic {
             || ssig12 >= 6.0 * self._n.abs() * PI * geomath::sq(cbet1)
         {
         } else {
-            let mut x = 0.0;
-            let mut y = 0.0;
-            let mut betscale = 0.0;
-            let mut lamscale = 0.0;
+            let x: f64;
+            let y: f64;
+            let betscale: f64;
+            let lamscale: f64;
             let lam12x = (-slam12).atan2(-clam12);
             if self.f >= 0.0 {
                 let k2 = geomath::sq(sbet1) * self._ep2;
@@ -468,7 +468,7 @@ impl Geodesic {
         let domg12 = -self.f * self._A3f(eps) * salp0 * (sig12 + B312);
         let lam12 = eta + domg12;
 
-        let mut dlam12 = 0.0;
+        let mut dlam12: f64;
         if diffp {
             if calp2 == 0.0 {
                 dlam12 = -2.0 * self._f1 * dn1 / sbet1;
@@ -523,8 +523,8 @@ impl Geodesic {
         lon12 = lonsign * geomath::ang_round(lon12);
         lon12s = geomath::ang_round((180.0 - lon12) - lonsign * lon12s);
         let lam12 = lon12.to_radians();
-        let mut slam12 = 0.0;
-        let mut clam12 = 0.0;
+        let slam12: f64;
+        let mut clam12: f64;
         if lon12 > 90.0 {
             let res = geomath::sincosd(lon12s);
             slam12 = res.0;
@@ -552,10 +552,10 @@ impl Geodesic {
         let (mut sbet1, cbet1) = geomath::sincosd(lat1);
         sbet1 *= self._f1;
 
-        let (mut sbet1, mut cbet1) = geomath::norm(sbet1, cbet1);
+        let (sbet1, mut cbet1) = geomath::norm(sbet1, cbet1);
         cbet1 = cbet1.max(self.tiny_);
 
-        let (mut sbet2, mut cbet2) = geomath::sincosd(lat2);
+        let (mut sbet2, cbet2) = geomath::sincosd(lat2);
         sbet2 *= self._f1;
 
         let (mut sbet2, mut cbet2) = geomath::norm(sbet2, cbet2);
@@ -587,7 +587,7 @@ impl Geodesic {
         let mut csig1 = 0.0;
         let mut ssig2 = 0.0;
         let mut csig2 = 0.0;
-        let mut sig12 = 0.0;
+        let mut sig12: f64;
         let mut s12x = 0.0;
         let mut m12x = 0.0;
 
@@ -640,7 +640,7 @@ impl Geodesic {
         let mut somg12 = 2.0;
         let mut comg12 = 0.0;
         let mut omg12 = 0.0;
-        let mut dnm = 0.0;
+        let dnm: f64;
         let mut eps = 0.0;
         if !meridian && sbet1 == 0.0 && (self.f <= 0.0 || lon12s >= self.f * 180.0) {
             calp1 = 0.0;
@@ -814,7 +814,7 @@ impl Geodesic {
                 comg12 = omg12.cos();
             }
 
-            let mut alp12 = 0.0;
+            let alp12: f64;
             if !meridian && comg12 > -0.7071 && sbet2 - sbet1 < 1.75 {
                 let domg12 = 1.0 + comg12;
                 let dbet1 = 1.0 + cbet1;
@@ -865,8 +865,6 @@ impl Geodesic {
         lon2: f64,
         outmask: u64,
     ) -> HashMap<String, f64> {
-        let mut lat1 = lat1;
-        let mut lat2 = lat2;
         let mut outmask = outmask;
         let (a12, s12, salp1, calp1, salp2, calp2, m12, M12, M21, S12) =
             self._GenInverse(lat1, lon1, lat2, lon2, &mut outmask);
@@ -922,8 +920,9 @@ impl Geodesic {
         s12_a12: f64,
         outmask: u64,
     ) -> (f64, f64, f64, f64, f64, f64, f64, f64, f64) {
-        let mut outmask = outmask;
-        // TODO HELP
+        // TODO This operation in python does not change the outmask,
+        //      while it does change it in Rust, so maybe all the operations
+        //      that modifies the outmask should be double checked
         // if !arcmode {
         //     outmask = outmask | caps::DISTANCE_IN;
         // };
@@ -940,7 +939,7 @@ impl Geodesic {
         s12: f64,
         outmask: Option<u64>,
     ) -> HashMap<String, f64> {
-        let mut outmask = match outmask {
+        let outmask = match outmask {
             Some(outmask) => outmask,
             None => caps::STANDARD,
         };
@@ -990,13 +989,14 @@ mod tests {
     use assert_approx_eq::assert_approx_eq;
 
     #[test]
-    fn test_inverse() {
+    fn test_inverse_and_direct() -> Result<(), String> {
+        // See python/test_geodesic.py
         let geod = Geodesic::new(WGS84_A, WGS84_F);
         assert_eq!(
             *geod
                 .Inverse(0.0, 0.0, 1.0, 1.0, caps::STANDARD)
                 .get("s12")
-                .expect("HEY"),
+                .ok_or_else(|| "No s12 in Inverse response!".to_string())?,
             156899.56829134026
         );
         let testcases = vec![
@@ -1296,7 +1296,6 @@ mod tests {
             assert_approx_eq!(*inv.get("S12").expect("HEY"), S12, 0.1f64);
         }
         // Also test direct
-        let mut count = 0;
         for (lat1, lon1, azi1, lat2, lon2, azi2, s12, a12, m12, M12, M21, S12) in testcases.iter() {
             let fwd = geod.Direct(
                 *lat1,
@@ -1314,6 +1313,7 @@ mod tests {
             assert_approx_eq!(*fwd.get("M21").expect("HEY"), M21, 1e-15f64);
             assert_approx_eq!(*fwd.get("S12").expect("HEY"), S12, 0.1f64);
         }
+        Ok(())
     }
 
     #[test]

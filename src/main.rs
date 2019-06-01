@@ -6,6 +6,7 @@ use geographiclib;
 
 use std::time::{Duration, Instant};
 
+/* Since this is mostly a proof of work, I just do manual benchmarking here */
 fn main() {
     const WGS84_A: f64 = 6378137.0;
     const WGS84_F: f64 = 1.0 / 298.257223563;
