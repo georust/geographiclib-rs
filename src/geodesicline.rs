@@ -390,60 +390,6 @@ impl GeodesicLine {
         }
         result
     }
-
-    pub fn ArcPosition(&self, a12: f64, outmask: Option<u64>) -> HashMap<String, f64> {
-        let outmask = match outmask {
-            Some(outmask) => outmask,
-            None => caps::STANDARD,
-        };
-        let mut result: HashMap<String, f64> = HashMap::new();
-        result.insert("lat1".to_string(), self.lat1);
-        result.insert("azi1".to_string(), self.azi1);
-        result.insert("a12".to_string(), a12);
-        let lon1 = if outmask & caps::LONG_UNROLL != 0 {
-            self.lon1
-        } else {
-            geomath::ang_normalize(self.lon1)
-        };
-        result.insert("lon1".to_string(), lon1);
-
-        let (a12, lat2, lon2, azi2, s12, m12, M12, M21, S12) =
-            self._gen_position(true, a12, outmask);
-        let outmask = outmask & caps::OUT_MASK;
-        if outmask & caps::DISTANCE != 0 {
-            result.insert("s12".to_string(), s12);
-        }
-        if outmask & caps::LATITUDE != 0 {
-            result.insert("lat2".to_string(), lat2);
-        }
-        if outmask & caps::LONGITUDE != 0 {
-            result.insert("lon2".to_string(), lon2);
-        }
-        if outmask & caps::AZIMUTH != 0 {
-            result.insert("azi2".to_string(), azi2);
-        }
-        if outmask & caps::REDUCEDLENGTH != 0 {
-            result.insert("m12".to_string(), m12);
-        }
-        if outmask & caps::GEODESICSCALE != 0 {
-            result.insert("M12".to_string(), M12);
-            result.insert("M21".to_string(), M21);
-        }
-        if outmask & caps::AREA != 0 {
-            result.insert("S12".to_string(), S12);
-        }
-        result
-    }
-
-    pub fn SetDistance(&mut self, s13: f64) {
-        self.s13 = s13;
-        self.a13 = self._gen_position(false, self.s13, 0).0;
-    }
-
-    pub fn SetArc(&mut self, a13: f64) {
-        self.a13 = a13;
-        self.s13 = self._gen_position(true, self.a13, caps::DISTANCE).4;
-    }
 }
 
 #[cfg(test)]
