@@ -6,7 +6,7 @@ found [these bindings](https://github.com/savage13/geographiclib) to be usable a
 
 This is a 1:1 port of the python implementation, which strictly resembles the C++ one, but it's more readable for me.
 
-Both the `inverse` and `direct` algorithms are implemented, but they seems to be 3 times slower than the rust bindings
+Both the `inverse` and `direct` algorithms are implemented, but they seem to be 3 times slower than the rust bindings
 of the C implementation on my machine, but I think there is room for improvements.
 
 # Try it
