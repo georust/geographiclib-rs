@@ -1,5 +1,5 @@
 # geodesic-rs
-A port of geographiclib in Rust
+A port of [geographiclib](https://geographiclib.sourceforge.io/) in Rust
 
 This is still an early stage work in progress, if you need something that works I
 found [these bindings](https://github.com/savage13/geographiclib) to be usable and fast.
