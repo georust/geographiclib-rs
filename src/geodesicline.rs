@@ -1,3 +1,5 @@
+#![allow(non_snake_case)]
+
 use crate::geodesic;
 use crate::geodesiccapability as caps;
 use crate::geomath;

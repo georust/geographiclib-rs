@@ -1,3 +1,5 @@
+#![allow(non_snake_case)]
+
 pub const DIGITS: u64 = 53;
 pub const TWO: f64 = 2.0;
 
