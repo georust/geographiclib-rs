@@ -422,20 +422,20 @@ mod tests {
         assert_eq!(gl._b, 6356752.314245179);
         assert_eq!(gl._c2, 40589732499314.76);
         assert_eq!(gl._f1, 0.9966471893352525);
-        assert_eq!(gl.caps, 33408);
+        assert_eq!(gl.caps, 36747);
         assert_eq!(gl.lat1, 0.0);
         assert_eq!(gl.lon1, 0.0);
         assert_eq!(gl.azi1, 0.0);
         assert_eq!(gl.salp1, 0.0);
-        assert_eq!(gl.calp1, 0.0);
+        assert_eq!(gl.calp1, 1.0);
         assert_eq!(gl._dn1, 1.0);
         assert_eq!(gl._salp0, 0.0);
-        assert_eq!(gl._calp0, 0.0);
+        assert_eq!(gl._calp0, 1.0);
         assert_eq!(gl._ssig1, 0.0);
         assert_eq!(gl._somg1, 0.0);
         assert_eq!(gl._csig1, 1.0);
         assert_eq!(gl._comg1, 1.0);
-        assert_eq!(gl._k2, 0.0);
+        assert_eq!(gl._k2, geod._ep2);
         assert_eq!(gl.s13.is_nan(), true);
         assert_eq!(gl.a13.is_nan(), true);
     }

@@ -1349,8 +1349,8 @@ mod tests {
             &mut vec![0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0],
         );
         assert_eq!(res.0, -1.0);
-        assert_eq!(res.1, 0.7095310092765433);
-        assert_eq!(res.2, 0.7046742132893822);
+        assert_approx_eq!(res.1, 0.7095310092765433, 1e-13);
+        assert_approx_eq!(res.2, 0.7046742132893822, 1e-13);
         assert_eq!(res.3.is_nan(), true);
         assert_eq!(res.4.is_nan(), true);
         assert_eq!(res.5, 1.0000002548969817);
@@ -1369,8 +1369,8 @@ mod tests {
             &mut vec![0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0],
         );
         assert_eq!(res.0, -1.0);
-        assert_eq!(res.1, 0.7095310092765433);
-        assert_eq!(res.2, 0.7046742132893822);
+        assert_approx_eq!(res.1, 0.7095310092765433, 1e-13);
+        assert_approx_eq!(res.2, 0.7046742132893822, 1e-13);
         assert_eq!(res.3.is_nan(), true);
         assert_eq!(res.4.is_nan(), true);
         assert_eq!(res.5, 1.0000002548969817);
@@ -1403,7 +1403,7 @@ mod tests {
         assert_eq!(res1.5, 0.9996954065111039);
         assert_eq!(res1.6, -0.0);
         assert_eq!(res1.7, 1.0);
-        assert_eq!(res1.8, 0.0008355095326524276);
+        assert_approx_eq!(res1.8, 0.0008355095326524276, 1e-13);
         assert_eq!(res1.9, -5.8708496511415445e-05);
         assert_eq!(res1.10, 0.034900275148485);
 
