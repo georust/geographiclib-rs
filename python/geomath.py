@@ -83,7 +83,7 @@ class Math:
 
 
     @staticmethod
-    def ang_normalize(x):
+    def AngNormalize(x):
         """reduce angle to (-180,180]"""
 
         y = math.fmod(x, 360)
@@ -105,8 +105,8 @@ class Math:
     def ang_diff(x, y):
         """compute y - x and reduce to [-180,180] accurately"""
 
-        d, t = Math.sum(Math.ang_normalize(-x), Math.ang_normalize(y))
-        d = Math.ang_normalize(d)
+        d, t = Math.sum(Math.AngNormalize(-x), Math.AngNormalize(y))
+        d = Math.AngNormalize(d)
         return Math.sum(-180 if d == 180 and t > 0 else d, t)
 
 

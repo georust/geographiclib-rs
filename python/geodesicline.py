@@ -56,7 +56,7 @@ class GeodesicLine(object):
         # the longitude of the first point in degrees (readonly)
         self.lon1 = lon1
         if math.isnan(salp1) or math.isnan(calp1):
-            self.azi1 = Math.ang_normalize(azi1)
+            self.azi1 = Math.AngNormalize(azi1)
             self.salp1, self.calp1 = Math.sincosd(Math.ang_round(azi1))
         else:
             # the azimuth at the first point in degrees (readonly)
@@ -271,8 +271,8 @@ class GeodesicLine(object):
             lon2 = (
                 self.lon1 + lon12
                 if outmask & Geodesic.LONG_UNROLL
-                else Math.ang_normalize(
-                    Math.ang_normalize(self.lon1) + Math.ang_normalize(lon12)
+                else Math.AngNormalize(
+                    Math.AngNormalize(self.lon1) + Math.AngNormalize(lon12)
                 )
             )
 
@@ -357,7 +357,7 @@ class GeodesicLine(object):
             "lat1": self.lat1,
             "lon1": self.lon1
             if outmask & Geodesic.LONG_UNROLL
-            else Math.ang_normalize(self.lon1),
+            else Math.AngNormalize(self.lon1),
             "azi1": self.azi1,
             "s12": s12,
         }
@@ -398,7 +398,7 @@ class GeodesicLine(object):
             "lat1": self.lat1,
             "lon1": self.lon1
             if outmask & Geodesic.LONG_UNROLL
-            else Math.ang_normalize(self.lon1),
+            else Math.AngNormalize(self.lon1),
             "azi1": self.azi1,
             "a12": a12,
         }

@@ -15,8 +15,8 @@ class PolygonArea:
         # Return 1 or -1 if crossing prime meridian in east or west direction.
         # Otherwise return zero.
         # Compute lon12 the same way as Geodesic::Inverse.
-        lon1 = Math.ang_normalize(lon1)
-        lon2 = Math.ang_normalize(lon2)
+        lon1 = Math.AngNormalize(lon1)
+        lon2 = Math.AngNormalize(lon2)
         lon12, _ = Math.ang_diff(lon1, lon2)
         cross = (
             1

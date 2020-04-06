@@ -1347,12 +1347,12 @@ class Geodesic:
             lon12, e = Math.ang_diff(lon1, lon2)
             lon2 = (lon1 + lon12) + e
         else:
-            lon2 = Math.ang_normalize(lon2)
+            lon2 = Math.AngNormalize(lon2)
         result = {
             "lat1": Math.lat_fix(lat1),
             "lon1": lon1
             if outmask & Geodesic.LONG_UNROLL
-            else Math.ang_normalize(lon1),
+            else Math.AngNormalize(lon1),
             "lat2": Math.lat_fix(lat2),
             "lon2": lon2,
         }
@@ -1407,8 +1407,8 @@ class Geodesic:
             "lat1": Math.lat_fix(lat1),
             "lon1": lon1
             if outmask & Geodesic.LONG_UNROLL
-            else Math.ang_normalize(lon1),
-            "azi1": Math.ang_normalize(azi1),
+            else Math.AngNormalize(lon1),
+            "azi1": Math.AngNormalize(azi1),
             "s12": s12,
         }
         result["a12"] = a12
@@ -1453,8 +1453,8 @@ class Geodesic:
             "lat1": Math.lat_fix(lat1),
             "lon1": lon1
             if outmask & Geodesic.LONG_UNROLL
-            else Math.ang_normalize(lon1),
-            "azi1": Math.ang_normalize(azi1),
+            else Math.AngNormalize(lon1),
+            "azi1": Math.AngNormalize(azi1),
             "a12": a12,
         }
         if outmask & Geodesic.DISTANCE:
