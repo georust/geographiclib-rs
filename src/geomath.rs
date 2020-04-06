@@ -125,38 +125,61 @@ pub fn fmod(x: f64, y: f64) -> f64 {
     x % y
 }
 
-// Compute sine and cosine of x in degrees
+/// Compute sine and cosine of x in degrees
 pub fn sincosd(x: f64) -> (f64, f64) {
-    let mut r = fmod(x, 360.0);
-    let mut q = if r.is_nan() {
-        std::f64::NAN
+    // r = math.fmod(x, 360) if Math.isfinite(x) else Math.nan
+    let mut r = if x.is_finite() {
+        fmod(x, 360.0)
     } else {
-        (r / 90.0 + 0.5).floor()
+        f64::NAN
     };
-    r -= 90.0 * q;
-    r = r.to_radians();
-    let mut s = r.sin();
-    let mut c = r.cos();
-    q = q % 4.0;
-    q = if q < 0.0 { q + 4.0 } else { q };
-    if q == 1.0 {
-        let _s = s;
-        s = c;
-        c = -_s;
-    } else if q == 2.0 {
-        s = -s;
-        c = -c;
-    } else if q == 3.0 {
-        let _s = s;
-        s = -c;
-        c = _s
-    }
-    if x == 0.0 {
-        s = x;
+
+    // q = 0 if Math.isnan(r) else int(round(r / 90))
+    let mut q = if r.is_nan() {
+        0
     } else {
-        s = 0.0 + s;
-        c = 0.0 + c;
-    }
+        (r / 90.0).round() as i32
+    };
+
+    // r -= 90 * q; r = math.radians(r)
+    r -= 90.0 * q as f64;
+    r = r.to_radians();
+
+    // s = math.sin(r); c = math.cos(r)
+    let s = r.sin();
+    let c = r.cos();
+
+    // q = q % 4
+    q = q % 4;
+
+    // if q == 1:
+    //     s, c =  c, -s
+    // elif q == 2:
+    //     s, c = -s, -c
+    // elif q == 3:
+    //     s, c = -c,  s
+
+    let q = if q < 0 { q + 4 } else { q };
+
+    let (s, c) = if q == 1 {
+        (c, -s)
+    } else if q == 2 {
+        (-s, -c)
+    } else if q == 3 {
+        (-c, s)
+    } else {
+        debug_assert_eq!(q, 0);
+        (s, c)
+    };
+
+    // # Remove the minus sign on -0.0 except for sin(-0.0).
+    // # On Windows 32-bit with python 2.7, math.fmod(-0.0, 360) = +0.0
+    // # (x, c) here fixes this bug.  See also Math::sincosd in the C++ library.
+    // # AngNormalize has a similar fix.
+    //     s, c = (x, c) if x == 0 else (0.0+s, 0.0+c)
+    // return s, c
+    let (s, c) = if x == 0.0 { (x, c) } else { (0.0 + s, 0.0 + c) };
+
     (s, c)
 }
 

@@ -110,28 +110,29 @@ class Math:
         return Math.sum(-180 if d == 180 and t > 0 else d, t)
 
 
-    @staticmethod
-    def sincosd(x):
-        """Compute sine and cosine of x in degrees."""
-        r = math.fmod(x, 360)
-        q = Math.NAN if math.isnan(r) else int(math.floor(r / 90 + 0.5))
-        r -= 90 * q
-        r = math.radians(r)
-        s = math.sin(r)
-        c = math.cos(r)
-        q = q % 4
-        if q == 1:
-            s, c = c, -s
-        elif q == 2:
-            s, c = -s, -c
-        elif q == 3:
-            s, c = -c, s
-        # Remove the minus sign on -0.0 except for sin(-0.0).
-        # On Windows 32-bit with python 2.7, math.fmod(-0.0, 360) = +0.0
-        # (x, c) here fixes this bug.  See also Math::sincosd in the C++ library.
-        # AngNormalize has a similar fix.
-        s, c = (x, c) if x == 0 else (0.0 + s, 0.0 + c)
-        return s, c
+  def sincosd(x):
+    """Compute sine and cosine of x in degrees."""
+
+    r = math.fmod(x, 360) if Math.isfinite(x) else Math.nan
+    q = 0 if Math.isnan(r) else int(round(r / 90))
+    r -= 90 * q;
+    r = math.radians(r)
+    s = math.sin(r);
+    c = math.cos(r)
+    q = q % 4
+    if q == 1:
+      s, c = c, -s
+    elif q == 2:
+      s, c = -s, -c
+    elif q == 3:
+      s, c = -c, s
+    # Remove the minus sign on -0.0 except for sin(-0.0).
+    # On Windows 32-bit with python 2.7, math.fmod(-0.0, 360) = +0.0
+    # (x, c) here fixes this bug.  See also Math::sincosd in the C++ library.
+    # AngNormalize has a similar fix.
+    s, c = (x, c) if x == 0 else (0.0 + s, 0.0 + c)
+    return s, c
+  sincosd = staticmethod(sincosd)
 
 
     @staticmethod
