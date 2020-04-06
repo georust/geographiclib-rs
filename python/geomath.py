@@ -33,6 +33,16 @@ class Math:
         y = math.pow(abs(x), 1 / 3.0)
         return y if x >= 0 else -y
 
+  def atanh(x):
+    """atanh(x) (missing from python 2.5.2)"""
+
+    if sys.version_info > (2, 6):
+      return math.atanh(x)
+
+    y = abs(x)                  # Enforce odd parity
+    y = Math.log1p(2 * y/(1 - y))/2
+    return y if x > 0 else (-y if x < 0 else x)
+  atanh = staticmethod(atanh)
 
     @staticmethod
     def norm(x, y):
