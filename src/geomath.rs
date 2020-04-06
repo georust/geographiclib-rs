@@ -84,20 +84,47 @@ pub fn ang_round(x: f64) -> f64 {
     }
 }
 
-// reduce angle to (-180,180]
-pub fn ang_normalize(x: f64) -> f64 {
-    let mut y = fmod(x, 360.0);
-    if x == 0.0 {
-        y = x;
-    };
-    if y <= -180.0 {
-        y + 360.0
+/// remainder of x/y in the range [-y/2, y/2]
+fn remainder(x: f64, y: f64) -> f64 {
+    // z = math.fmod(x, y) if Math.isfinite(x) else Math.nan
+    let z = if x.is_finite() {
+        x % y
     } else {
-        if y <= 180.0 {
-            y
+        f64::NAN
+    };
+
+    // # On Windows 32-bit with python 2.7, math.fmod(-0.0, 360) = +0.0
+    // # This fixes this bug.  See also Math::AngNormalize in the C++ library.
+    // # sincosd has a similar fix.
+    // z = x if x == 0 else z
+    let z = if x == 0.0 {
+        x
+    } else {
+        z
+    };
+
+    // return (z + y if z < -y/2 else
+    // (z if z < y/2 else z -y))
+    if z < -y / 2.0 {
+        z + y
+    } else {
+        if z < y / 2.0 {
+            z
         } else {
-            y - 360.0
+            z - y
         }
+    }
+}
+
+/// reduce angle to (-180,180]
+pub fn ang_normalize(x: f64) -> f64 {
+    // y = Math.remainder(x, 360)
+    // return 180 if y == -180 else y
+    let y = remainder(x, 360.0);
+    if y == -180.0 {
+        180.0
+    } else {
+        y
     }
 }
 
