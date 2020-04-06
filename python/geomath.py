@@ -27,11 +27,12 @@ class Math:
         return x * x
 
 
-    @staticmethod
-    def cbrt(x):
-        """Real cube root of a number"""
-        y = math.pow(abs(x), 1 / 3.0)
-        return y if x >= 0 else -y
+  def cbrt(x):
+    """Real cube root of a number"""
+
+    y = math.pow(abs(x), 1/3.0)
+    return y if x > 0 else (-y if x < 0 else x)
+  cbrt = staticmethod(cbrt)
 
   def atanh(x):
     """atanh(x) (missing from python 2.5.2)"""
