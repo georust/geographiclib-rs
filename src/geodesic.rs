@@ -39,6 +39,20 @@ pub struct Geodesic {
 }
 
 impl Geodesic {
+    pub fn wgs84() -> Self {
+        Self::new(WGS84_A, WGS84_F)
+    }
+
+    pub fn equatorial_radius(&self) -> f64 {
+        self.a
+    }
+
+    pub fn flattening(&self) -> f64 {
+        self.f
+    }
+}
+
+impl Geodesic {
     pub fn new(a: f64, f: f64) -> Self {
         let GEODESIC_ORDER = 6;
         let nC3x_ = 15;
