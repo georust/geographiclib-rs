@@ -235,11 +235,7 @@ impl GeodesicLine {
             // tau12 = s12_a12 / (self._b * (1 + self._A1m1))
             // tau12 = tau12 if Math.isfinite(tau12) else Math.nan
             let tau12 = s12_a12 / (self._b * (1.0 + self._A1m1));
-            let tau12 = if tau12.is_finite() {
-                tau12
-            } else {
-                f64::NAN
-            };
+            let tau12 = if tau12.is_finite() { tau12 } else { f64::NAN };
 
             let s = tau12.sin();
             let c = tau12.cos();

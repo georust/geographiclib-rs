@@ -93,21 +93,13 @@ pub fn ang_round(x: f64) -> f64 {
 /// remainder of x/y in the range [-y/2, y/2]
 fn remainder(x: f64, y: f64) -> f64 {
     // z = math.fmod(x, y) if Math.isfinite(x) else Math.nan
-    let z = if x.is_finite() {
-        x % y
-    } else {
-        f64::NAN
-    };
+    let z = if x.is_finite() { x % y } else { f64::NAN };
 
     // # On Windows 32-bit with python 2.7, math.fmod(-0.0, 360) = +0.0
     // # This fixes this bug.  See also Math::AngNormalize in the C++ library.
     // # sincosd has a similar fix.
     // z = x if x == 0 else z
-    let z = if x == 0.0 {
-        x
-    } else {
-        z
-    };
+    let z = if x == 0.0 { x } else { z };
 
     // return (z + y if z < -y/2 else
     // (z if z < y/2 else z -y))
