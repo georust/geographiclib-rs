@@ -449,20 +449,19 @@ impl Geodesic {
         ssig1 = res.0;
         csig1 = res.1;
 
-        let salp2 = salp0 / if cbet2 != cbet1 { cbet2 } else { salp1 };
-        let calp2 = (geomath::sq(*calp1 * cbet1)
-            + if cbet1 < -sbet1 {
-                (cbet2 - cbet1) * (cbet1 + cbet2)
-            } else {
-                (sbet1 - sbet2) * (sbet1 + sbet2)
-            })
-        .sqrt()
-            / if cbet2 != cbet1 || sbet2.abs() != -sbet1 {
-                cbet2
-            } else {
-                calp1.abs()
-            };
-
+        let salp2 = if cbet2 != cbet1 { salp0 / cbet2 } else { salp1 };
+        let calp2 = if cbet2 != cbet1 || sbet2.abs() != -sbet1 {
+            (geomath::sq(*calp1 * cbet1)
+                + if cbet1 < -sbet1 {
+                    (cbet2 - cbet1) * (cbet1 + cbet2)
+                } else {
+                    (sbet1 - sbet2) * (sbet1 + sbet2)
+                })
+            .sqrt()
+                / cbet2
+        } else {
+            calp1.abs()
+        };
         let mut ssig2 = sbet2;
         let somg2 = salp0 * sbet2;
         let mut csig2 = calp2 * cbet2;
