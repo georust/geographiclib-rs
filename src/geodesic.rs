@@ -3,6 +3,8 @@
 use crate::geodesiccapability as caps;
 use crate::geodesicline;
 use crate::geomath;
+
+use itertools::Itertools;
 use std::f64::consts::PI;
 
 pub const WGS84_A: f64 = 6378137.0;
@@ -181,7 +183,7 @@ impl Geodesic {
         geomath::polyval(self.GEODESIC_ORDER - 1, &self._A3x, 0, eps)
     }
 
-    pub fn _C3f(&self, eps: f64, c: &mut Vec<f64>) {
+    pub fn _C3f(&self, eps: f64, c: &mut [f64]) {
         let mut mult = 1.0;
         let mut o = 0.0;
         for l in 1..self.GEODESIC_ORDER {
@@ -192,7 +194,7 @@ impl Geodesic {
         }
     }
 
-    pub fn _C4f(&self, eps: f64, c: &mut Vec<f64>) {
+    pub fn _C4f(&self, eps: f64, c: &mut [f64]) {
         let mut mult = 1.0;
         let mut o = 0.0;
         for l in 0..self.GEODESIC_ORDER {
@@ -216,8 +218,8 @@ impl Geodesic {
         cbet1: f64,
         cbet2: f64,
         outmask: u64,
-        C1a: &mut Vec<f64>,
-        C2a: &mut Vec<f64>,
+        C1a: &mut [f64],
+        C2a: &mut [f64],
     ) -> (f64, f64, f64, f64, f64) {
         let outmask = outmask & caps::OUT_MASK;
         let mut s12b = std::f64::NAN;
@@ -284,8 +286,8 @@ impl Geodesic {
         lam12: f64,
         slam12: f64,
         clam12: f64,
-        C1a: &mut Vec<f64>,
-        C2a: &mut Vec<f64>,
+        C1a: &mut [f64],
+        C2a: &mut [f64],
     ) -> (f64, f64, f64, f64, f64, f64) {
         let mut sig12 = -1.0;
         let mut salp2 = std::f64::NAN;
@@ -430,9 +432,9 @@ impl Geodesic {
         slam120: f64,
         clam120: f64,
         diffp: bool,
-        C1a: &mut Vec<f64>,
-        C2a: &mut Vec<f64>,
-        C3a: &mut Vec<f64>,
+        C1a: &mut [f64],
+        C2a: &mut [f64],
+        C3a: &mut [f64],
     ) -> (f64, f64, f64, f64, f64, f64, f64, f64, f64, f64, f64) {
         if sbet1 == 0.0 && *calp1 == 0.0 {
             *calp1 = -self.tiny_;
@@ -788,9 +790,9 @@ impl Geodesic {
         let dn1 = (1.0 + self._ep2 * geomath::sq(sbet1)).sqrt();
         let dn2 = (1.0 + self._ep2 * geomath::sq(sbet2)).sqrt();
 
-        let mut C1a: Vec<f64> = vec![0.0; self.GEODESIC_ORDER as usize + 1];
-        let mut C2a: Vec<f64> = vec![0.0; self.GEODESIC_ORDER as usize + 1];
-        let mut C3a: Vec<f64> = vec![0.0; self.GEODESIC_ORDER as usize + 1];
+        let cvec_size = self.GEODESIC_ORDER as usize + 1;
+        let mut vec_pool =  vec![0.0; cvec_size * 3];
+        let (mut C1a, mut C2a, mut C3a) = vec_pool.chunks_exact_mut(cvec_size).collect_tuple().unwrap();
 
         let mut meridian = lat1 == -90.0 || slam12 == 0.0;
         let mut calp1 = 0.0;

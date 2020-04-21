@@ -54,7 +54,7 @@ pub fn sum(u: f64, v: f64) -> (f64, f64) {
 }
 
 // Evaluate a polynomial
-pub fn polyval(n: i64, p: &Vec<f64>, s: usize, x: f64) -> f64 {
+pub fn polyval(n: i64, p: &[f64], s: usize, x: f64) -> f64 {
     let mut s = s;
     let mut n = n;
     let mut y = if n < 0 { 0.0 } else { p[s] };
@@ -241,7 +241,7 @@ pub fn isfinite(x: f64) -> bool {
 }
 
 // Functions that used to be inside Geodesic
-pub fn sin_cos_series(sinp: bool, sinx: f64, cosx: f64, c: &Vec<f64>) -> f64 {
+pub fn sin_cos_series(sinp: bool, sinx: f64, cosx: f64, c: &[f64]) -> f64 {
     let mut k = c.len();
     let mut n: i64 = k as i64 - if sinp { 1 } else { 0 };
     let ar: f64 = 2.0 * (cosx - sinx) * (cosx + sinx);
@@ -313,7 +313,7 @@ lazy_static! {
     ];
 }
 
-pub fn _C1f(eps: f64, c: &mut Vec<f64>, geodesic_order: i64) {
+pub fn _C1f(eps: f64, c: &mut [f64], geodesic_order: i64) {
     let eps2 = sq(eps);
     let mut d = eps;
     let mut o = 0;
@@ -333,7 +333,7 @@ lazy_static! {
     ];
 }
 
-pub fn _C1pf(eps: f64, c: &mut Vec<f64>, geodesic_order: i64) {
+pub fn _C1pf(eps: f64, c: &mut [f64], geodesic_order: i64) {
     let eps2 = sq(eps);
     let mut d = eps;
     let mut o = 0;
@@ -363,7 +363,7 @@ lazy_static! {
     ];
 }
 
-pub fn _C2f(eps: f64, c: &mut Vec<f64>, geodesic_order: i64) {
+pub fn _C2f(eps: f64, c: &mut [f64], geodesic_order: i64) {
     let eps2 = sq(eps);
     let mut d = eps;
     let mut o = 0;
