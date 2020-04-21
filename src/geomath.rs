@@ -241,7 +241,7 @@ pub fn isfinite(x: f64) -> bool {
 }
 
 // Functions that used to be inside Geodesic
-pub fn sin_cos_series(sinp: bool, sinx: f64, cosx: f64, c: Vec<f64>) -> f64 {
+pub fn sin_cos_series(sinp: bool, sinx: f64, cosx: f64, c: &Vec<f64>) -> f64 {
     let mut k = c.len();
     let mut n: i64 = k as i64 - if sinp { 1 } else { 0 };
     let ar: f64 = 2.0 * (cosx - sinx) * (cosx + sinx);
@@ -456,7 +456,7 @@ mod tests {
                 false,
                 -0.8928657853278468,
                 0.45032287238256896,
-                vec![
+                &vec![
                     0.6660771734724675,
                     1.5757752625233906e-05,
                     3.8461688963148916e-09,
@@ -473,7 +473,7 @@ mod tests {
                 false,
                 -0.8928657853278468,
                 0.45032287238256896,
-                vec![0., 1., 2., 3., 4., 5.],
+                &vec![0., 1., 2., 3., 4., 5.],
             ),
             1.8998562852254026
         );
@@ -482,7 +482,7 @@ mod tests {
                 true,
                 0.2969032234925426,
                 0.9549075745221299,
-                vec![
+                &vec![
                     0.0,
                     -0.0003561309485314716,
                     -3.170731714689771e-08,
@@ -499,7 +499,7 @@ mod tests {
                 true,
                 -0.8928657853278468,
                 0.45032287238256896,
-                vec![
+                &vec![
                     0.0,
                     -0.0003561309485314716,
                     -3.170731714689771e-08,
@@ -513,7 +513,7 @@ mod tests {
         );
 
         assert_eq!(
-            sin_cos_series(true, 0.12, 0.21, vec![1.0, 2.0]),
+            sin_cos_series(true, 0.12, 0.21, &vec![1.0, 2.0]),
             0.10079999999999999
         );
         assert_eq!(
@@ -521,7 +521,7 @@ mod tests {
                 true,
                 -0.024679833885152578,
                 0.9996954065111039,
-                vec![
+                &vec![
                     0.0,
                     -0.0008355098973052918,
                     -1.7444619952659748e-07,

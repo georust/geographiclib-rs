@@ -116,7 +116,7 @@ impl GeodesicLine {
         if caps & caps::CAP_C1 != 0 {
             _A1m1 = geomath::_A1m1f(eps, geod.GEODESIC_ORDER);
             geomath::_C1f(eps, &mut _C1a, geod.GEODESIC_ORDER);
-            _B11 = geomath::sin_cos_series(true, _ssig1, _csig1, _C1a.clone());
+            _B11 = geomath::sin_cos_series(true, _ssig1, _csig1, &_C1a);
             let s = _B11.sin();
             let c = _B11.cos();
             _stau1 = _ssig1 * c + _csig1 * s;
@@ -134,7 +134,7 @@ impl GeodesicLine {
         if caps & caps::CAP_C2 != 0 {
             _A2m1 = geomath::_A2m1f(eps, geod.GEODESIC_ORDER);
             geomath::_C2f(eps, &mut _C2a, geod.GEODESIC_ORDER);
-            _B21 = geomath::sin_cos_series(true, _ssig1, _csig1, _C2a.clone());
+            _B21 = geomath::sin_cos_series(true, _ssig1, _csig1, &_C2a);
         }
 
         let mut _C3a = (0..geod.GEODESIC_ORDER).map(|x| x as f64).collect();
@@ -143,7 +143,7 @@ impl GeodesicLine {
         if caps & caps::CAP_C3 != 0 {
             geod._C3f(eps, &mut _C3a);
             _A3c = -f * _salp0 * geod._A3f(eps);
-            _B31 = geomath::sin_cos_series(true, _ssig1, _csig1, _C3a.clone());
+            _B31 = geomath::sin_cos_series(true, _ssig1, _csig1, &_C3a);
         }
 
         let mut _C4a = (0..geod.GEODESIC_ORDER).map(|x| x as f64).collect();
@@ -152,7 +152,7 @@ impl GeodesicLine {
         if caps & caps::CAP_C4 != 0 {
             geod._C4f(eps, &mut _C4a);
             _A4 = geomath::sq(a) * _calp0 * _salp0 * geod._e2;
-            _B41 = geomath::sin_cos_series(false, _ssig1, _csig1, _C4a.clone());
+            _B41 = geomath::sin_cos_series(false, _ssig1, _csig1, &_C4a);
         }
 
         let s13 = std::f64::NAN;
@@ -245,7 +245,7 @@ impl GeodesicLine {
                 true,
                 self._stau1 * c + self._ctau1 * s,
                 self._ctau1 * c - self._stau1 * s,
-                self._C1pa.clone(),
+                &self._C1pa,
             );
             sig12 = tau12 - (B12 - self._B11);
             ssig12 = sig12.sin();
@@ -253,7 +253,7 @@ impl GeodesicLine {
             if self.f.abs() > 0.01 {
                 ssig2 = self._ssig1 * csig12 + self._csig1 * ssig12;
                 csig2 = self._csig1 * csig12 - self._ssig1 * ssig12;
-                B12 = geomath::sin_cos_series(true, ssig2, csig2, self._C1a.clone());
+                B12 = geomath::sin_cos_series(true, ssig2, csig2, &self._C1a);
                 let serr = (1.0 + self._A1m1) * (sig12 + (B12 - self._B11)) - s12_a12 / self._b;
                 sig12 = sig12 - serr / (1.0 + self._k2 * ssig2.sqrt()).sqrt();
                 ssig12 = sig12.sin();
@@ -265,7 +265,7 @@ impl GeodesicLine {
         let dn2 = (1.0 + self._k2 * geomath::sq(ssig2)).sqrt();
         if outmask & (caps::DISTANCE | caps::REDUCEDLENGTH | caps::GEODESICSCALE) != 0 {
             if arcmode || self.f.abs() > 0.01 {
-                B12 = geomath::sin_cos_series(true, ssig2, csig2, self._C1a.clone());
+                B12 = geomath::sin_cos_series(true, ssig2, csig2, &self._C1a);
             }
             AB1 = (1.0 + self._A1m1) * (B12 - self._B11);
         }
@@ -299,7 +299,7 @@ impl GeodesicLine {
             let lam12 = omg12
                 + self._A3c
                     * (sig12
-                        + (geomath::sin_cos_series(true, ssig2, csig2, self._C3a.clone())
+                        + (geomath::sin_cos_series(true, ssig2, csig2, &self._C3a)
                             - self._B31));
             let lon12 = lam12.to_degrees();
             lon2 = if outmask & caps::LONG_UNROLL != 0 {
@@ -318,7 +318,7 @@ impl GeodesicLine {
             azi2 = geomath::atan2d(salp2, calp2);
         }
         if outmask & (caps::REDUCEDLENGTH | caps::GEODESICSCALE) != 0 {
-            let B22 = geomath::sin_cos_series(true, ssig2, csig2, self._C2a.clone());
+            let B22 = geomath::sin_cos_series(true, ssig2, csig2, &self._C2a);
             let AB2 = (1.0 + self._A2m1) * (B22 - self._B21);
             let J12 = (self._A1m1 - self._A2m1) * sig12 + (AB1 - AB2);
             if outmask & caps::REDUCEDLENGTH != 0 {
@@ -334,7 +334,7 @@ impl GeodesicLine {
             }
         }
         if outmask & caps::AREA != 0 {
-            let B42 = geomath::sin_cos_series(false, ssig2, csig2, self._C4a.clone());
+            let B42 = geomath::sin_cos_series(false, ssig2, csig2, &self._C4a);
             let salp12: f64;
             let calp12: f64;
             if self._calp0 == 0.0 || self._salp0 == 0.0 {
