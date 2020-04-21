@@ -788,9 +788,9 @@ impl Geodesic {
         let dn1 = (1.0 + self._ep2 * geomath::sq(sbet1)).sqrt();
         let dn2 = (1.0 + self._ep2 * geomath::sq(sbet2)).sqrt();
 
-        let mut C1a: Vec<f64> = (0..=self.GEODESIC_ORDER).map(|x| x as f64).collect();
-        let mut C2a: Vec<f64> = (0..=self.GEODESIC_ORDER).map(|x| x as f64).collect();
-        let mut C3a: Vec<f64> = (0..self.GEODESIC_ORDER).map(|x| x as f64).collect();
+        let mut C1a: Vec<f64> = vec![0.0; self.GEODESIC_ORDER as usize + 1];
+        let mut C2a: Vec<f64> = vec![0.0; self.GEODESIC_ORDER as usize + 1];
+        let mut C3a: Vec<f64> = vec![0.0; self.GEODESIC_ORDER as usize + 1];
 
         let mut meridian = lat1 == -90.0 || slam12 == 0.0;
         let mut calp1 = 0.0;
@@ -1014,7 +1014,7 @@ impl Geodesic {
                 let res = geomath::norm(ssig2, csig2);
                 ssig2 = res.0;
                 csig2 = res.1;
-                let mut C4a: Vec<f64> = (0..self.GEODESIC_ORDER).map(|x| x as f64).collect();
+                let mut C4a: Vec<f64> = vec![0.0; self.GEODESIC_ORDER as usize + 1];
                 self._C4f(eps, &mut C4a);
                 let B41 = geomath::sin_cos_series(false, ssig1, csig1, &C4a);
                 let B42 = geomath::sin_cos_series(false, ssig2, csig2, &C4a);

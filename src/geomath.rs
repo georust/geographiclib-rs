@@ -267,7 +267,7 @@ pub fn sin_cos_series(sinp: bool, sinx: f64, cosx: f64, c: &Vec<f64>) -> f64 {
     }
 }
 
-// Solve stroid equation
+// Solve astroid equation
 pub fn astroid(x: f64, y: f64) -> f64 {
     let p = sq(x);
     let q = sq(y);
