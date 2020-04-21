@@ -75,7 +75,7 @@ lazy_static! {
     ];
 }
 
-const GEODESIC_ORDER: i64 = 6;
+pub const GEODESIC_ORDER: i64 = 6;
 const nC3x_: i64 = 15;
 const nC4x_: i64 = 21;
 
