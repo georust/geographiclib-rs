@@ -76,9 +76,9 @@ lazy_static! {
 
 impl Geodesic {
     pub fn new(a: f64, f: f64) -> Self {
-        let GEODESIC_ORDER = 6;
-        let nC3x_ = 15;
-        let nC4x_ = 21;
+        let GEODESIC_ORDER: i64 = 6;
+        let nC3x_: i64 = 15;
+        let nC4x_ :i64 = 21;
         let maxit1_ = 20;
         let maxit2_ = maxit1_ + geomath::DIGITS + 10;
         let tiny_ = geomath::get_min_val().sqrt();
@@ -106,9 +106,9 @@ impl Geodesic {
                 } / _e2.abs().sqrt()))
             / 2.0;
         let _etol2 = 0.1 * tol2_ / (f.abs().max(0.001) * (1.0 - f / 2.0).min(1.0) / 2.0).sqrt();
-        let mut _A3x: Vec<f64> = (0..GEODESIC_ORDER).map(|x| x as f64).collect();
-        let mut _C3x: Vec<f64> = (0..nC3x_).map(|x| x as f64).collect();
-        let mut _C4x: Vec<f64> = (0..nC4x_).map(|x| x as f64).collect();
+        let mut _A3x: Vec<f64> = vec![0.0; GEODESIC_ORDER as usize];
+        let mut _C3x: Vec<f64> = vec![0.0; nC3x_ as usize];
+        let mut _C4x: Vec<f64> = vec![0.0; nC4x_ as usize];
 
         // Call a3coeff
         let mut o: i64 = 0;
