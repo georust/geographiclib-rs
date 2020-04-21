@@ -296,66 +296,81 @@ pub fn astroid(x: f64, y: f64) -> f64 {
     }
 }
 
+lazy_static! {
+    static ref COEFF_A1m1f: Vec<f64> = vec![1.0, 4.0, 64.0, 0.0, 256.0];
+}
+
 pub fn _A1m1f(eps: f64, geodesic_order: i64) -> f64 {
-    let coeff = vec![1.0, 4.0, 64.0, 0.0, 256.0];
     let m: i64 = geodesic_order / 2;
-    let t = polyval(m, &coeff, 0, sq(eps)) / coeff[(m + 1) as usize] as f64;
+    let t = polyval(m, &COEFF_A1m1f, 0, sq(eps)) / COEFF_A1m1f[(m + 1) as usize] as f64;
     (t + eps) / (1.0 - eps)
 }
 
-pub fn _C1f(eps: f64, c: &mut Vec<f64>, geodesic_order: i64) {
-    let coeff = vec![
+lazy_static! {
+    static ref COEFF_C1f: Vec<f64> = vec![
         -1.0, 6.0, -16.0, 32.0, -9.0, 64.0, -128.0, 2048.0, 9.0, -16.0, 768.0, 3.0, -5.0, 512.0,
         -7.0, 1280.0, -7.0, 2048.0,
     ];
+}
+
+pub fn _C1f(eps: f64, c: &mut Vec<f64>, geodesic_order: i64) {
     let eps2 = sq(eps);
     let mut d = eps;
     let mut o = 0;
     for l in 1..=geodesic_order {
         let m = ((geodesic_order - l) / 2) as i64;
         c[l as usize] =
-            d * polyval(m, &coeff, o as usize, eps2) / coeff[(o + m + 1) as usize] as f64;
+            d * polyval(m, &COEFF_C1f, o as usize, eps2) / COEFF_C1f[(o + m + 1) as usize] as f64;
         o += m + 2;
         d *= eps;
     }
 }
 
-pub fn _C1pf(eps: f64, c: &mut Vec<f64>, geodesic_order: i64) {
-    let coeff = vec![
+lazy_static! {
+    static ref COEFF_C1pf: Vec<f64> = vec![
         205.0, -432.0, 768.0, 1536.0, 4005.0, -4736.0, 3840.0, 12288.0, -225.0, 116.0, 384.0,
         -7173.0, 2695.0, 7680.0, 3467.0, 7680.0, 38081.0, 61440.0,
     ];
+}
+
+pub fn _C1pf(eps: f64, c: &mut Vec<f64>, geodesic_order: i64) {
     let eps2 = sq(eps);
     let mut d = eps;
     let mut o = 0;
     for l in 1..=geodesic_order {
         let m = (geodesic_order - l) / 2;
-        c[l as usize] =
-            d * polyval(m as i64, &coeff, o as usize, eps2) / coeff[(o + m + 1) as usize] as f64;
+        c[l as usize] = d * polyval(m as i64, &COEFF_C1pf, o as usize, eps2)
+            / COEFF_C1pf[(o + m + 1) as usize] as f64;
         o += m + 2;
         d *= eps;
     }
 }
 
+lazy_static! {
+    static ref COEFF_A2m1f: Vec<f64> = vec![-11.0, -28.0, -192.0, 0.0, 256.0];
+}
+
 pub fn _A2m1f(eps: f64, geodesic_order: i64) -> f64 {
-    let coeff = vec![-11.0, -28.0, -192.0, 0.0, 256.0];
     let m: i64 = geodesic_order / 2;
-    let t = polyval(m, &coeff, 0, sq(eps)) / coeff[(m + 1) as usize] as f64;
+    let t = polyval(m, &COEFF_A2m1f, 0, sq(eps)) / COEFF_A2m1f[(m + 1) as usize] as f64;
     (t - eps) / (1.0 + eps)
 }
 
-pub fn _C2f(eps: f64, c: &mut Vec<f64>, geodesic_order: i64) {
-    let coeff = vec![
+lazy_static! {
+    static ref COEFF_C2f: Vec<f64> = vec![
         1.0, 2.0, 16.0, 32.0, 35.0, 64.0, 384.0, 2048.0, 15.0, 80.0, 768.0, 7.0, 35.0, 512.0, 63.0,
         1280.0, 77.0, 2048.0,
     ];
+}
+
+pub fn _C2f(eps: f64, c: &mut Vec<f64>, geodesic_order: i64) {
     let eps2 = sq(eps);
     let mut d = eps;
     let mut o = 0;
     for l in 1..=geodesic_order {
         let m = (geodesic_order - l) / 2;
-        c[l as usize] =
-            d * polyval(m as i64, &coeff, o as usize, eps2) / coeff[(o + m + 1) as usize] as f64;
+        c[l as usize] = d * polyval(m as i64, &COEFF_C2f, o as usize, eps2)
+            / COEFF_C2f[(o + m + 1) as usize] as f64;
         o += m + 2;
         d *= eps;
     }

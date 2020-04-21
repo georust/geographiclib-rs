@@ -299,8 +299,7 @@ impl GeodesicLine {
             let lam12 = omg12
                 + self._A3c
                     * (sig12
-                        + (geomath::sin_cos_series(true, ssig2, csig2, &self._C3a)
-                            - self._B31));
+                        + (geomath::sin_cos_series(true, ssig2, csig2, &self._C3a) - self._B31));
             let lon12 = lam12.to_degrees();
             lon2 = if outmask & caps::LONG_UNROLL != 0 {
                 self.lon1 + lon12
