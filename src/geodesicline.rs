@@ -18,7 +18,7 @@ pub struct GeodesicLine {
     _B31: f64,
     _B41: f64,
     _C1a: [f64; GEODESIC_ORDER as usize + 1],
-    _C1pa:[f64; GEODESIC_ORDER as usize + 1],
+    _C1pa: [f64; GEODESIC_ORDER as usize + 1],
     _C2a: [f64; GEODESIC_ORDER as usize + 1],
     _C3a: [f64; GEODESIC_ORDER as usize + 1],
     _C4a: [f64; GEODESIC_ORDER as usize + 1],
