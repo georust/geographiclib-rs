@@ -119,30 +119,24 @@ impl Runner {
 
     fn compute_inverse(&self, fields: &Vec<f64>) -> Vec<f64> {
         assert_eq!(4, fields.len());
-        let lat1 = fields[0];
-        let lon1 = fields[1];
-        let lat2 = fields[2];
-        let lon2 = fields[3];
+        let input_lat1 = fields[0];
+        let input_lon1 = fields[1];
+        let input_lat2 = fields[2];
+        let input_lon2 = fields[3];
 
         let outmask = capability::ALL;
-        let result = self.geod.Inverse(lat1, lon1, lat2, lon2, outmask);
+        let (s12, azi1, azi2, m12, M12, M21, S12, a12) = self
+            .geod
+            .Inverse(input_lat1, input_lon1, input_lat2, input_lon2);
 
         let output_fields = if self.is_full_output {
             // TODO - we're currently omitting several fields, and only outputting what's
             //        necessary to pass the validation tool
             vec![
-                lat1,
-                lon1,
-                result["azi1"],
-                lat2,
-                lon2,
-                result["azi2"],
-                result["s12"],
-                result["a12"],
-                result["m12"],
+                input_lat1, input_lon1, azi1, input_lat2, input_lon2, azi2, s12, a12, m12,
             ]
         } else {
-            vec![result["azi1"], result["azi2"], result["s12"]]
+            vec![azi1, azi2, s12]
         };
         output_fields
     }

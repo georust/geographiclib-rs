@@ -60,7 +60,7 @@ fn geodesic_inverse_benchmark(c: &mut Criterion) {
         let geod = geographiclib::Geodesic::wgs84();
         b.iter(|| {
             for (lat1, lon1, lat2, lon2) in inputs.clone() {
-                geod.inverse(lat1, lon1, lat2, lon2);
+                let (_s12, _azi1, _azi2, _a12) = geod.inverse(lat1, lon1, lat2, lon2);
             }
         })
     });
@@ -69,7 +69,8 @@ fn geodesic_inverse_benchmark(c: &mut Criterion) {
         let geod = geographiclib_rs::Geodesic::wgs84();
         b.iter(|| {
             for (lat1, lon1, lat2, lon2) in inputs.clone() {
-                geod.Inverse(lat1, lon1, lat2, lon2, capability::ALL);
+                // Do work comparable to geographiclib c-wrapper's `geod.inverse` method
+                let (_s12, _azi1, _azi2, _a12) = geod.Inverse4(lat1, lon1, lat2, lon2);
             }
         })
     });

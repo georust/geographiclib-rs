@@ -14,6 +14,6 @@ fn main() {
     });
 
     for (lat1, lon1, lat2, lon2) in inputs {
-        geod.Inverse(lat1, lon1, lat2, lon2, capability::ALL);
+        geod.Inverse(lat1, lon1, lat2, lon2);
     }
 }
