@@ -58,9 +58,10 @@ pub fn polyval(n: i64, p: &[f64], s: usize, x: f64) -> f64 {
     let mut s = s;
     let mut n = n;
     let mut y = if n < 0 { 0.0 } else { p[s] };
+    assert!((n as usize) < (usize::MAX - s));
     while n > 0 {
         n -= 1;
-        s = s.checked_add(1).expect("");
+        s += 1;
         y = y * x + p[s];
     }
     y
