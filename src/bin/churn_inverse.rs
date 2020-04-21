@@ -1,4 +1,4 @@
-use geographiclib_rs::Geodesic;
+use geographiclib_rs::{capability, Geodesic};
 use std::fs::File;
 use std::io::{BufRead, BufReader};
 
@@ -10,10 +10,10 @@ fn main() {
     let inputs = reader.lines().map(|line| {
         let line = line.unwrap();
         let fields: Vec<f64> = line.split(" ").map(|s| s.parse::<f64>().unwrap()).collect();
-        (fields[0], fields[1], fields[2], fields[6])
+        (fields[0], fields[1], fields[3], fields[4])
     });
 
-    for (lat1, lon1, azi1, s12) in inputs {
-        geod.Direct(lat1, lon1, azi1, s12);
+    for (lat1, lon1, lat2, lon2) in inputs {
+        geod.Inverse(lat1, lon1, lat2, lon2, capability::ALL);
     }
 }
