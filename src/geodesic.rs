@@ -127,7 +127,6 @@ impl Geodesic {
 
         for l in 1..GEODESIC_ORDER {
             for j in (l..GEODESIC_ORDER).rev() {
-                let j = j.clone();
                 let m = j.min(GEODESIC_ORDER as i64 - j - 1);
                 _C3x[k as usize] = geomath::polyval(m, &COEFF_c3, o as usize, _n)
                     / COEFF_c3[(o + m + 1) as usize] as f64;
@@ -142,7 +141,6 @@ impl Geodesic {
 
         for l in 0..GEODESIC_ORDER {
             for j in (l..GEODESIC_ORDER).rev() {
-                let j = j.clone();
                 let m = GEODESIC_ORDER as i64 - j - 1;
                 _C4x[k as usize] = geomath::polyval(m, &COEFF_c4, o as usize, _n)
                     / COEFF_c4[(o + m + 1) as usize] as f64;
