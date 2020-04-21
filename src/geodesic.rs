@@ -21,9 +21,9 @@ pub struct Geodesic {
     pub _b: f64,
     pub _c2: f64,
     _etol2: f64,
-    _A3x: Vec<f64>,
-    _C3x: Vec<f64>,
-    _C4x: Vec<f64>,
+    _A3x: [f64; GEODESIC_ORDER as usize],
+    _C3x: [f64; nC3x_ as usize],
+    _C4x: [f64; nC4x_ as usize],
 
     pub GEODESIC_ORDER: i64,
     nC3x_: i64,
@@ -76,11 +76,11 @@ lazy_static! {
 }
 
 const GEODESIC_ORDER: i64 = 6;
+const nC3x_: i64 = 15;
+const nC4x_: i64 = 21;
 
 impl Geodesic {
     pub fn new(a: f64, f: f64) -> Self {
-        let nC3x_: i64 = 15;
-        let nC4x_: i64 = 21;
         let maxit1_ = 20;
         let maxit2_ = maxit1_ + geomath::DIGITS + 10;
         let tiny_ = geomath::get_min_val().sqrt();
@@ -108,9 +108,11 @@ impl Geodesic {
                 } / _e2.abs().sqrt()))
             / 2.0;
         let _etol2 = 0.1 * tol2_ / (f.abs().max(0.001) * (1.0 - f / 2.0).min(1.0) / 2.0).sqrt();
-        let mut _A3x: Vec<f64> = vec![0.0; GEODESIC_ORDER as usize];
-        let mut _C3x: Vec<f64> = vec![0.0; nC3x_ as usize];
-        let mut _C4x: Vec<f64> = vec![0.0; nC4x_ as usize];
+
+
+        let mut _A3x: [f64; GEODESIC_ORDER as usize] = [0.0; GEODESIC_ORDER as usize];
+        let mut _C3x: [f64; nC3x_ as usize] = [0.0; nC3x_ as usize];
+        let mut _C4x: [f64; nC4x_ as usize] = [0.0; nC4x_ as usize];
 
         // Call a3coeff
         let mut o: i64 = 0;
@@ -1832,7 +1834,7 @@ mod tests {
             0.8139459053827204,
             0.9811634781422108,
             1920,
-            &mut vec![
+            &mut [
                 0.0,
                 -0.0003561309485314716,
                 -3.170731714689771e-08,
@@ -1841,7 +1843,7 @@ mod tests {
                 -1.0025061462383107e-18,
                 -4.462794158625518e-22,
             ],
-            &mut vec![
+            &mut [
                 0.0,
                 -0.0007122622584701569,
                 -1.2678416507678478e-07,
@@ -1865,7 +1867,7 @@ mod tests {
         geod._C4f(0.12, &mut c);
         assert_eq!(
             c,
-            vec![
+            [
                 0.6420952961066771,
                 0.0023680700061156517,
                 9.96704067834604e-05,
@@ -1885,7 +1887,7 @@ mod tests {
 
         assert_eq!(
             c,
-            vec![
+            [
                 1.0,
                 0.031839442894193756,
                 0.0009839921354137713,
@@ -1919,7 +1921,7 @@ mod tests {
         assert_eq!(geod._etol2, 3.6424611488788524e-08, "geod._etol2 wrong");
         assert_eq!(
             geod._A3x,
-            vec![
+            [
                 -0.0234375,
                 -0.046927475637074494,
                 -0.06281503005876607,
@@ -1932,7 +1934,7 @@ mod tests {
 
         assert_eq!(
             geod._C3x,
-            vec![
+            [
                 0.0234375,
                 0.03908873781853724,
                 0.04695366939653196,
@@ -1953,7 +1955,7 @@ mod tests {
         );
         assert_eq!(
             geod._C4x,
-            vec![
+            [
                 0.00646020646020646,
                 0.0035037627212872787,
                 0.034742279454780166,
