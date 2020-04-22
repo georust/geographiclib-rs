@@ -355,6 +355,8 @@ impl GeodesicLine {
         (a12, lat2, lon2, azi2, s12, m12, M12, M21, S12)
     }
 
+    // not currently used, but maybe some day
+    #[allow(dead_code)]
     pub fn Position(&self, s12: f64, outmask: Option<u64>) -> HashMap<String, f64> {
         let outmask = match outmask {
             Some(outmask) => outmask,
