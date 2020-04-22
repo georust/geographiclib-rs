@@ -401,11 +401,11 @@ impl GeodesicLine {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use geodesic::{Geodesic, WGS84_A, WGS84_F};
+    use geodesic::Geodesic;
 
     #[test]
     fn test_gen_position() {
-        let geod = Geodesic::new(WGS84_A, WGS84_F);
+        let geod = Geodesic::wgs84();
         let gl = GeodesicLine::new(&geod, 0.0, 0.0, 10.0, None, None, None);
         let res = gl._gen_position(false, 150.0, 3979);
         assert_eq!(res.0, 0.0013520059461334633);
@@ -421,7 +421,7 @@ mod tests {
 
     #[test]
     fn test_init() {
-        let geod = Geodesic::new(WGS84_A, WGS84_F);
+        let geod = Geodesic::wgs84();
         let gl = GeodesicLine::new(&geod, 0.0, 0.0, 0.0, None, None, None);
         assert_eq!(gl.a, 6378137.0);
         assert_eq!(gl.f, 0.0033528106647474805);

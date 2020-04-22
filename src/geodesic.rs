@@ -1578,7 +1578,7 @@ mod tests {
 
     #[test]
     fn test_geninverse() {
-        let geod = Geodesic::new(WGS84_A, WGS84_F);
+        let geod = Geodesic::wgs84();
         let res = geod.GenInverse(0.0, 0.0, 1.0, 1.0, caps::STANDARD);
         assert_eq!(res.0, 1.4141938478710363);
         assert_eq!(res.1, 156899.56829134026);
@@ -1594,7 +1594,7 @@ mod tests {
 
     #[test]
     fn test_inverse_start() {
-        let geod = Geodesic::new(WGS84_A, WGS84_F);
+        let geod = Geodesic::wgs84();
         let res = geod._InverseStart(
             -0.017393909556108908,
             0.9998487145115275,
@@ -1638,7 +1638,7 @@ mod tests {
 
     #[test]
     fn test_lambda12() {
-        let geod = Geodesic::new(WGS84_A, WGS84_F);
+        let geod = Geodesic::wgs84();
         let res1 = geod._Lambda12(
             -0.017393909556108908,
             0.9998487145115275,
@@ -1722,7 +1722,7 @@ mod tests {
     #[test]
     fn test_lengths() {
         // Results taken from the python implementation
-        let geod = Geodesic::new(WGS84_A, WGS84_F);
+        let geod = Geodesic::wgs84();
         let mut c1a = vec![0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0];
         let mut c2a = vec![0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0];
         let res1 = geod._Lengths(
@@ -1860,7 +1860,7 @@ mod tests {
 
     #[test]
     fn test_goed__C4f() {
-        let geod = Geodesic::new(WGS84_A, WGS84_F);
+        let geod = Geodesic::wgs84();
         let mut c = vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0];
         geod._C4f(0.12, &mut c);
         assert_eq!(
@@ -1879,7 +1879,7 @@ mod tests {
 
     #[test]
     fn test_goed__C3f() {
-        let geod = Geodesic::new(WGS84_A, WGS84_F);
+        let geod = Geodesic::wgs84();
         let mut c = vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0];
         geod._C3f(0.12, &mut c);
 
@@ -1899,7 +1899,7 @@ mod tests {
 
     #[test]
     fn test_goed__A3f() {
-        let geod = Geodesic::new(WGS84_A, WGS84_F);
+        let geod = Geodesic::wgs84();
         assert_eq!(geod._A3f(0.12), 0.9363788874000158);
     }
 
@@ -1907,7 +1907,7 @@ mod tests {
     fn test_geod_init() {
         // Check that after the init the variables are correctly set.
         // Actual values are taken from the python implementation
-        let geod = Geodesic::new(WGS84_A, WGS84_F);
+        let geod = Geodesic::wgs84();
         assert_eq!(geod.a, 6378137.0, "geod.a wrong");
         assert_eq!(geod.f, 0.0033528106647474805, "geod.f wrong");
         assert_eq!(geod._f1, 0.9966471893352525, "geod._f1 wrong");
