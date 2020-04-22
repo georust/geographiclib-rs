@@ -1128,7 +1128,7 @@ impl DirectGeodesic<(f64, f64, f64, f64, f64, f64, f64, f64)> for Geodesic {
 /// is used to refine the solution.
 ///
 /// ```rust
-/// // Example, determine the distance between
+/// // Example, determine the distance between two points
 /// use geographiclib_rs::{Geodesic, InverseGeodesic};
 ///
 /// let g = Geodesic::wgs84();
