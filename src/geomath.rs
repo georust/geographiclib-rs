@@ -1,3 +1,5 @@
+#![allow(non_snake_case)]
+
 pub const DIGITS: u64 = 53;
 pub const TWO: f64 = 2.0;
 
@@ -18,13 +20,19 @@ pub fn sq(x: f64) -> f64 {
     x.powi(2)
 }
 
+// We use the built-in impl (f64::cbrt) rather than this.
 // Real cube root
 pub fn cbrt(x: f64) -> f64 {
+    // y = math.pow(abs(x), 1/3.0)
     let y = x.abs().powf(1.0 / 3.0);
-    if x >= 0.0 {
+
+    // return y if x > 0 else (-y if x < 0 else x)
+    if x > 0.0 {
         y
-    } else {
+    } else if x < 0.0 {
         -y
+    } else {
+        x
     }
 }
 
@@ -82,20 +90,39 @@ pub fn ang_round(x: f64) -> f64 {
     }
 }
 
-// reduce angle to (-180,180]
-pub fn ang_normalize(x: f64) -> f64 {
-    let mut y = fmod(x, 360.0);
-    if x == 0.0 {
-        y = x;
-    };
-    if y <= -180.0 {
-        y + 360.0
+/// remainder of x/y in the range [-y/2, y/2]
+fn remainder(x: f64, y: f64) -> f64 {
+    // z = math.fmod(x, y) if Math.isfinite(x) else Math.nan
+    let z = if x.is_finite() { x % y } else { f64::NAN };
+
+    // # On Windows 32-bit with python 2.7, math.fmod(-0.0, 360) = +0.0
+    // # This fixes this bug.  See also Math::AngNormalize in the C++ library.
+    // # sincosd has a similar fix.
+    // z = x if x == 0 else z
+    let z = if x == 0.0 { x } else { z };
+
+    // return (z + y if z < -y/2 else
+    // (z if z < y/2 else z -y))
+    if z < -y / 2.0 {
+        z + y
     } else {
-        if y <= 180.0 {
-            y
+        if z < y / 2.0 {
+            z
         } else {
-            y - 360.0
+            z - y
         }
+    }
+}
+
+/// reduce angle to (-180,180]
+pub fn ang_normalize(x: f64) -> f64 {
+    // y = Math.remainder(x, 360)
+    // return 180 if y == -180 else y
+    let y = remainder(x, 360.0);
+    if y == -180.0 {
+        180.0
+    } else {
+        y
     }
 }
 
@@ -123,38 +150,61 @@ pub fn fmod(x: f64, y: f64) -> f64 {
     x % y
 }
 
-// Compute sine and cosine of x in degrees
+/// Compute sine and cosine of x in degrees
 pub fn sincosd(x: f64) -> (f64, f64) {
-    let mut r = fmod(x, 360.0);
-    let mut q = if r.is_nan() {
-        std::f64::NAN
+    // r = math.fmod(x, 360) if Math.isfinite(x) else Math.nan
+    let mut r = if x.is_finite() {
+        fmod(x, 360.0)
     } else {
-        (r / 90.0 + 0.5).floor()
+        f64::NAN
     };
-    r -= 90.0 * q;
-    r = r.to_radians();
-    let mut s = r.sin();
-    let mut c = r.cos();
-    q = q % 4.0;
-    q = if q < 0.0 { q + 4.0 } else { q };
-    if q == 1.0 {
-        let _s = s;
-        s = c;
-        c = -_s;
-    } else if q == 2.0 {
-        s = -s;
-        c = -c;
-    } else if q == 3.0 {
-        let _s = s;
-        s = -c;
-        c = _s
-    }
-    if x == 0.0 {
-        s = x;
+
+    // q = 0 if Math.isnan(r) else int(round(r / 90))
+    let mut q = if r.is_nan() {
+        0
     } else {
-        s = 0.0 + s;
-        c = 0.0 + c;
-    }
+        (r / 90.0).round() as i32
+    };
+
+    // r -= 90 * q; r = math.radians(r)
+    r -= 90.0 * q as f64;
+    r = r.to_radians();
+
+    // s = math.sin(r); c = math.cos(r)
+    let s = r.sin();
+    let c = r.cos();
+
+    // q = q % 4
+    q = q % 4;
+
+    // if q == 1:
+    //     s, c =  c, -s
+    // elif q == 2:
+    //     s, c = -s, -c
+    // elif q == 3:
+    //     s, c = -c,  s
+
+    let q = if q < 0 { q + 4 } else { q };
+
+    let (s, c) = if q == 1 {
+        (c, -s)
+    } else if q == 2 {
+        (-s, -c)
+    } else if q == 3 {
+        (-c, s)
+    } else {
+        debug_assert_eq!(q, 0);
+        (s, c)
+    };
+
+    // # Remove the minus sign on -0.0 except for sin(-0.0).
+    // # On Windows 32-bit with python 2.7, math.fmod(-0.0, 360) = +0.0
+    // # (x, c) here fixes this bug.  See also Math::sincosd in the C++ library.
+    // # AngNormalize has a similar fix.
+    //     s, c = (x, c) if x == 0 else (0.0+s, 0.0+c)
+    // return s, c
+    let (s, c) = if x == 0.0 { (x, c) } else { (0.0 + s, 0.0 + c) };
+
     (s, c)
 }
 
@@ -231,7 +281,7 @@ pub fn astroid(x: f64, y: f64) -> f64 {
         if disc >= 0.0 {
             let mut t3 = s + r3;
             t3 += if t3 < 0.0 { -disc.sqrt() } else { disc.sqrt() };
-            let t = t3.cbrt();
+            let t = cbrt(t3); // we could use built-in T.cbrt
             u += t + if t != 0.0 { r2 / t } else { 0.0 };
         } else {
             let ang = (-disc).sqrt().atan2(-(s + r3));
@@ -413,7 +463,7 @@ mod tests {
                     1.3040960748120204e-12,
                     5.252912023008548e-16,
                     2.367770858285795e-19
-                ]
+                ],
             ),
             0.29993425660538664
         );
@@ -423,7 +473,7 @@ mod tests {
                 false,
                 -0.8928657853278468,
                 0.45032287238256896,
-                vec![0., 1., 2., 3., 4., 5.]
+                vec![0., 1., 2., 3., 4., 5.],
             ),
             1.8998562852254026
         );
@@ -440,7 +490,7 @@ mod tests {
                     -2.5133854116682488e-15,
                     -1.0025061462383107e-18,
                     -4.462794158625518e-22
-                ]
+                ],
             ),
             -0.00020196665516199853
         );
@@ -457,7 +507,7 @@ mod tests {
                     -2.5133854116682488e-15,
                     -1.0025061462383107e-18,
                     -4.462794158625518e-22
-                ]
+                ],
             ),
             0.00028635444718997857
         );
@@ -479,7 +529,7 @@ mod tests {
                     -3.80472772706481e-14,
                     -2.2251271876594078e-17,
                     1.2789961247944744e-20
-                ]
+                ],
             ),
             4.124513511893872e-05
         );

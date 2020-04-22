@@ -1,3 +1,5 @@
+#![allow(non_snake_case)]
+
 pub const CAP_NONE: u64 = 0;
 pub const CAP_C1: u64 = 1 << 0;
 pub const CAP_C1p: u64 = 1 << 1;

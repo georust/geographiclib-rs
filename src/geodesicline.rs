@@ -1,3 +1,5 @@
+#![allow(non_snake_case)]
+
 use crate::geodesic;
 use crate::geodesiccapability as caps;
 use crate::geomath;
@@ -230,7 +232,11 @@ impl GeodesicLine {
             ssig12 = res.0;
             csig12 = res.0;
         } else {
+            // tau12 = s12_a12 / (self._b * (1 + self._A1m1))
+            // tau12 = tau12 if Math.isfinite(tau12) else Math.nan
             let tau12 = s12_a12 / (self._b * (1.0 + self._A1m1));
+            let tau12 = if tau12.is_finite() { tau12 } else { f64::NAN };
+
             let s = tau12.sin();
             let c = tau12.cos();
 
@@ -422,20 +428,20 @@ mod tests {
         assert_eq!(gl._b, 6356752.314245179);
         assert_eq!(gl._c2, 40589732499314.76);
         assert_eq!(gl._f1, 0.9966471893352525);
-        assert_eq!(gl.caps, 33408);
+        assert_eq!(gl.caps, 36747);
         assert_eq!(gl.lat1, 0.0);
         assert_eq!(gl.lon1, 0.0);
         assert_eq!(gl.azi1, 0.0);
         assert_eq!(gl.salp1, 0.0);
-        assert_eq!(gl.calp1, 0.0);
+        assert_eq!(gl.calp1, 1.0);
         assert_eq!(gl._dn1, 1.0);
         assert_eq!(gl._salp0, 0.0);
-        assert_eq!(gl._calp0, 0.0);
+        assert_eq!(gl._calp0, 1.0);
         assert_eq!(gl._ssig1, 0.0);
         assert_eq!(gl._somg1, 0.0);
         assert_eq!(gl._csig1, 1.0);
         assert_eq!(gl._comg1, 1.0);
-        assert_eq!(gl._k2, 0.0);
+        assert_eq!(gl._k2, geod._ep2);
         assert_eq!(gl.s13.is_nan(), true);
         assert_eq!(gl.a13.is_nan(), true);
     }
