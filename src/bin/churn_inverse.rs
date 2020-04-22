@@ -1,4 +1,4 @@
-use geographiclib_rs::{capability, Geodesic};
+use geographiclib_rs::Geodesic;
 use std::fs::File;
 use std::io::{BufRead, BufReader};
 

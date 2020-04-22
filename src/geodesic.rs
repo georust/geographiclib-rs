@@ -52,18 +52,18 @@ impl Geodesic {
     }
 }
 
-const COEFF_a3: [f64; 18] = [
+const COEFF_A3: [f64; 18] = [
     -3.0, 128.0, -2.0, -3.0, 64.0, -1.0, -3.0, -1.0, 16.0, 3.0, -1.0, -2.0, 8.0, 1.0, -1.0, 2.0,
     1.0, 1.0,
 ];
 
-const COEFF_c3: [f64; 45] = [
+const COEFF_C3: [f64; 45] = [
     3.0, 128.0, 2.0, 5.0, 128.0, -1.0, 3.0, 3.0, 64.0, -1.0, 0.0, 1.0, 8.0, -1.0, 1.0, 4.0, 5.0,
     256.0, 1.0, 3.0, 128.0, -3.0, -2.0, 3.0, 64.0, 1.0, -3.0, 2.0, 32.0, 7.0, 512.0, -10.0, 9.0,
     384.0, 5.0, -9.0, 5.0, 192.0, 7.0, 512.0, -14.0, 7.0, 512.0, 21.0, 2560.0,
 ];
 
-const COEFF_c4: [f64; 77] = [
+const COEFF_C4: [f64; 77] = [
     97.0, 15015.0, 1088.0, 156.0, 45045.0, -224.0, -4784.0, 1573.0, 45045.0, -10656.0, 14144.0,
     -4576.0, -858.0, 45045.0, 64.0, 624.0, -4576.0, 6864.0, -3003.0, 15015.0, 100.0, 208.0, 572.0,
     3432.0, -12012.0, 30030.0, 45045.0, 1.0, 9009.0, -2944.0, 468.0, 135135.0, 5792.0, 1040.0,
@@ -74,7 +74,9 @@ const COEFF_c4: [f64; 77] = [
 ];
 
 pub const GEODESIC_ORDER: i64 = 6;
+#[allow(non_upper_case_globals)]
 const nC3x_: i64 = 15;
+#[allow(non_upper_case_globals)]
 const nC4x_: i64 = 21;
 
 impl Geodesic {
@@ -116,8 +118,8 @@ impl Geodesic {
         let mut k = 0;
         for j in (0..GEODESIC_ORDER).rev() {
             let m = j.min(GEODESIC_ORDER as i64 - j - 1);
-            _A3x[k as usize] = geomath::polyval(m, &COEFF_a3, o as usize, _n)
-                / COEFF_a3[(o + m + 1) as usize] as f64;
+            _A3x[k as usize] = geomath::polyval(m, &COEFF_A3, o as usize, _n)
+                / COEFF_A3[(o + m + 1) as usize] as f64;
             k += 1;
             o += m + 2;
         }
@@ -129,8 +131,8 @@ impl Geodesic {
         for l in 1..GEODESIC_ORDER {
             for j in (l..GEODESIC_ORDER).rev() {
                 let m = j.min(GEODESIC_ORDER as i64 - j - 1);
-                _C3x[k as usize] = geomath::polyval(m, &COEFF_c3, o as usize, _n)
-                    / COEFF_c3[(o + m + 1) as usize] as f64;
+                _C3x[k as usize] = geomath::polyval(m, &COEFF_C3, o as usize, _n)
+                    / COEFF_C3[(o + m + 1) as usize] as f64;
                 k += 1;
                 o += m + 2;
             }
@@ -143,8 +145,8 @@ impl Geodesic {
         for l in 0..GEODESIC_ORDER {
             for j in (l..GEODESIC_ORDER).rev() {
                 let m = GEODESIC_ORDER as i64 - j - 1;
-                _C4x[k as usize] = geomath::polyval(m, &COEFF_c4, o as usize, _n)
-                    / COEFF_c4[(o + m + 1) as usize] as f64;
+                _C4x[k as usize] = geomath::polyval(m, &COEFF_C4, o as usize, _n)
+                    / COEFF_C4[(o + m + 1) as usize] as f64;
                 k += 1;
                 o += m + 2;
             }
@@ -607,7 +609,7 @@ impl Geodesic {
     /// - a12 arc length of between point 1 and point 2 (degrees).
     pub fn Inverse4(&self, lat1: f64, lon1: f64, lat2: f64, lon2: f64) -> (f64, f64, f64, f64) {
         let capabilities = caps::DISTANCE | caps::AZIMUTH;
-        let (a12, s12, azi1, azi2, m12, M12, M21, S12) =
+        let (a12, s12, azi1, azi2, _m12, _M12, _M21, _S12) =
             self.GenInverse2(lat1, lon1, lat2, lon2, capabilities);
 
         (s12, azi1, azi2, a12)
@@ -790,10 +792,10 @@ impl Geodesic {
         let dn1 = (1.0 + self._ep2 * geomath::sq(sbet1)).sqrt();
         let dn2 = (1.0 + self._ep2 * geomath::sq(sbet2)).sqrt();
 
-        const carr_size: usize = GEODESIC_ORDER as usize + 1;
-        let mut C1a: [f64; carr_size] = [0.0; carr_size];
-        let mut C2a: [f64; carr_size] = [0.0; carr_size];
-        let mut C3a: [f64; carr_size] = [0.0; carr_size];
+        const CARR_SIZE: usize = GEODESIC_ORDER as usize + 1;
+        let mut C1a: [f64; CARR_SIZE] = [0.0; CARR_SIZE];
+        let mut C2a: [f64; CARR_SIZE] = [0.0; CARR_SIZE];
+        let mut C3a: [f64; CARR_SIZE] = [0.0; CARR_SIZE];
 
         let mut meridian = lat1 == -90.0 || slam12 == 0.0;
         let mut calp1 = 0.0;
@@ -1017,7 +1019,7 @@ impl Geodesic {
                 let res = geomath::norm(ssig2, csig2);
                 ssig2 = res.0;
                 csig2 = res.1;
-                let mut C4a: [f64; carr_size] = [0.0; carr_size];
+                let mut C4a: [f64; CARR_SIZE] = [0.0; CARR_SIZE];
                 self._C4f(eps, &mut C4a);
                 let B41 = geomath::sin_cos_series(false, ssig1, csig1, &C4a);
                 let B42 = geomath::sin_cos_series(false, ssig2, csig2, &C4a);
@@ -1136,7 +1138,7 @@ impl Geodesic {
             | caps::REDUCEDLENGTH
             | caps::GEODESICSCALE
             | caps::AREA;
-        let (a12, lat2, lon2, azi2, s12, m12, M12, M21, S12) =
+        let (a12, lat2, lon2, azi2, _s12, m12, M12, M21, S12) =
             self.GenDirect(lat1, lon1, azi1, false, s12, capabilities);
         (lat2, lon2, azi2, m12, M12, M21, S12, a12)
     }
@@ -1148,7 +1150,7 @@ impl Geodesic {
     ///  - lon2 longitude of point 2 (degrees).
     pub fn Direct2(&self, lat1: f64, lon1: f64, azi1: f64, s12: f64) -> (f64, f64) {
         let capabilities = caps::LATITUDE | caps::LONGITUDE;
-        let (a12, lat2, lon2, azi2, s12, m12, M12, M21, S12) =
+        let (_a12, lat2, lon2, _azi2, _s12, _m12, _M12, _M21, _S12) =
             self.GenDirect(lat1, lon1, azi1, false, s12, capabilities);
         (lat2, lon2)
     }
@@ -1171,7 +1173,7 @@ impl Geodesic {
     /// ```
     pub fn Direct3(&self, lat1: f64, lon1: f64, azi1: f64, s12: f64) -> (f64, f64, f64) {
         let capabilities = caps::LATITUDE | caps::LONGITUDE | caps::AZIMUTH;
-        let (a12, lat2, lon2, azi2, s12, m12, M12, M21, S12) =
+        let (_a12, lat2, lon2, azi2, _s12, _m12, _M12, _M21, _S12) =
             self.GenDirect(lat1, lon1, azi1, false, s12, capabilities);
         (lat2, lon2, azi2)
     }
@@ -1185,7 +1187,7 @@ impl Geodesic {
     ///  - m12 reduced length of geodesic (meters).
     pub fn Direct4(&self, lat1: f64, lon1: f64, azi1: f64, s12: f64) -> (f64, f64, f64, f64) {
         let capabilities = caps::LATITUDE | caps::LONGITUDE | caps::AZIMUTH | caps::REDUCEDLENGTH;
-        let (a12, lat2, lon2, azi2, s12, m12, M12, M21, S12) =
+        let (_a12, lat2, lon2, azi2, _s12, m12, _M12, _M21, _S12) =
             self.GenDirect(lat1, lon1, azi1, false, s12, capabilities);
         (lat2, lon2, azi2, m12)
     }
@@ -1200,7 +1202,7 @@ impl Geodesic {
     ///  - M21 geodesic scale of point 1 relative to point 2 (dimensionless).
     pub fn Direct5(&self, lat1: f64, lon1: f64, azi1: f64, s12: f64) -> (f64, f64, f64, f64, f64) {
         let capabilities = caps::LATITUDE | caps::LONGITUDE | caps::AZIMUTH | caps::GEODESICSCALE;
-        let (a12, lat2, lon2, azi2, s12, m12, M12, M21, S12) =
+        let (_a12, lat2, lon2, azi2, _s12, _m12, M12, M21, _S12) =
             self.GenDirect(lat1, lon1, azi1, false, s12, capabilities);
         (lat2, lon2, azi2, M12, M21)
     }
@@ -1226,7 +1228,7 @@ impl Geodesic {
             | caps::AZIMUTH
             | caps::REDUCEDLENGTH
             | caps::GEODESICSCALE;
-        let (a12, lat2, lon2, azi2, s12, m12, M12, M21, S12) =
+        let (_a12, lat2, lon2, azi2, _s12, m12, M12, M21, _S12) =
             self.GenDirect(lat1, lon1, azi1, false, s12, capabilities);
         (lat2, lon2, azi2, m12, M12, M21)
     }
@@ -1241,10 +1243,10 @@ mod tests {
     fn test_inverse_and_direct() -> Result<(), String> {
         // See python/test_geodesic.py
         let geod = Geodesic::wgs84();
-        let (a12, s12, azi1, azi2, m12, M12, M21, S12) =
+        let (_a12, s12, _azi1, _azi2, _m12, _M12, _M21, _S12) =
             geod.GenInverse2(0.0, 0.0, 1.0, 1.0, caps::STANDARD);
-
         assert_eq!(s12, 156899.56829134026);
+
         let testcases = vec![
             (
                 35.60777,
@@ -1528,6 +1530,7 @@ mod tests {
             ),
         ];
 
+        // MJK FIXME: this test isn't testing anything due to variable clobber
         for (lat1, lon1, azi1, lat2, lon2, azi2, s12, a12, m12, M12, M21, S12) in testcases.iter() {
             let (a12, s12, azi1, azi2, m12, M12, M21, S12) =
                 geod.GenInverse2(*lat1, *lon1, *lat2, *lon2, caps::ALL | caps::LONG_UNROLL);
@@ -1548,7 +1551,7 @@ mod tests {
                 computed_lat2,
                 computed_lon2,
                 computed_azi2,
-                computed_s12,
+                _computed_s12,
                 computed_m12,
                 computed_M12,
                 computed_M21,

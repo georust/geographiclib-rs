@@ -11,10 +11,6 @@ pub fn get_min_val() -> f64 {
     TWO.powi(-1022)
 }
 
-pub fn get_max_val() -> f64 {
-    TWO.powi(1023) * (2.0 - TWO.powi(1 - DIGITS as i32))
-}
-
 // Square
 pub fn sq(x: f64) -> f64 {
     x.powi(2)
@@ -234,11 +230,6 @@ pub fn atan2d(y: f64, x: f64) -> f64 {
         ang = -90.0 + ang;
     }
     ang
-}
-
-// test for finitness
-pub fn isfinite(x: f64) -> bool {
-    x.abs() <= get_max_val()
 }
 
 // Functions that used to be inside Geodesic

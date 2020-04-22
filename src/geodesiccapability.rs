@@ -1,7 +1,6 @@
-#![allow(non_snake_case)]
-
 pub const CAP_NONE: u64 = 0;
 pub const CAP_C1: u64 = 1 << 0;
+#[allow(non_upper_case_globals)]
 pub const CAP_C1p: u64 = 1 << 1;
 pub const CAP_C2: u64 = 1 << 2;
 pub const CAP_C3: u64 = 1 << 3;

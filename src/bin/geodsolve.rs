@@ -2,7 +2,7 @@ use std::env;
 use std::fs::File;
 use std::io::{self, BufRead, BufReader};
 
-use geographiclib_rs::{capability, Geodesic};
+use geographiclib_rs::Geodesic;
 use std::error::Error;
 
 struct Runner {
@@ -87,14 +87,15 @@ impl Runner {
         let lon1 = fields[1];
         let azi1 = fields[2];
         let s12 = fields[3];
+        #[allow(non_snake_case)]
         let (
             computed_lat2,
             computed_lon2,
             computed_azi2,
             computed_m12,
-            computed_M12,
-            computed_M21,
-            computed_S12,
+            _computed_M12,
+            _computed_M21,
+            _computed_S12,
             computed_a12,
         ) = self.geod.Direct(lat1, lon1, azi1, s12);
         let output_fields = if self.is_full_output {
@@ -124,8 +125,8 @@ impl Runner {
         let input_lat2 = fields[2];
         let input_lon2 = fields[3];
 
-        let outmask = capability::ALL;
-        let (s12, azi1, azi2, m12, M12, M21, S12, a12) = self
+        #[allow(non_snake_case)]
+        let (s12, azi1, azi2, m12, _M12, _M21, _S12, a12) = self
             .geod
             .Inverse(input_lat1, input_lon1, input_lat2, input_lon2);
 

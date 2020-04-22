@@ -3,7 +3,6 @@ extern crate geographiclib;
 extern crate geographiclib_rs;
 
 use criterion::{criterion_group, criterion_main, Criterion};
-use geographiclib_rs::capability;
 
 use std::fs::File;
 use std::io::{BufRead, BufReader};
@@ -26,7 +25,7 @@ fn geodesic_direct_benchmark(c: &mut Criterion) {
         let geod = geographiclib::Geodesic::wgs84();
         b.iter(|| {
             for (lat1, lon1, azi1, s12) in inputs.clone() {
-                let (lat2, lon2, azi2) = geod.direct(lat1, lon1, azi1, s12);
+                let (_lat2, _lon2, _azi2) = geod.direct(lat1, lon1, azi1, s12);
             }
         })
     });
@@ -36,7 +35,7 @@ fn geodesic_direct_benchmark(c: &mut Criterion) {
         b.iter(|| {
             for (lat1, lon1, azi1, s12) in inputs.clone() {
                 // Do work comparable to geographiclib c-wrapper's `geod.direct` method
-                let (lat2, lon2, azi2) = geod.Direct3(lat1, lon1, azi1, s12);
+                let (_lat2, _lon2, _azi2) = geod.Direct3(lat1, lon1, azi1, s12);
             }
         })
     });
