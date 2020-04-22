@@ -1,4 +1,4 @@
-use geographiclib_rs::Geodesic;
+use geographiclib_rs::{Geodesic, InverseGeodesic};
 use std::fs::File;
 use std::io::{BufRead, BufReader};
 
@@ -14,6 +14,8 @@ fn main() {
     });
 
     for (lat1, lon1, lat2, lon2) in inputs {
-        geod.Inverse(lat1, lon1, lat2, lon2);
+        #[allow(non_snake_case)]
+        let (_s12, _azi1, _azi2, _m12, _M12, _M21, _S12, _a12) =
+            geod.inverse(lat1, lon1, lat2, lon2);
     }
 }

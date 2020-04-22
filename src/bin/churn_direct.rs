@@ -1,4 +1,4 @@
-use geographiclib_rs::Geodesic;
+use geographiclib_rs::{DirectGeodesic, Geodesic};
 use std::fs::File;
 use std::io::{BufRead, BufReader};
 
@@ -14,6 +14,8 @@ fn main() {
     });
 
     for (lat1, lon1, azi1, s12) in inputs {
-        geod.Direct(lat1, lon1, azi1, s12);
+        #[allow(non_snake_case)]
+        let (_lat2, _lon2, _azi2, _m12, _M12, _M21, _S12, _a12) =
+            geod.direct(lat1, lon1, azi1, s12);
     }
 }

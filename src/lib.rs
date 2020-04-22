@@ -1,5 +1,5 @@
 mod geodesic;
-pub use geodesic::Geodesic;
+pub use geodesic::{DirectGeodesic, Geodesic, InverseGeodesic};
 
 pub mod geodesiccapability;
 pub use geodesiccapability as capability;

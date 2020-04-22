@@ -2,7 +2,7 @@ use std::env;
 use std::fs::File;
 use std::io::{self, BufRead, BufReader};
 
-use geographiclib_rs::Geodesic;
+use geographiclib_rs::{DirectGeodesic, Geodesic, InverseGeodesic};
 use std::error::Error;
 
 struct Runner {
@@ -97,7 +97,7 @@ impl Runner {
             _computed_M21,
             _computed_S12,
             computed_a12,
-        ) = self.geod.Direct(lat1, lon1, azi1, s12);
+        ) = self.geod.direct(lat1, lon1, azi1, s12);
         let output_fields = if self.is_full_output {
             // TODO - we're currently omitting several fields, and only outputting what's
             //        necessary to pass the validation tool
@@ -128,7 +128,7 @@ impl Runner {
         #[allow(non_snake_case)]
         let (s12, azi1, azi2, m12, _M12, _M21, _S12, a12) = self
             .geod
-            .Inverse(input_lat1, input_lon1, input_lat2, input_lon2);
+            .inverse(input_lat1, input_lon1, input_lat2, input_lon2);
 
         let output_fields = if self.is_full_output {
             // TODO - we're currently omitting several fields, and only outputting what's
