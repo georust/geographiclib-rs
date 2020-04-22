@@ -1530,21 +1530,21 @@ mod tests {
             ),
         ];
 
-        // MJK FIXME: this test isn't testing anything due to variable clobber
+        // Test inverse
         for (lat1, lon1, azi1, lat2, lon2, azi2, s12, a12, m12, M12, M21, S12) in testcases.iter() {
-            let (a12, s12, azi1, azi2, m12, M12, M21, S12) =
+            let (computed_a12, computed_s12, computed_azi1, computed_azi2, computed_m12, computed_M12, computed_M21, computed_S12) =
                 geod.GenInverse2(*lat1, *lon1, *lat2, *lon2, caps::ALL | caps::LONG_UNROLL);
-            assert_approx_eq!(lon2, lon2, 1e-13f64);
-            assert_approx_eq!(azi1, azi1, 1e-13f64);
-            assert_approx_eq!(azi2, azi2, 1e-13f64);
-            assert_approx_eq!(s12, s12, 1e-8f64);
-            assert_approx_eq!(a12, a12, 1e-13f64);
-            assert_approx_eq!(m12, m12, 1e-8f64);
-            assert_approx_eq!(M12, M12, 1e-15f64);
-            assert_approx_eq!(M21, M21, 1e-15f64);
-            assert_approx_eq!(S12, S12, 0.1f64);
+            assert_approx_eq!(computed_azi1, azi1, 1e-13f64);
+            assert_approx_eq!(computed_azi2, azi2, 1e-13f64);
+            assert_approx_eq!(computed_s12, s12, 1e-8f64);
+            assert_approx_eq!(computed_a12, a12, 1e-13f64);
+            assert_approx_eq!(computed_m12, m12, 1e-8f64);
+            assert_approx_eq!(computed_M12, M12, 1e-15f64);
+            assert_approx_eq!(computed_M21, M21, 1e-15f64);
+            assert_approx_eq!(computed_S12, S12, 0.1f64);
         }
-        // Also test direct
+
+        // Test direct
         for (lat1, lon1, azi1, lat2, lon2, azi2, s12, a12, m12, M12, M21, S12) in testcases.iter() {
             let (
                 computed_a12,
