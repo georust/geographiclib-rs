@@ -199,6 +199,7 @@ impl GeodesicLine {
         }
     }
 
+    /// returns (a12, lat2, lon2, azi2, s12, m12, M12, M21, S12)
     pub fn _gen_position(
         &self,
         arcmode: bool,

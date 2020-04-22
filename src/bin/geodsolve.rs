@@ -87,8 +87,16 @@ impl Runner {
         let lon1 = fields[1];
         let azi1 = fields[2];
         let s12 = fields[3];
-        let outmask = Some(capability::ALL);
-        let result = self.geod.Direct(lat1, lon1, azi1, s12, outmask);
+        let (
+            computed_lat2,
+            computed_lon2,
+            computed_azi2,
+            computed_m12,
+            computed_M12,
+            computed_M21,
+            computed_S12,
+            computed_a12,
+        ) = self.geod.Direct(lat1, lon1, azi1, s12);
         let output_fields = if self.is_full_output {
             // TODO - we're currently omitting several fields, and only outputting what's
             //        necessary to pass the validation tool
@@ -96,15 +104,15 @@ impl Runner {
                 lat1,
                 lon1,
                 azi1,
-                result["lat2"],
-                result["lon2"],
-                result["azi2"],
+                computed_lat2,
+                computed_lon2,
+                computed_azi2,
                 s12,
-                result["a12"],
-                result["m12"],
+                computed_a12,
+                computed_m12,
             ]
         } else {
-            vec![result["lat2"], result["lon2"], result["azi2"]]
+            vec![computed_lat2, computed_lon2, computed_azi2]
         };
         output_fields
     }

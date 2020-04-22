@@ -13,17 +13,20 @@ fn geodesic_direct_benchmark(c: &mut Criterion) {
 
     let file = File::open(INPUT_FOR_DIRECT).unwrap();
     let reader = BufReader::new(file);
-    let inputs: Vec<(f64,f64,f64,f64)> = reader.lines().map(|line| {
-        let line = line.unwrap();
-        let fields: Vec<f64> = line.split(" ").map(|s| s.parse::<f64>().unwrap()).collect();
-        (fields[0], fields[1], fields[2], fields[6])
-    }).collect();
+    let inputs: Vec<(f64, f64, f64, f64)> = reader
+        .lines()
+        .map(|line| {
+            let line = line.unwrap();
+            let fields: Vec<f64> = line.split(" ").map(|s| s.parse::<f64>().unwrap()).collect();
+            (fields[0], fields[1], fields[2], fields[6])
+        })
+        .collect();
 
     c.bench_function("direct (c wrapper)", |b| {
         let geod = geographiclib::Geodesic::wgs84();
         b.iter(|| {
             for (lat1, lon1, azi1, s12) in inputs.clone() {
-                geod.direct(lat1, lon1, azi1, s12);
+                let (lat2, lon2, azi2) = geod.direct(lat1, lon1, azi1, s12);
             }
         })
     });
@@ -32,7 +35,8 @@ fn geodesic_direct_benchmark(c: &mut Criterion) {
         let geod = geographiclib_rs::Geodesic::wgs84();
         b.iter(|| {
             for (lat1, lon1, azi1, s12) in inputs.clone() {
-                geod.Direct(lat1, lon1, azi1, s12, Some(capability::ALL));
+                // Do work comparable to geographiclib c-wrapper's `geod.direct` method
+                let (lat2, lon2, azi2) = geod.Direct3(lat1, lon1, azi1, s12);
             }
         })
     });
@@ -43,11 +47,14 @@ fn geodesic_inverse_benchmark(c: &mut Criterion) {
 
     let file = File::open(INPUT_FOR_INVERSE).unwrap();
     let reader = BufReader::new(file);
-    let inputs: Vec<(f64,f64,f64,f64)> = reader.lines().map(|line| {
-        let line = line.unwrap();
-        let fields: Vec<f64> = line.split(" ").map(|s| s.parse::<f64>().unwrap()).collect();
-        (fields[0], fields[1], fields[3], fields[4])
-    }).collect();
+    let inputs: Vec<(f64, f64, f64, f64)> = reader
+        .lines()
+        .map(|line| {
+            let line = line.unwrap();
+            let fields: Vec<f64> = line.split(" ").map(|s| s.parse::<f64>().unwrap()).collect();
+            (fields[0], fields[1], fields[3], fields[4])
+        })
+        .collect();
 
     c.bench_function("inverse (c wrapper)", |b| {
         let geod = geographiclib::Geodesic::wgs84();

@@ -926,75 +926,160 @@ impl Geodesic {
         result
     }
 
-    pub fn _GenDirect(
+    ///  returns (a12, lat2, lon2, azi2, s12, m12, M12, M21, S12)
+    pub fn GenDirect(
         &self,
         lat1: f64,
         lon1: f64,
         azi1: f64,
         arcmode: bool,
         s12_a12: f64,
-        outmask: u64,
+        mut outmask: u64,
     ) -> (f64, f64, f64, f64, f64, f64, f64, f64, f64) {
-        // TODO This operation in python does not change the outmask,
-        //      while it does change it in Rust, so maybe all the operations
-        //      that modifies the outmask should be double checked
-        // if !arcmode {
-        //     outmask = outmask | caps::DISTANCE_IN;
-        // };
+        if !arcmode {
+            outmask = outmask | caps::DISTANCE_IN;
+        };
+        let lon1 = if outmask & caps::LONG_UNROLL != 0 {
+            lon1
+        } else {
+            geomath::ang_normalize(lon1)
+        };
+
         let line =
             geodesicline::GeodesicLine::new(self, lat1, lon1, azi1, Some(outmask), None, None);
         line._gen_position(arcmode, s12_a12, outmask)
     }
 
+    /// Solve the direct geodesic problem where the length of the geodesic
+    /// is specified in terms of distance.
+    ///
+    /// # Arguments
+    ///   - lat1 - Latitude of 1st point [degrees] [-90.,90.]
+    ///   - lon1 - Longitude of 1st point [degrees] [-180., 180.]
+    ///   - azi1 - Azimuth at 1st point [degrees] [-180., 180.]
+    ///   - s12 - Distance from 1st to 2nd point [meters] Value may be negative
+    ///
+    /// # Returns
+    ///  - lat2 latitude of point 2 (degrees).
+    ///  - lon2 longitude of point 2 (degrees).
+    ///  - azi2 (forward) azimuth at point 2 (degrees).
+    ///  - m12 reduced length of geodesic (meters).
+    ///  - M12 geodesic scale of point 2 relative to point 1 (dimensionless).
+    ///  - M21 geodesic scale of point 1 relative to point 2 (dimensionless).
+    ///  - S12 area under the geodesic (meters<sup>2</sup>).
+    ///  - a12 arc length of between point 1 and point 2 (degrees).
+    ///
+    ///  If either point is at a pole, the azimuth is defined by keeping the
+    ///  longitude fixed, writing lat = ±(90° − ε), and taking the limit ε → 0+.
+    ///  An arc length greater that 180° signifies a geodesic which is not a
+    ///  shortest path. (For a prolate ellipsoid, an additional condition is
+    ///  necessary for a shortest path: the longitudinal extent must not
+    ///  exceed of 180°.)
     pub fn Direct(
         &self,
         lat1: f64,
         lon1: f64,
         azi1: f64,
         s12: f64,
-        outmask: Option<u64>,
-    ) -> HashMap<String, f64> {
-        let outmask = match outmask {
-            Some(outmask) => outmask,
-            None => caps::STANDARD,
-        };
-        // TODO IS THIS NEEDED?
-        // outmask &= caps::OUT_MASK;
+    ) -> (f64, f64, f64, f64, f64, f64, f64, f64) {
+        let capabilities = caps::LATITUDE
+            | caps::LONGITUDE
+            | caps::AZIMUTH
+            | caps::REDUCEDLENGTH
+            | caps::GEODESICSCALE
+            | caps::AREA;
         let (a12, lat2, lon2, azi2, s12, m12, M12, M21, S12) =
-            self._GenDirect(lat1, lon1, azi1, false, s12, outmask);
-        let mut result: HashMap<String, f64> = HashMap::new();
-        result.insert("lat1".to_string(), geomath::lat_fix(lat1));
-        result.insert(
-            "lon1".to_string(),
-            if outmask & caps::LONG_UNROLL != 0 {
-                lon1
-            } else {
-                geomath::ang_normalize(lon1)
-            },
-        );
-        result.insert("azi1".to_string(), geomath::lat_fix(azi1));
-        result.insert("s12".to_string(), s12);
-        result.insert("a12".to_string(), a12);
-        if outmask & caps::LATITUDE != 0 {
-            result.insert("lat2".to_string(), lat2);
-        }
-        if outmask & caps::LONGITUDE != 0 {
-            result.insert("lon2".to_string(), lon2);
-        }
-        if outmask & caps::AZIMUTH != 0 {
-            result.insert("azi2".to_string(), azi2);
-        }
-        if outmask & caps::REDUCEDLENGTH != 0 {
-            result.insert("m12".to_string(), m12);
-        }
-        if outmask & caps::GEODESICSCALE != 0 {
-            result.insert("M12".to_string(), M12);
-            result.insert("M21".to_string(), M21);
-        }
-        if outmask & caps::AREA != 0 {
-            result.insert("S12".to_string(), S12);
-        }
-        result
+            self.GenDirect(lat1, lon1, azi1, false, s12, capabilities);
+        (lat2, lon2, azi2, m12, M12, M21, S12, a12)
+    }
+
+    /// See the documentation for Geodesic::Direct.
+    ///
+    /// # Returns
+    ///  - lat2 latitude of point 2 (degrees).
+    ///  - lon2 longitude of point 2 (degrees).
+    pub fn Direct2(&self, lat1: f64, lon1: f64, azi1: f64, s12: f64) -> (f64, f64) {
+        let capabilities = caps::LATITUDE | caps::LONGITUDE;
+        let (a12, lat2, lon2, azi2, s12, m12, M12, M21, S12) =
+            self.GenDirect(lat1, lon1, azi1, false, s12, capabilities);
+        (lat2, lon2)
+    }
+
+    /// See the documentation for Geodesic::Direct.
+    ///
+    /// # Returns
+    ///  - lat2 latitude of point 2 (degrees).
+    ///  - lon2 longitude of point 2 (degrees).
+    ///  - azi2 (forward) azimuth at point 2 (degrees).
+    ///
+    /// ```rust
+    /// // Example, determine the point 10000 km NE of JFK:
+    /// use geographiclib::Geodesic;
+    /// let g = Geodesic::wgs84();
+    /// let (lat,lon,az) = g.direct(40.64, -73.78, 45.0, 10e6);
+    /// assert_eq!(lat, 32.621100463725796);
+    /// assert_eq!(lon, 49.05248709295982);
+    /// assert_eq!(az,  140.4059858768007);
+    /// ```
+    pub fn Direct3(&self, lat1: f64, lon1: f64, azi1: f64, s12: f64) -> (f64, f64, f64) {
+        let capabilities = caps::LATITUDE | caps::LONGITUDE | caps::AZIMUTH;
+        let (a12, lat2, lon2, azi2, s12, m12, M12, M21, S12) =
+            self.GenDirect(lat1, lon1, azi1, false, s12, capabilities);
+        (lat2, lon2, azi2)
+    }
+
+    /// See the documentation for Geodesic::Direct.
+    ///
+    /// # Returns
+    ///  - lat2 latitude of point 2 (degrees).
+    ///  - lon2 longitude of point 2 (degrees).
+    ///  - azi2 (forward) azimuth at point 2 (degrees).
+    ///  - m12 reduced length of geodesic (meters).
+    pub fn Direct4(&self, lat1: f64, lon1: f64, azi1: f64, s12: f64) -> (f64, f64, f64, f64) {
+        let capabilities = caps::LATITUDE | caps::LONGITUDE | caps::AZIMUTH | caps::REDUCEDLENGTH;
+        let (a12, lat2, lon2, azi2, s12, m12, M12, M21, S12) =
+            self.GenDirect(lat1, lon1, azi1, false, s12, capabilities);
+        (lat2, lon2, azi2, m12)
+    }
+
+    /// See the documentation for Geodesic::Direct.
+    ///
+    /// # Returns
+    ///  - lat2 latitude of point 2 (degrees).
+    ///  - lon2 longitude of point 2 (degrees).
+    ///  - azi2 (forward) azimuth at point 2 (degrees).
+    ///  - M12 geodesic scale of point 2 relative to point 1 (dimensionless).
+    ///  - M21 geodesic scale of point 1 relative to point 2 (dimensionless).
+    pub fn Direct5(&self, lat1: f64, lon1: f64, azi1: f64, s12: f64) -> (f64, f64, f64, f64, f64) {
+        let capabilities = caps::LATITUDE | caps::LONGITUDE | caps::AZIMUTH | caps::GEODESICSCALE;
+        let (a12, lat2, lon2, azi2, s12, m12, M12, M21, S12) =
+            self.GenDirect(lat1, lon1, azi1, false, s12, capabilities);
+        (lat2, lon2, azi2, M12, M21)
+    }
+
+    /// See the documentation for Geodesic::Direct.
+    /// # Returns
+    ///  - lat2 latitude of point 2 (degrees).
+    ///  - lon2 longitude of point 2 (degrees).
+    ///  - azi2 (forward) azimuth at point 2 (degrees).
+    ///  - m12 reduced length of geodesic (meters).
+    ///  - M12 geodesic scale of point 2 relative to point 1 (dimensionless).
+    ///  - M21 geodesic scale of point 1 relative to point 2 (dimensionless).
+    pub fn Direct6(
+        &self,
+        lat1: f64,
+        lon1: f64,
+        azi1: f64,
+        s12: f64,
+    ) -> (f64, f64, f64, f64, f64, f64) {
+        let capabilities = caps::LATITUDE
+            | caps::LONGITUDE
+            | caps::AZIMUTH
+            | caps::REDUCEDLENGTH
+            | caps::GEODESICSCALE;
+        let (a12, lat2, lon2, azi2, s12, m12, M12, M21, S12) =
+            self.GenDirect(lat1, lon1, azi1, false, s12, capabilities);
+        (lat2, lon2, azi2, m12, M12, M21)
     }
 }
 
@@ -1006,7 +1091,7 @@ mod tests {
     #[test]
     fn test_inverse_and_direct() -> Result<(), String> {
         // See python/test_geodesic.py
-        let geod = Geodesic::new(WGS84_A, WGS84_F);
+        let geod = Geodesic::wgs84();
         assert_eq!(
             *geod
                 .Inverse(0.0, 0.0, 1.0, 1.0, caps::STANDARD)
@@ -1311,21 +1396,32 @@ mod tests {
         }
         // Also test direct
         for (lat1, lon1, azi1, lat2, lon2, azi2, s12, a12, m12, M12, M21, S12) in testcases.iter() {
-            let fwd = geod.Direct(
+            let (
+                computed_a12,
+                computed_lat2,
+                computed_lon2,
+                computed_azi2,
+                computed_s12,
+                computed_m12,
+                computed_M12,
+                computed_M21,
+                computed_S12,
+            ) = geod.GenDirect(
                 *lat1,
                 *lon1,
                 *azi1,
+                false,
                 *s12,
-                Some(caps::ALL | caps::LONG_UNROLL),
+                caps::ALL | caps::LONG_UNROLL,
             );
-            assert_approx_eq!(*fwd.get("lat2").expect("HEY"), lat2, 1e-13f64);
-            assert_approx_eq!(*fwd.get("lon2").expect("HEY"), lon2, 1e-13f64);
-            assert_approx_eq!(*fwd.get("azi2").expect("HEY"), azi2, 1e-13f64);
-            assert_approx_eq!(*fwd.get("a12").expect("HEY"), a12, 1e-13f64);
-            assert_approx_eq!(*fwd.get("m12").expect("HEY"), m12, 1e-8f64);
-            assert_approx_eq!(*fwd.get("M12").expect("HEY"), M12, 1e-15f64);
-            assert_approx_eq!(*fwd.get("M21").expect("HEY"), M21, 1e-15f64);
-            assert_approx_eq!(*fwd.get("S12").expect("HEY"), S12, 0.1f64);
+            assert_approx_eq!(computed_lat2, lat2, 1e-13f64);
+            assert_approx_eq!(computed_lon2, lon2, 1e-13f64);
+            assert_approx_eq!(computed_azi2, azi2, 1e-13f64);
+            assert_approx_eq!(computed_a12, a12, 1e-13f64);
+            assert_approx_eq!(computed_m12, m12, 1e-8f64);
+            assert_approx_eq!(computed_M12, M12, 1e-15f64);
+            assert_approx_eq!(computed_M21, M21, 1e-15f64);
+            assert_approx_eq!(computed_S12, S12, 0.1f64);
         }
         Ok(())
     }
