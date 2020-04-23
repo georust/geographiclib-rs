@@ -11,10 +11,6 @@ pub fn get_min_val() -> f64 {
     TWO.powi(-1022)
 }
 
-pub fn get_max_val() -> f64 {
-    TWO.powi(1023) * (2.0 - TWO.powi(1 - DIGITS as i32))
-}
-
 // Square
 pub fn sq(x: f64) -> f64 {
     x.powi(2)
@@ -54,13 +50,14 @@ pub fn sum(u: f64, v: f64) -> (f64, f64) {
 }
 
 // Evaluate a polynomial
-pub fn polyval(n: i64, p: &Vec<f64>, s: usize, x: f64) -> f64 {
+pub fn polyval(n: i64, p: &[f64], s: usize, x: f64) -> f64 {
     let mut s = s;
     let mut n = n;
     let mut y = if n < 0 { 0.0 } else { p[s] };
+    assert!((n as usize) < (usize::MAX - s));
     while n > 0 {
         n -= 1;
-        s = s.checked_add(1).expect("");
+        s += 1;
         y = y * x + p[s];
     }
     y
@@ -235,13 +232,8 @@ pub fn atan2d(y: f64, x: f64) -> f64 {
     ang
 }
 
-// test for finitness
-pub fn isfinite(x: f64) -> bool {
-    x.abs() <= get_max_val()
-}
-
 // Functions that used to be inside Geodesic
-pub fn sin_cos_series(sinp: bool, sinx: f64, cosx: f64, c: Vec<f64>) -> f64 {
+pub fn sin_cos_series(sinp: bool, sinx: f64, cosx: f64, c: &[f64]) -> f64 {
     let mut k = c.len();
     let mut n: i64 = k as i64 - if sinp { 1 } else { 0 };
     let ar: f64 = 2.0 * (cosx - sinx) * (cosx + sinx);
@@ -267,7 +259,7 @@ pub fn sin_cos_series(sinp: bool, sinx: f64, cosx: f64, c: Vec<f64>) -> f64 {
     }
 }
 
-// Solve stroid equation
+// Solve astroid equation
 pub fn astroid(x: f64, y: f64) -> f64 {
     let p = sq(x);
     let q = sq(y);
@@ -297,14 +289,14 @@ pub fn astroid(x: f64, y: f64) -> f64 {
 }
 
 pub fn _A1m1f(eps: f64, geodesic_order: i64) -> f64 {
-    let coeff = vec![1.0, 4.0, 64.0, 0.0, 256.0];
+    const COEFF: [f64; 5] = [1.0, 4.0, 64.0, 0.0, 256.0];
     let m: i64 = geodesic_order / 2;
-    let t = polyval(m, &coeff, 0, sq(eps)) / coeff[(m + 1) as usize] as f64;
+    let t = polyval(m, &COEFF, 0, sq(eps)) / COEFF[(m + 1) as usize] as f64;
     (t + eps) / (1.0 - eps)
 }
 
-pub fn _C1f(eps: f64, c: &mut Vec<f64>, geodesic_order: i64) {
-    let coeff = vec![
+pub fn _C1f(eps: f64, c: &mut [f64], geodesic_order: i64) {
+    const COEFF: [f64; 18] = [
         -1.0, 6.0, -16.0, 32.0, -9.0, 64.0, -128.0, 2048.0, 9.0, -16.0, 768.0, 3.0, -5.0, 512.0,
         -7.0, 1280.0, -7.0, 2048.0,
     ];
@@ -314,14 +306,14 @@ pub fn _C1f(eps: f64, c: &mut Vec<f64>, geodesic_order: i64) {
     for l in 1..=geodesic_order {
         let m = ((geodesic_order - l) / 2) as i64;
         c[l as usize] =
-            d * polyval(m, &coeff, o as usize, eps2) / coeff[(o + m + 1) as usize] as f64;
+            d * polyval(m, &COEFF, o as usize, eps2) / COEFF[(o + m + 1) as usize] as f64;
         o += m + 2;
         d *= eps;
     }
 }
 
-pub fn _C1pf(eps: f64, c: &mut Vec<f64>, geodesic_order: i64) {
-    let coeff = vec![
+pub fn _C1pf(eps: f64, c: &mut [f64], geodesic_order: i64) {
+    const COEFF: [f64; 18] = [
         205.0, -432.0, 768.0, 1536.0, 4005.0, -4736.0, 3840.0, 12288.0, -225.0, 116.0, 384.0,
         -7173.0, 2695.0, 7680.0, 3467.0, 7680.0, 38081.0, 61440.0,
     ];
@@ -331,21 +323,21 @@ pub fn _C1pf(eps: f64, c: &mut Vec<f64>, geodesic_order: i64) {
     for l in 1..=geodesic_order {
         let m = (geodesic_order - l) / 2;
         c[l as usize] =
-            d * polyval(m as i64, &coeff, o as usize, eps2) / coeff[(o + m + 1) as usize] as f64;
+            d * polyval(m as i64, &COEFF, o as usize, eps2) / COEFF[(o + m + 1) as usize] as f64;
         o += m + 2;
         d *= eps;
     }
 }
 
 pub fn _A2m1f(eps: f64, geodesic_order: i64) -> f64 {
-    let coeff = vec![-11.0, -28.0, -192.0, 0.0, 256.0];
+    const COEFF: [f64; 5] = [-11.0, -28.0, -192.0, 0.0, 256.0];
     let m: i64 = geodesic_order / 2;
-    let t = polyval(m, &coeff, 0, sq(eps)) / coeff[(m + 1) as usize] as f64;
+    let t = polyval(m, &COEFF, 0, sq(eps)) / COEFF[(m + 1) as usize] as f64;
     (t - eps) / (1.0 + eps)
 }
 
-pub fn _C2f(eps: f64, c: &mut Vec<f64>, geodesic_order: i64) {
-    let coeff = vec![
+pub fn _C2f(eps: f64, c: &mut [f64], geodesic_order: i64) {
+    const COEFF: [f64; 18] = [
         1.0, 2.0, 16.0, 32.0, 35.0, 64.0, 384.0, 2048.0, 15.0, 80.0, 768.0, 7.0, 35.0, 512.0, 63.0,
         1280.0, 77.0, 2048.0,
     ];
@@ -355,7 +347,7 @@ pub fn _C2f(eps: f64, c: &mut Vec<f64>, geodesic_order: i64) {
     for l in 1..=geodesic_order {
         let m = (geodesic_order - l) / 2;
         c[l as usize] =
-            d * polyval(m as i64, &coeff, o as usize, eps2) / coeff[(o + m + 1) as usize] as f64;
+            d * polyval(m as i64, &COEFF, o as usize, eps2) / COEFF[(o + m + 1) as usize] as f64;
         o += m + 2;
         d *= eps;
     }
@@ -456,7 +448,7 @@ mod tests {
                 false,
                 -0.8928657853278468,
                 0.45032287238256896,
-                vec![
+                &vec![
                     0.6660771734724675,
                     1.5757752625233906e-05,
                     3.8461688963148916e-09,
@@ -473,7 +465,7 @@ mod tests {
                 false,
                 -0.8928657853278468,
                 0.45032287238256896,
-                vec![0., 1., 2., 3., 4., 5.],
+                &vec![0., 1., 2., 3., 4., 5.],
             ),
             1.8998562852254026
         );
@@ -482,7 +474,7 @@ mod tests {
                 true,
                 0.2969032234925426,
                 0.9549075745221299,
-                vec![
+                &vec![
                     0.0,
                     -0.0003561309485314716,
                     -3.170731714689771e-08,
@@ -499,7 +491,7 @@ mod tests {
                 true,
                 -0.8928657853278468,
                 0.45032287238256896,
-                vec![
+                &vec![
                     0.0,
                     -0.0003561309485314716,
                     -3.170731714689771e-08,
@@ -513,7 +505,7 @@ mod tests {
         );
 
         assert_eq!(
-            sin_cos_series(true, 0.12, 0.21, vec![1.0, 2.0]),
+            sin_cos_series(true, 0.12, 0.21, &vec![1.0, 2.0]),
             0.10079999999999999
         );
         assert_eq!(
@@ -521,7 +513,7 @@ mod tests {
                 true,
                 -0.024679833885152578,
                 0.9996954065111039,
-                vec![
+                &vec![
                     0.0,
                     -0.0008355098973052918,
                     -1.7444619952659748e-07,

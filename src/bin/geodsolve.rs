@@ -2,7 +2,7 @@ use std::env;
 use std::fs::File;
 use std::io::{self, BufRead, BufReader};
 
-use geographiclib_rs::{capability, Geodesic};
+use geographiclib_rs::{DirectGeodesic, Geodesic, InverseGeodesic};
 use std::error::Error;
 
 struct Runner {
@@ -87,8 +87,17 @@ impl Runner {
         let lon1 = fields[1];
         let azi1 = fields[2];
         let s12 = fields[3];
-        let outmask = Some(capability::ALL);
-        let result = self.geod.Direct(lat1, lon1, azi1, s12, outmask);
+        #[allow(non_snake_case)]
+        let (
+            computed_lat2,
+            computed_lon2,
+            computed_azi2,
+            computed_m12,
+            _computed_M12,
+            _computed_M21,
+            _computed_S12,
+            computed_a12,
+        ) = self.geod.direct(lat1, lon1, azi1, s12);
         let output_fields = if self.is_full_output {
             // TODO - we're currently omitting several fields, and only outputting what's
             //        necessary to pass the validation tool
@@ -96,45 +105,39 @@ impl Runner {
                 lat1,
                 lon1,
                 azi1,
-                result["lat2"],
-                result["lon2"],
-                result["azi2"],
+                computed_lat2,
+                computed_lon2,
+                computed_azi2,
                 s12,
-                result["a12"],
-                result["m12"],
+                computed_a12,
+                computed_m12,
             ]
         } else {
-            vec![result["lat2"], result["lon2"], result["azi2"]]
+            vec![computed_lat2, computed_lon2, computed_azi2]
         };
         output_fields
     }
 
     fn compute_inverse(&self, fields: &Vec<f64>) -> Vec<f64> {
         assert_eq!(4, fields.len());
-        let lat1 = fields[0];
-        let lon1 = fields[1];
-        let lat2 = fields[2];
-        let lon2 = fields[3];
+        let input_lat1 = fields[0];
+        let input_lon1 = fields[1];
+        let input_lat2 = fields[2];
+        let input_lon2 = fields[3];
 
-        let outmask = capability::ALL;
-        let result = self.geod.Inverse(lat1, lon1, lat2, lon2, outmask);
+        #[allow(non_snake_case)]
+        let (s12, azi1, azi2, m12, _M12, _M21, _S12, a12) = self
+            .geod
+            .inverse(input_lat1, input_lon1, input_lat2, input_lon2);
 
         let output_fields = if self.is_full_output {
             // TODO - we're currently omitting several fields, and only outputting what's
             //        necessary to pass the validation tool
             vec![
-                lat1,
-                lon1,
-                result["azi1"],
-                lat2,
-                lon2,
-                result["azi2"],
-                result["s12"],
-                result["a12"],
-                result["m12"],
+                input_lat1, input_lon1, azi1, input_lat2, input_lon2, azi2, s12, a12, m12,
             ]
         } else {
-            vec![result["azi1"], result["azi2"], result["s12"]]
+            vec![azi1, azi2, s12]
         };
         output_fields
     }
