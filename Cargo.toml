@@ -1,7 +1,7 @@
 [package]
 name = "geographiclib-rs"
 version = "0.1.0"
-authors = ["Federico Dolce <psykopear@gmail.com>"]
+authors = ["Federico Dolce <psykopear@gmail.com>", "Michael Kirk <michael.code@endoftheworl.de"]
 edition = "2018"
 
 [dependencies]
