@@ -4,7 +4,6 @@ use crate::geodesiccapability as caps;
 use crate::geodesicline;
 use crate::geomath;
 
-use itertools::Itertools;
 use std::f64::consts::PI;
 
 pub const WGS84_A: f64 = 6378137.0;
