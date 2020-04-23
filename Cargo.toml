@@ -4,13 +4,10 @@ version = "0.1.0"
 authors = ["Federico Dolce <psykopear@gmail.com>", "Michael Kirk <michael.code@endoftheworl.de"]
 edition = "2018"
 
-[dependencies]
-failure = "0.1.5"
-geographiclib = "0.1.0"
-
 [dev-dependencies]
 assert_approx_eq = "1.1.0"
 criterion = "0.3.1"
+geographiclib = "0.1.0"
 
 [[bench]]
 name = "geodesic_benchmark"
