@@ -54,7 +54,7 @@ pub fn polyval(n: i64, p: &[f64], s: usize, x: f64) -> f64 {
     let mut s = s;
     let mut n = n;
     let mut y = if n < 0 { 0.0 } else { p[s] };
-    assert!((n as usize) < (usize::MAX - s));
+    assert!((n as usize) < (std::usize::MAX - s));
     while n > 0 {
         n -= 1;
         s += 1;
@@ -90,7 +90,7 @@ pub fn ang_round(x: f64) -> f64 {
 /// remainder of x/y in the range [-y/2, y/2]
 fn remainder(x: f64, y: f64) -> f64 {
     // z = math.fmod(x, y) if Math.isfinite(x) else Math.nan
-    let z = if x.is_finite() { x % y } else { f64::NAN };
+    let z = if x.is_finite() { x % y } else { std::f64::NAN };
 
     // # On Windows 32-bit with python 2.7, math.fmod(-0.0, 360) = +0.0
     // # This fixes this bug.  See also Math::AngNormalize in the C++ library.
@@ -153,7 +153,7 @@ pub fn sincosd(x: f64) -> (f64, f64) {
     let mut r = if x.is_finite() {
         fmod(x, 360.0)
     } else {
-        f64::NAN
+        std::f64::NAN
     };
 
     // q = 0 if Math.isnan(r) else int(round(r / 90))

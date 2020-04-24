@@ -4,7 +4,6 @@ use crate::geodesic::{self, GEODESIC_ORDER};
 use crate::geodesiccapability as caps;
 use crate::geomath;
 use std::collections::HashMap;
-use std::f64::NAN;
 
 #[derive(Debug)]
 pub struct GeodesicLine {
@@ -62,11 +61,11 @@ impl GeodesicLine {
             Some(caps) => caps,
         };
         let salp1 = match salp1 {
-            None => NAN,
+            None => std::f64::NAN,
             Some(salp1) => salp1,
         };
         let calp1 = match calp1 {
-            None => NAN,
+            None => std::f64::NAN,
             Some(calp1) => calp1,
         };
 
@@ -206,15 +205,15 @@ impl GeodesicLine {
         s12_a12: f64,
         outmask: u64,
     ) -> (f64, f64, f64, f64, f64, f64, f64, f64, f64) {
-        let mut a12 = NAN;
-        let mut lat2 = NAN;
-        let mut lon2 = NAN;
-        let mut azi2 = NAN;
-        let mut s12 = NAN;
-        let mut m12 = NAN;
-        let mut M12 = NAN;
-        let mut M21 = NAN;
-        let mut S12 = NAN;
+        let mut a12 = std::f64::NAN;
+        let mut lat2 = std::f64::NAN;
+        let mut lon2 = std::f64::NAN;
+        let mut azi2 = std::f64::NAN;
+        let mut s12 = std::f64::NAN;
+        let mut m12 = std::f64::NAN;
+        let mut M12 = std::f64::NAN;
+        let mut M21 = std::f64::NAN;
+        let mut S12 = std::f64::NAN;
         let outmask = outmask & (self.caps & caps::OUT_MASK);
         if !(arcmode || (self.caps & (caps::OUT_MASK & caps::DISTANCE_IN) != 0)) {
             return (a12, lat2, lon2, azi2, s12, m12, M12, M21, S12);
@@ -236,7 +235,7 @@ impl GeodesicLine {
             // tau12 = s12_a12 / (self._b * (1 + self._A1m1))
             // tau12 = tau12 if Math.isfinite(tau12) else Math.nan
             let tau12 = s12_a12 / (self._b * (1.0 + self._A1m1));
-            let tau12 = if tau12.is_finite() { tau12 } else { f64::NAN };
+            let tau12 = if tau12.is_finite() { tau12 } else { std::f64::NAN };
 
             let s = tau12.sin();
             let c = tau12.cos();
