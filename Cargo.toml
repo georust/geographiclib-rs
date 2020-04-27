@@ -4,6 +4,9 @@ version = "0.1.0"
 authors = ["Federico Dolce <psykopear@gmail.com>", "Michael Kirk <michael.code@endoftheworl.de"]
 edition = "2018"
 
+[dependencies]
+lazy_static = "1.4.0"
+
 [dev-dependencies]
 assert_approx_eq = "1.1.0"
 criterion = "0.3.1"

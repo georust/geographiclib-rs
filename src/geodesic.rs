@@ -9,7 +9,7 @@ use std::f64::consts::PI;
 pub const WGS84_A: f64 = 6378137.0;
 pub const WGS84_F: f64 = 1.0 / 298.257223563;
 
-#[derive(Debug)]
+#[derive(Debug, Copy, Clone)]
 pub struct Geodesic {
     pub a: f64,
     pub f: f64,
@@ -38,9 +38,14 @@ pub struct Geodesic {
     xthresh_: f64,
 }
 
+lazy_static! {
+    static ref WGS84_GEOD: Geodesic = Geodesic::new(WGS84_A, WGS84_F);
+}
+
 impl Geodesic {
+
     pub fn wgs84() -> Self {
-        Self::new(WGS84_A, WGS84_F)
+        WGS84_GEOD.clone()
     }
 
     pub fn equatorial_radius(&self) -> f64 {
