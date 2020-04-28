@@ -43,7 +43,6 @@ lazy_static! {
 }
 
 impl Geodesic {
-
     pub fn wgs84() -> Self {
         WGS84_GEOD.clone()
     }
