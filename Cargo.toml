@@ -1,11 +1,11 @@
 [package]
 name = "geographiclib-rs"
-version = "0.1.0"
+version = "0.2.0"
 license = "MIT"
 edition = "2018"
 
 description = "A port of geographiclib in Rust."
-authors = ["Federico Dolce <psykopear@gmail.com>", "Michael Kirk <michael.code@endoftheworl.de"]
+authors = ["Federico Dolce <psykopear@gmail.com>", "Michael Kirk <michael.code@endoftheworl.de>"]
 repository = "https://github.com/georust/geographiclib-rs"
 keywords = ["gis", "geo", "geography", "geospatial"]
 documentation = "https://docs.rs/geographiclib-rs"
