@@ -2,6 +2,8 @@
 
 A subset of [geographiclib](https://geographiclib.sourceforge.io/) implemented in Rust.
 
+Currently this implements the direct and the inverse geodesic calculations.
+
 If instead you are looking for Rust bindings to [Karney's C++ implementation](https://sourceforge.net/projects/geographiclib/), see [https://crates.io/geographiclib](https://crates.io/crates/geographiclib).
 
 ## Examples
