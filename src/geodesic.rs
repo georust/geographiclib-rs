@@ -928,8 +928,7 @@ impl Geodesic {
     }
 }
 
-/// Solve the direct geodesic problem where the length of the geodesic
-/// is specified in terms of distance.
+/// Place a second point, given the first point, an azimuth, and a distance.
 ///
 /// # Arguments
 ///   - lat1 - Latitude of 1st point [degrees] [-90.,90.]
@@ -1095,7 +1094,7 @@ impl DirectGeodesic<(f64, f64, f64, f64, f64, f64, f64, f64)> for Geodesic {
     }
 }
 
-/// Solve the inverse geodesic problem.
+/// Measure the distance (and other values) between two points.
 ///
 /// # Arguments
 /// - lat1 latitude of point 1 (degrees).
@@ -1118,12 +1117,12 @@ impl DirectGeodesic<(f64, f64, f64, f64, f64, f64, f64, f64)> for Geodesic {
 /// - S12 area under the geodesic (meters<sup>2</sup>).
 /// - a12 arc length of between point 1 and point 2 (degrees).
 ///
-///  \e lat1 and \e lat2 should be in the range [&minus;90&deg;, 90&deg;].
-///  The values of \e azi1 and \e azi2 returned are in the range
+///  `lat1` and `lat2` should be in the range [&minus;90&deg;, 90&deg;].
+///  The values of `azi1` and `azi2` returned are in the range
 ///  [&minus;180&deg;, 180&deg;].
 ///
 /// If either point is at a pole, the azimuth is defined by keeping the
-/// longitude fixed, writing \e lat = &plusmn;(90&deg; &minus; &epsilon;),
+/// longitude fixed, writing `lat` = &plusmn;(90&deg; &minus; &epsilon;),
 /// and taking the limit &epsilon; &rarr; 0+.
 ///
 /// The solution to the inverse problem is found using Newton's method.  If
