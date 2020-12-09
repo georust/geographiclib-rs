@@ -1,0 +1,11 @@
+[package]
+name = "utilities"
+version = "0.2.0"
+license = "MIT"
+edition = "2018"
+
+description = "Utilities for use in geographiclib-rs testing and benchmarking."
+authors = ["Stony Lohr <stony.lohr@gmail.com>"]
+
+[dependencies]
+lazy_static = "1.4.0"

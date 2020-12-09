@@ -5,7 +5,7 @@ license = "MIT"
 edition = "2018"
 
 description = "A port of geographiclib in Rust."
-authors = ["Federico Dolce <psykopear@gmail.com>", "Michael Kirk <michael.code@endoftheworl.de>"]
+authors = ["Federico Dolce <psykopear@gmail.com>", "Michael Kirk <michael.code@endoftheworl.de>", "Stony Lohr <stony.lohr@gmail.com>"]
 repository = "https://github.com/georust/geographiclib-rs"
 keywords = ["gis", "geo", "geography", "geospatial"]
 documentation = "https://docs.rs/geographiclib-rs"
@@ -18,7 +18,12 @@ lazy_static = "1.4.0"
 assert_approx_eq = "1.1.0"
 criterion = "0.3.1"
 geographiclib = "0.1.0"
+utilities = { path = "utilities" }
 
 [[bench]]
 name = "geodesic_benchmark"
+harness = false
+
+[[bench]]
+name = "geomath_benchmark"
 harness = false
