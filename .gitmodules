@@ -1,0 +1,4 @@
+[submodule "test_fixtures/geographiclib-instrumented"]
+	path = test_fixtures/geographiclib-instrumented
+	url = https://alephknot@git.code.sf.net/u/alephknot/geographiclib
+	branch = instrumented-crude

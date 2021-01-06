@@ -9,3 +9,5 @@ authors = ["Stony Lohr <stony.lohr@gmail.com>"]
 
 [dependencies]
 lazy_static = "1.4.0"
+zip = "0.5.9"
+geographiclib-rs = { path = ".." }
