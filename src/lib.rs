@@ -5,7 +5,7 @@ pub mod geodesiccapability;
 pub use geodesiccapability as capability;
 
 mod geodesicline;
-pub mod geomath;
+mod geomath;
 
 #[macro_use]
 extern crate lazy_static;

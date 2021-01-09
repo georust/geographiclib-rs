@@ -355,11 +355,16 @@ pub fn _C2f(eps: f64, c: &mut [f64], geodesic_order: i64) {
 
 #[cfg(test)]
 mod tests {
+    extern crate utilities;
+
     use super::*;
-    // Results for the assertions are taken by running the python implementation
+    use utilities::{assert_delta, DeltaEntry, test_basic};
+    use std::sync::{Arc, Mutex};
+
+    // Results for assertions in *_vs_python tests are taken by running the python implementation
 
     #[test]
-    fn test_sincosd() {
+    fn test_sincosd_vs_python() {
         let res = sincosd(-77.03196);
         assert_eq!(res.0, -0.9744953925159129);
         assert_eq!(res.1, 0.22440750870961693);
@@ -373,7 +378,7 @@ mod tests {
     }
 
     #[test]
-    fn test__C2f() {
+    fn test__C2f_vs_python() {
         let mut c = vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0];
         _C2f(0.12, &mut c, 6);
         assert_eq!(
@@ -391,12 +396,12 @@ mod tests {
     }
 
     #[test]
-    fn test__A2m1f() {
+    fn test__A2m1f_vs_python() {
         assert_eq!(_A2m1f(0.12, 6), -0.11680607884285714);
     }
 
     #[test]
-    fn test__C1pf() {
+    fn test__C1pf_vs_python() {
         let mut c = vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0];
         _C1pf(0.12, &mut c, 6);
         assert_eq!(
@@ -414,7 +419,7 @@ mod tests {
     }
 
     #[test]
-    fn test__C1f() {
+    fn test__C1f_vs_python() {
         let mut c = vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0];
         _C1f(0.12, &mut c, 6);
         assert_eq!(
@@ -432,17 +437,17 @@ mod tests {
     }
 
     #[test]
-    fn test__A1m1f() {
+    fn test__A1m1f_vs_python() {
         assert_eq!(_A1m1f(0.12, 6), 0.1404582405272727);
     }
 
     #[test]
-    fn test_astroid() {
+    fn test_astroid_vs_python() {
         assert_eq!(astroid(21.0, 12.0), 23.44475767500982);
     }
 
     #[test]
-    fn test_sin_cos_series() {
+    fn test_sin_cos_series_vs_python() {
         assert_eq!(
             sin_cos_series(
                 false,
@@ -526,4 +531,206 @@ mod tests {
             4.124513511893872e-05
         );
     }
+
+    // *_vs_cpp tests are based on instrumented inputs and outputs from C++
+    // They're flagged as "ignore" both because they're slow and not self-contained
+    // (since they need to read data files), so they only run if specifically requested.
+
+    #[test]
+    #[ignore]
+    fn test_geomath_ang_diff_vs_cpp() {
+        // Line format: x y result=z e-out
+        test_basic("Math_AngDiff_x_y_e", 4, |line_num, items| {
+            let result = ang_diff(items[0], items[1]);
+            assert_delta!(items[2], result.0, 0.0, false, "result (result.0)", line_num);
+            assert_delta!(items[3], result.1, 0.0, false, "e (result.1)", line_num);
+        });
+    }
+
+    #[test]
+    #[ignore]
+    fn test_geomath_ang_normalize_vs_cpp() {
+        // Line format: x result
+        test_basic("Math_AngNormalize", 2, |line_num, items| {
+            let result = ang_normalize(items[0]);
+            assert_delta!(items[1], result, 0.0, false, "result", line_num);
+        });
+    }
+
+    #[test]
+    #[ignore]
+    fn test_geomath_ang_round_vs_cpp() {
+        // Line format: x result
+        test_basic("Math_AngRound", 2, |line_num, items| {
+            let result = ang_round(items[0]);
+            assert_delta!(items[1], result, 0.0, false, "result", line_num);
+        });
+    }
+
+    #[test]
+    #[ignore]
+    fn test_geomath_atan2d_vs_cpp() {
+        // Line format: y x result
+        let delta_entries = Arc::new(Mutex::new(vec![DeltaEntry::new(); 1]));
+        test_basic("Math_atan2d", 3, |line_num, items| {
+            let result = atan2d(items[0], items[1]);
+            let mut entries = delta_entries.lock().unwrap();
+
+            entries[0].add(items[2], result, line_num);
+            // For input of (-0, 1), the ideal result is +0, but C++ currently gets away with -0.
+            // Accept a value that is either positive 0, or that matches the C++ result for this case.
+            let special_case = items[0] == 0.0 && items[0].is_sign_negative() && items[1] == 1.0 && result.is_sign_positive();
+            assert_delta!(items[2], result, 5e-16, special_case, "result", line_num);
+        });
+
+        delta_entries.lock().unwrap().iter().enumerate().for_each(|(i, entry)| {
+            println!("test_geomath_atan2d_vs_cpp result.{}: {}", i, entry);
+        });
+    }
+
+    // Placeholder: Math_atand
+
+    #[test]
+    #[ignore]
+    fn test_geomath_consts_vs_cpp() {
+        // Line format: digits digits10 extra_digits bigendian pi degree GEOGRAPHICLIB_PRECISION GEOGRAPHICLIB_WORDS_BIGENDIAN
+        let items = utilities::read_consts_basic("Math_consts", 8);
+        let line_num = 2;
+        assert_delta!(items[0], DIGITS as f64, 0.0, false, "DIGITS", line_num);
+        assert_delta!(items[4], std::f64::consts::PI, 0.0, false, "PI", line_num);
+    }
+
+    // Placeholder: Math_cosd
+    // Placeholder: Math_eatanhe
+
+    #[test]
+    #[ignore]
+    fn test_geomath_lat_fix_vs_cpp() {
+        // Line format: x result
+        test_basic("Math_LatFix", 2, |line_num, items| {
+            let result = lat_fix(items[0]);
+            assert_delta!(items[1], result, 0.0, false, "result", line_num);
+        });
+    }
+
+    #[test]
+    #[ignore]
+    fn test_geomath_norm_vs_cpp() {
+        // Line format: x-in y-in x-out y-out
+        test_basic("Math_norm", 4, |line_num, items| {
+            let result = norm(items[0], items[1]);
+            assert_delta!(items[2], result.0, 0.0, false, "x-out (result.0)", line_num);
+            assert_delta!(items[3], result.1, 0.0, false, "y-out (result.1)", line_num);
+        });
+    }
+
+    #[test]
+    #[ignore]
+    fn test_geomath_polyval_vs_cpp() {
+        // Line format: N p(N+1) x result
+        test_basic("Math_polyval", -1, |line_num, items| {
+            assert!(items.len() > 2, "Expected a minimum of 3 items per line. Line {} had {}.", line_num, items.len());
+            let n = items[0] as i64;
+            let p_len = if n < 0 { 0 } else { n as usize + 1 };
+            let arg_count = p_len + 3;
+            assert!(items.len() == arg_count, "Expected {} items on line {}, based on first item, but found {}.", arg_count, line_num, items.len());
+            let p = &items[1..arg_count-2];
+            let x = items[arg_count-2];
+            assert_eq!(p_len, p.len(), "Internal error: On line {}, tried to construct slice size {} but found {}", line_num, p_len, p.len());
+            let result = polyval(n, p, 0, x);
+            assert_delta!(items[arg_count - 1], result, 0.0, false, "result", line_num);
+        });
+    }
+
+    #[test]
+    #[ignore]
+    fn test_geomath_sincosd_vs_cpp() {
+        // Line format: x sinx-out cosx-out
+        let delta_entries = Arc::new(Mutex::new(vec![DeltaEntry::new(); 2]));
+        test_basic("Math_sincosd", 3, |line_num, items| {
+            let result = sincosd(items[0]);
+            let mut entries = delta_entries.lock().unwrap();
+
+            entries[0].add(items[1], result.0, line_num);
+            assert_delta!(items[1], result.0, 2e-16, false, "sinx-out (result.0)", line_num);
+
+            entries[1].add(items[2], result.1, line_num);
+            assert_delta!(items[2], result.1, 2e-16, false, "cosx-out (result.1)", line_num);
+        });
+
+        delta_entries.lock().unwrap().iter().enumerate().for_each(|(i, entry)| {
+            println!("test_geomath_sincosd_vs_cpp result.{}: {}", i, entry);
+        });
+    }
+
+    // Placeholder: Math_sind
+
+    #[test]
+    #[ignore]
+    fn test_geomath_sq_vs_cpp() {
+        // Line format: x result
+        test_basic("Math_sq", 2, |line_num, items| {
+            let result = sq(items[0]);
+            assert_delta!(items[1], result, 0.0, false, "result", line_num);
+        });
+    }
+
+    #[test]
+    #[ignore]
+    fn test_geomath_sum_vs_cpp() {
+        // Line format: u v result=s t-out
+        test_basic("Math_sum", 4, |line_num, items| {
+            let result = sum(items[0], items[1]);
+            assert_delta!(items[2], result.0, 0.0, false, "result (result.0)", line_num);
+            assert_delta!(items[3], result.1, 0.0, false, "t-out (result.1)", line_num);
+        });
+    }
+
+    // Placeholder: Math_swab
+    // Placeholder: Math_tand
+    // Placeholder: Math_tauf
+    // Placeholder: Math_taupf
+
+    #[test]
+    #[ignore]
+    fn test_geomath_astroid_vs_cpp() {
+        // Line format: x y result
+        // Note: In the geographiclib C++ library, this function is in Geodesic, but in Rust it's in geomath.
+        let delta_entries = Arc::new(Mutex::new(vec![DeltaEntry::new(); 1]));
+        test_basic("Geodesic_Astroid", 3, |line_num, items| {
+            let result = astroid(items[0], items[1]);
+            let mut entries = delta_entries.lock().unwrap();
+
+            entries[0].add(items[2], result, line_num);
+            assert_delta!(items[2], result, 1e-15, false, "result", line_num);
+        });
+
+        delta_entries.lock().unwrap().iter().enumerate().for_each(|(i, entry)| {
+            println!("test_geomath_astroid_vs_cpp result.{}: {}", i, entry);
+        });
+    }
+
+    #[test]
+    #[ignore]
+    fn test_geomath_sin_cos_series_vs_cpp() {
+        // Line format: sinp sinx cosx n c(n+sinp) result
+        // Note: In the geographiclib C++ library, this function is in Geodesic, but in Rust it's in geomath.
+        test_basic("Geodesic_SinCosSeries", -1, |line_num, items| {
+            assert!(items.len() > 4, "Expected a minimum of 5 items per line. Line {} had {}.", line_num, items.len());
+            let sinp = items[0] != 0f64;
+            let n = items[3] as i64;
+            let mut s = if n < 0 { 0 } else { n as usize };
+            if sinp {
+                s += 1;
+            }
+            let arg_count = s + 5;
+            assert!(items.len() == arg_count, "Expected {} items on line {}, based on first item, but found {}.", arg_count, line_num, items.len());
+            let c = &items[4..s+4];
+            assert_eq!(s, c.len(), "Internal error: On line {}, tried to construct slice size {} but found {}", line_num, s, c.len());
+            let result = sin_cos_series(sinp, items[1], items[2], c);
+            assert_delta!(items[arg_count - 1], result, 0.0, false, "result", line_num);
+        });
+    }
+
+
 }

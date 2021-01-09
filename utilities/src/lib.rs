@@ -1,5 +1,7 @@
 extern crate geographiclib_rs;
 
+use std::collections::BTreeMap;
+use std::fmt::Display;
 use geographiclib_rs::Geodesic;
 use std::collections::HashMap;
 use std::error::Error;
@@ -10,14 +12,24 @@ use std::time;
 use std::u64;
 use zip;
 
-// todo: add a rust unit test that mirrors C++ MGRS::Check
+// testing reminder: Use "cargo test -- --nocapture" to let tests print to console.
+// testing reminder: If a new "*_vs_cpp" test fails especially badly, review the C++ "instrumented-crude" logging for possible bugs there
+// testing tip: While assert variations are valuable for catching regressions, they're
+//              often of more limited value when trying to _improve_ result precision.
+//              In such cases, use of something like DeltaEntry is often helpful,
+//              but remember to use nocapture, and often directing output to a file, for
+//              syntax like "cargo test -- --nocapture > ../test-out-a.txt".
+// benchmarking reminder: Remember to shut down unneeded processes before benching.
+// benchmarking reminder: In some cases, it may be desirable to capture multiple before and after
+//                        bench runs, to get a clearer sense of natural variability.
 
 const ZIP_PATH_RELATIVE: &str = "test_fixtures/geographiclib-instrumented/geographiclib-instrumented-crude-out";
 const DAT_PATH_RELATIVE: &str = "test_fixtures/test-data-unzipped";
 
 #[allow(non_upper_case_globals)]
-pub const nC_: usize = 7; // todo: define in geodesic-rs instead
+pub const nC_: usize = 7; // todo: define in geodesic.rs instead
 
+// Expected paths for zipped and unzipped versions of a file.
 pub struct DataPathPair {
     pub path_zip: path::PathBuf,
     pub path_dat: path::PathBuf,
@@ -42,6 +54,9 @@ pub fn get_data_paths(op_name: &str) -> std::io::Result<DataPathPair> {
     Ok(result)
 }
 
+// Given expected paths to the zipped and unzipped copies of a data file,
+// check whether the unzipped copy is missing, or whether the zipped copy
+// is newer. In either of those cases, unzip a fresh copy of the zipped file.
 pub fn refresh_unzipped(paths: &DataPathPair) -> std::io::Result<()> {
     let path_zip = paths.path_zip.as_path();
     let modified_in = path_zip.metadata().expect("Failed to read zip file metadata")
@@ -69,6 +84,8 @@ pub fn refresh_unzipped(paths: &DataPathPair) -> std::io::Result<()> {
     Ok(())
 }
 
+// Convert a string to f64, handling various special cases
+// found in geographiclib C++ instrumented-crude data files.
 pub fn as_f64(s: &str) -> Result<f64, Box<dyn Error + Sync + Send>> {
     match s {
         "nan" => Ok(f64::NAN),
@@ -104,7 +121,11 @@ pub fn calc_delta(x: f64, y: f64) -> (f64, f64) {
         return if x.is_sign_negative() == y.is_sign_negative() { (0f64, 0f64) } else { (f64::INFINITY, f64::INFINITY) };
     } else {
         let diff_abs = (x - y).abs();
-        let diff_rel = 2.0 * diff_abs / (x.abs() + y.abs());
+        let diff_rel = if diff_abs == 0.0 {
+            0.0
+        } else {
+            2.0 * diff_abs / (x.abs() + y.abs())
+        };
         return (diff_abs, diff_rel);
     }
 }
@@ -127,8 +148,11 @@ pub fn as_vec_basic(op_name: &str) -> Vec<f64> {
         result
 }
 
+// Construct a lookup of geodesics by construction parameters.
 // We can't use f64 in the key directly because it implements PartialEq,
 // but not Eq or Hash, because of the complication that NaN != NaN.
+// See confirm_geodesic and get_geodesic for other helper functionality
+// related to this same type of lookup.
 pub fn get_geodesic_lookup(data: &Vec<Vec<f64>>) -> HashMap<(u64, u64), Geodesic> {
     let mut map: HashMap<(u64, u64), Geodesic> = HashMap::new();
     for items in data {
@@ -136,6 +160,8 @@ pub fn get_geodesic_lookup(data: &Vec<Vec<f64>>) -> HashMap<(u64, u64), Geodesic
     }
     map
 }
+// Check whether a geodesic with the given parameters exists in the lookup.
+// If none is found, add one.
 fn confirm_geodesic(a: f64, f: f64, map: &mut HashMap<(u64, u64), Geodesic>) {
     assert!(!a.is_nan() && !f.is_nan(), "This operation is not suitable for use with NaNs");
     let key: (u64, u64) = (a.to_bits(), f.to_bits());
@@ -234,52 +260,212 @@ pub fn test_basic<T>(op_name: &str, arg_count: isize, f: T)
         });
 }
 
-pub struct RecordDeltaEntry {
-    pub diff_abs: f64,
-    pub diff_rel: f64,
-    pub sign_change: bool,
-    pub line_abs: usize,
-    pub line_rel: usize,
+// A struct for taking difference values, splitting into buckets, and reporting back.
+pub struct DeltaHistogram {
+    pub num_nan: usize,
+    pub num_inf: usize,
+    pub num_zero: usize,
+    pub exp_buckets: HashMap<isize, usize>,
 }
 
-impl RecordDeltaEntry {
+impl DeltaHistogram {
     pub fn new() -> Self {
-        RecordDeltaEntry {
-            diff_abs: 0.0,
-            diff_rel: 0.0,
-            sign_change: false,
-            line_abs: 0,
-            line_rel: 0,
+        DeltaHistogram {
+            num_nan: 0,
+            num_inf: 0,
+            num_zero: 0,
+            exp_buckets: HashMap::new(),
+        }
+    }
+
+    // Add a new difference item to the dataset being tracked.
+    pub fn add(&mut self, delta: f64) {
+        if delta.is_nan() {
+            self.num_nan += 1;
+        } else if delta.is_infinite() {
+            self.num_inf += 1;
+        } else if delta == 0.0 {
+            self.num_zero += 1;
+        } else {
+            let exp = delta.log10() as isize;
+            let current: usize = match self.exp_buckets.get(&exp) {
+                Some(val) => *val,
+                _ => 0,
+            };
+            self.exp_buckets.insert(exp, current + 1);
         }
     }
 }
 
-impl Copy for RecordDeltaEntry {}
+impl Clone for DeltaHistogram {
+    fn clone(&self) -> Self {
+        DeltaHistogram {
+            num_nan: self.num_nan,
+            num_inf: self.num_inf,
+            num_zero: self.num_zero,
+            exp_buckets: self.exp_buckets.clone(),
+        }
+    }
+}
 
-impl Clone for RecordDeltaEntry {
+impl Display for DeltaHistogram {
+    // Display a summary, reduced down to a managagle number of buckets.
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::result::Result<(), std::fmt::Error> {
+        const MAX_BUCKETS: usize = 7;
+        let mut keys_asc: Vec<isize> = Vec::new();
+        let mut collapsed_from: Vec<isize> = Vec::new();
+        let mut collapsed_to: Vec<isize> = Vec::new();
+        let mut histo_reduced: BTreeMap<isize, usize> = BTreeMap::new();
+        let mut num_total = 0;
+        self.exp_buckets.iter().for_each(|(&key, &val)| {
+            keys_asc.push(key);
+            histo_reduced.insert(key, val);
+            num_total += val;
+        });
+        keys_asc.sort();
+        while histo_reduced.len() > MAX_BUCKETS {
+            // Collapse the smallest bucket into its least-populated neighbor.
+            let mut smallest = usize::MAX;
+            let mut collapse_from = isize::MIN;
+            self.exp_buckets.iter().for_each(|(&key, &val)| {
+                if val < smallest {
+                    collapse_from = key;
+                    smallest = val;
+                }
+            });
+            let index_smallest = keys_asc.iter().position(|&val| val == collapse_from).unwrap();
+            let key_prev = if index_smallest == 0 { isize::MIN } else { keys_asc[index_smallest - 1] };
+            let key_next = if index_smallest >= histo_reduced.len() - 1 { isize::MIN } else { keys_asc[index_smallest + 1] };
+            let size_prev: usize = if key_prev == isize::MIN {
+                usize::MAX
+            } else {
+                *histo_reduced.get(&key_prev).unwrap()
+            };
+            let size_next = if key_prev == isize::MIN {
+                usize::MAX
+            } else {
+                *histo_reduced.get(&key_next).unwrap()
+            };
+            let (collapse_to, size_to) = if size_next < size_prev {
+                (key_next, size_next)
+            } else {
+                (key_prev, size_prev)
+            };
+            histo_reduced.insert(collapse_to, size_to + smallest);
+            histo_reduced.remove(&collapse_from);
+            keys_asc.remove(index_smallest);
+            collapsed_from.push(collapse_from);
+            collapsed_to.push(collapse_to);
+        }
+        // Convert counts to percentages
+        let num_total_f = num_total as f64;
+        histo_reduced.iter_mut().for_each(|(_key, val)| {
+            let percent = 100f64 * *val as f64 / num_total_f;
+            // Never round to 0 or 100. Only accept those values naturally.
+            let rounded = if percent < 1.0 {
+                assert!(*val != 0, "Internal error: Bucket contains no items");
+                1
+            } else if percent > 99.0 && *val != num_total {
+                99
+            } else {
+                percent.round() as usize
+            };
+            *val = rounded;
+        });
+        write!(f, "count {}, zero {}%", num_total, self.num_zero)?;
+        for (key, val) in histo_reduced {
+            let gained = collapsed_to.contains(&key);
+            write!(f, ", {}e{} {}%", if gained { "~" } else { "" }, key, val)?;
+        }
+        write!(f, "inf {}%, nan {}%", self.num_inf, self.num_nan)?;
+        Ok(())
+    }
+}
+
+
+// Information about value differences.
+// This is typically used to record the worst-case differences found
+// among sets of comparable expected vs found values.
+pub struct DeltaEntry {
+    pub diff_abs: f64,
+    pub diff_rel: f64,
+    pub num_sign_change_only: usize,
+    pub num_sign_change_plus_diff: usize,
+    pub line_abs: usize,
+    pub line_rel: usize,
+    pub histo: DeltaHistogram,
+}
+
+impl DeltaEntry {
+    pub fn new() -> Self {
+        DeltaEntry {
+            diff_abs: 0.0,
+            diff_rel: 0.0,
+            num_sign_change_only: 0,
+            num_sign_change_plus_diff: 0,
+            line_abs: 0,
+            line_rel: 0,
+            histo: DeltaHistogram::new(),
+        }
+    }
+
+    // Given x and y, calculate their absolute difference, relative difference,
+    // and sign change status, then check whether any of those values is the
+    // worst seen so far for comparable operations. If it is, record the line
+    // number and the new worst difference.
+    // Note that use of this function typically suggests that the values in question
+    // are suspected to not be an ideal match for the expected values.
+    pub fn add(&mut self, x: f64, y: f64, line_num: usize) {
+        let delta = calc_delta(x, y);
+        if (f64::is_nan(delta.0) && !f64::is_nan(self.diff_abs)) || delta.0 > self.diff_abs {
+            self.diff_abs = delta.0;
+            self.line_abs = line_num;
+        }
+        if (f64::is_nan(delta.1) && !f64::is_nan(self.diff_rel)) || delta.1 > self.diff_rel {
+            self.diff_rel = delta.1;
+            self.line_rel = line_num;
+        }
+        if x.is_sign_negative() == y.is_sign_negative() {
+        } else if delta.0 == 0.0 {
+            self.num_sign_change_only += 1;
+        } else {
+            self.num_sign_change_plus_diff += 1;
+        }
+        // On the next line, negating the inequality is intentional, to get desired nan behavior.
+        let diff_better = if delta.0.is_nan() || !(delta.0 <= delta.1) {
+            delta.1
+        } else {
+            delta.0
+        };
+        self.histo.add(diff_better);
+    }
+}
+
+impl Clone for DeltaEntry {
         fn clone(&self) -> Self {
-            RecordDeltaEntry {
+            DeltaEntry {
                 diff_abs: self.diff_abs,
                 diff_rel: self.diff_rel,
-                sign_change: self.sign_change,
+                num_sign_change_only: self.num_sign_change_only,
+                num_sign_change_plus_diff: self.num_sign_change_plus_diff,
                 line_abs: self.line_rel,
                 line_rel: self.line_rel,
+                histo: self.histo.clone(),
             }
         }
 }
 
-pub fn record_delta(x: f64, y: f64, line_num: usize, entry: &mut RecordDeltaEntry) {
-    let delta2 = calc_delta(x, y);
-    if (f64::is_nan(delta2.0) && !f64::is_nan(entry.diff_abs)) || delta2.0 > entry.diff_abs {
-        entry.diff_abs = delta2.0;
-        entry.line_abs = line_num;
-    }
-    if (f64::is_nan(delta2.1) && !f64::is_nan(entry.diff_rel)) || delta2.1 > entry.diff_rel {
-        entry.diff_rel = delta2.1;
-        entry.line_rel = line_num;
-    }
-    if x.is_sign_negative() != y.is_sign_negative() {
-        entry.sign_change = true;
+impl Display for DeltaEntry {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::result::Result<(), std::fmt::Error> {
+        write!(
+            f,
+            "max abs {:e} at line {}, max rel {:e} at line {}, sign diffs {}+{}, histo {}",
+            self.diff_abs, self.line_abs,
+            self.diff_rel, self.line_rel,
+            self.num_sign_change_only, self.num_sign_change_plus_diff,
+            self.histo,
+        )?;
+        Ok(())
     }
 }
 
@@ -304,46 +490,3 @@ macro_rules! assert_delta {
             );
     }
 }
-
-
-
-// fn unescape_all(s: &String) -> String {
-//     let chars1 = s.as_bytes();
-//     let mut chars2 = chars1.to_owned();
-//     let len = chars1.len();
-//     let mut i_from: usize = 0;
-//     let mut i_to: usize = 0;
-//     const BACKSLASH: u8 = '\\' as u8;
-//     const LOWER_S: u8 = 's' as u8;
-//     const SPACE: u8 = ' ' as u8;
-//     const ZERO: u8 = '0' as u8;
-//     const NOTHING: u8 = '\0' as u8;
-//     while i_from < len {
-//         let c = chars1[i_from];
-//         i_from += 1;
-//         if c == BACKSLASH {
-//             if i_from >= len {
-//                 panic!("Invalid escape sequence. Item ended with single backslash.");
-//             }
-//             let c_swap = match chars1[i_from] {
-//                 BACKSLASH => BACKSLASH,
-//                 LOWER_S => SPACE,
-//                 ZERO => NOTHING,
-//                 _ => panic!("Invalid escape sequence \\{}", &s[i_from..i_from+1])
-//             };
-//             if c_swap != NOTHING {
-//                 chars2[i_to] = c_swap;
-//                 i_to += 1;
-//             }
-//         } else {
-//             chars2[i_to] = c;
-//             i_to += 1;
-//         }
-//     }
-
-//     for i in i_to..len {
-//         chars2[i] = NOTHING;
-//     }
-//     let copy = String::from_utf8(chars2).expect("Failed to create new string");
-//     return copy;
-// }
