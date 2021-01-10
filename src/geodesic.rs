@@ -1312,7 +1312,8 @@ mod tests {
 
     use super::*;
     use assert_approx_eq::assert_approx_eq;
-    // use geographiclib_rs::{Geodesic, geodesiccapability as caps}; // todo: remove?
+    use std::fs::File;
+    use std::path;
     use std::sync::{Arc, Mutex};
     use utilities::{assert_delta, nC_, DeltaEntry, test_basic};
     
@@ -2562,8 +2563,133 @@ mod tests {
         assert!(azi2.is_nan());
     }
 
+    // *_geodtest_* tests are based on Karney's GeodTest*.dat test datasets.
+    // A description of these files' content can be found at:
+    //     https://geographiclib.sourceforge.io/html/geodesic.html#testgeod
+    // Here are some key excerpts...
+    //    This consists of a set of geodesics for the WGS84 ellipsoid.
+    //     Each line of the test set gives 10 space delimited numbers
+    //         latitude at point 1, lat1 (degrees, exact)
+    //         longitude at point 1, lon1 (degrees, always 0)
+    //         azimuth at point 1, azi1 (clockwise from north in degrees, exact)
+    //         latitude at point 2, lat2 (degrees, accurate to 10−18 deg)
+    //         longitude at point 2, lon2 (degrees, accurate to 10−18 deg)
+    //         azimuth at point 2, azi2 (degrees, accurate to 10−18 deg)
+    //         geodesic distance from point 1 to point 2, s12 (meters, exact)
+    //         arc distance on the auxiliary sphere, a12 (degrees, accurate to 10−18 deg)
+    //         reduced length of the geodesic, m12 (meters, accurate to 0.1 pm)
+    //         the area under the geodesic, S12 (m2, accurate to 1 mm2)
+    // These tests are flagged as "ignore" because they're slow and not self-contained
+    // (since they need to read data files), so they only run if specifically requested.
+
+    // General logic for processing a GeodTest*.dat file
+    fn geodtest_basic<T>(f: T)
+        where T: Fn(usize, &(f64, f64, f64, f64, f64, f64, f64, f64, f64, f64))
+    {
+        let dir_base = std::env::current_dir().expect("Failed to determine current directory");
+        let path_base = dir_base.as_path();
+        let pathbuf = path::Path::new(path_base)
+            .join(utilities::DAT_PATH_RELATIVE)
+            .join("GeodTest.dat");
+        let path = pathbuf.as_path();
+        let file = match File::open(path) {
+            Ok(val) => val,
+            Err(_error) => {
+                let path_str = path.to_str().expect("Failed to convert GeodTest path to string during error reporting");
+                panic!("Failed to open GeodTest.dat file. It may need to be downloaded and unzipped to: {}", path_str)
+            }
+        };
+        utilities::test_numeric(&file, 0, 10, |line_num, items| {
+            let tuple = (items[0], items[1], items[2], items[3], items[4], items[5], items[6], items[7], items[8], items[9]);
+            f(line_num, &tuple);
+        });
+    }
+
+    // Take a tuple representing a GeodTest*.dat line, and transform it for
+    // an operation that goes from point 2 to point 1 instead of 1 to 2.
+    fn geodtest_reverse_vals(vals_in: &(f64, f64, f64, f64, f64, f64, f64, f64, f64, f64)) -> (f64, f64, f64, f64, f64, f64, f64, f64, f64, f64) {
+        let (lat1, lon1, azi1, lat2, lon2, azi2, s12, a12, m12, S12) = *vals_in;
+        (lat2, lon2, azi2, lat1, lon1, azi1, -s12, a12, m12, S12)
+    }
+
+    #[test]
+    #[ignore]
+    fn test_geodtest_geodesic_direct12() {
+        // Line format: lat1 lon1 azi1 lat2 lon2 azi2 s12 a12 m12 S12
+        let g = Arc::new(Mutex::new(Geodesic::wgs84()));
+        geodtest_basic(|line_num, &(lat1, lon1, azi1, lat2, lon2, azi2, s12, a12, m12, S12)| {
+            let g = g.lock().unwrap();
+            let (lat2_out, lon2_out, azi2_out, m12_out, _M12_out, _M21_out, S12_out, a12_out) =
+                g.direct(lat1, lon1, azi1, s12);
+            assert_delta!(lat2, lat2_out, 0.0, false, "result.0 (lat2)", line_num);
+            assert_delta!(lon2, lon2_out, 0.0, false, "result.1 (lon2)", line_num);
+            assert_delta!(azi2, azi2_out, 0.0, false, "result.2 (azi2)", line_num);
+            assert_delta!(m12, m12_out, 0.0, false, "result.3 (m12)", line_num);
+            assert_delta!(S12, S12_out, 0.0, false, "result.6 (S12)", line_num);
+            assert_delta!(a12, a12_out, 0.0, false, "result.7 (a12)", line_num);
+        });
+    }
+
+    #[test]
+    #[ignore]
+    fn test_geodtest_geodesic_direct21() {
+        // Line format: lat1 lon1 azi1 lat2 lon2 azi2 s12 a12 m12 S12
+        let g = Arc::new(Mutex::new(Geodesic::wgs84()));
+        geodtest_basic(|line_num, vals| {
+            let g = g.lock().unwrap();
+            let (lat1, lon1, azi1, lat2, lon2, azi2, s12, a12, m12, S12) =
+                geodtest_reverse_vals(vals);
+            let (lat2_out, lon2_out, azi2_out, m12_out, _M12_out, _M21_out, S12_out, a12_out) =
+                g.direct(lat1, lon1, azi1, s12);
+            assert_delta!(lat2, lat2_out, 0.0, false, "result.0 (lat2)", line_num);
+            assert_delta!(lon2, lon2_out, 0.0, false, "result.1 (lon2)", line_num);
+            assert_delta!(azi2, azi2_out, 0.0, false, "result.2 (azi2)", line_num);
+            assert_delta!(m12, m12_out, 0.0, false, "result.3 (m12)", line_num);
+            assert_delta!(S12, S12_out, 0.0, false, "result.6 (S12)", line_num);
+            assert_delta!(a12, a12_out, 0.0, false, "result.7 (a12)", line_num);
+        });
+    }
+
+    #[test]
+    #[ignore]
+    fn test_geodtest_geodesic_inverse12() {
+        // Line format: lat1 lon1 azi1 lat2 lon2 azi2 s12 a12 m12 S12
+        let g = Arc::new(Mutex::new(Geodesic::wgs84()));
+        geodtest_basic(|line_num, &(lat1, lon1, azi1, lat2, lon2, azi2, s12, a12, m12, S12)| {
+            let g = g.lock().unwrap();
+            let (s12_out, azi1_out, azi2_out, m12_out, _M12_out, _M21_out, S12_out, a12_out) =
+                g.inverse(lat1, lon1, lat2, lon2);
+            assert_delta!(s12, s12_out, 0.0, false, "result.0 (s12)", line_num);
+            assert_delta!(azi1, azi1_out, 0.0, false, "result.1 (azi1)", line_num);
+            assert_delta!(azi2, azi2_out, 0.0, false, "result.2 (azi2)", line_num);
+            assert_delta!(m12, m12_out, 0.0, false, "result.3 (m12)", line_num);
+            assert_delta!(S12, S12_out, 0.0, false, "result.6 (S12)", line_num);
+            assert_delta!(a12, a12_out, 0.0, false, "result.7 (a12)", line_num);
+        });
+    }
+
+    #[test]
+    #[ignore]
+    fn test_geodtest_geodesic_inverse21() {
+        // Line format: lat1 lon1 azi1 lat2 lon2 azi2 s12 a12 m12 S12
+        let g = Arc::new(Mutex::new(Geodesic::wgs84()));
+        geodtest_basic(|line_num, vals| {
+            let g = g.lock().unwrap();
+            let (lat1, lon1, azi1, lat2, lon2, azi2, s12, a12, m12, S12) =
+                geodtest_reverse_vals(vals);
+            let (s12_out, azi1_out, azi2_out, m12_out, _M12_out, _M21_out, S12_out, a12_out) =
+                g.inverse(lat1, lon1, lat2, lon2);
+            assert_delta!(s12, s12_out, 0.0, false, "result.0 (s12)", line_num);
+            assert_delta!(azi1, azi1_out, 0.0, false, "result.1 (azi1)", line_num);
+            assert_delta!(azi2, azi2_out, 0.0, false, "result.2 (azi2)", line_num);
+            assert_delta!(m12, m12_out, 0.0, false, "result.3 (m12)", line_num);
+            assert_delta!(S12, S12_out, 0.0, false, "result.6 (S12)", line_num);
+            assert_delta!(a12, a12_out, 0.0, false, "result.7 (a12)", line_num);
+        });
+    }
+
     // *_vs_cpp_* tests are based on instrumented inputs and outputs from C++.
-    // They're flagged as "ignore" because they're slow and not self-contained
+    // These tests are flagged as "ignore" because they're slow and not self-contained
     // (since they need to read data files), so they only run if specifically requested.
 
     // placeholder: Geodesic_A1m1f

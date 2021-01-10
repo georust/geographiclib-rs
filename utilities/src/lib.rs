@@ -1,10 +1,9 @@
 extern crate geographiclib_rs;
 
-use std::collections::BTreeMap;
-use std::fmt::Display;
 use geographiclib_rs::Geodesic;
-use std::collections::HashMap;
+use std::collections::{BTreeMap, HashMap};
 use std::error::Error;
+use std::fmt::Display;
 use std::fs::{self, File};
 use std::io::{self, BufRead, prelude::*};
 use std::path;
@@ -24,7 +23,7 @@ use zip;
 //                        bench runs, to get a clearer sense of natural variability.
 
 const ZIP_PATH_RELATIVE: &str = "test_fixtures/geographiclib-instrumented/geographiclib-instrumented-crude-out";
-const DAT_PATH_RELATIVE: &str = "test_fixtures/test-data-unzipped";
+pub const DAT_PATH_RELATIVE: &str = "test_fixtures/test-data-unzipped";
 
 #[allow(non_upper_case_globals)]
 pub const nC_: usize = 7; // todo: define in geodesic.rs instead
@@ -182,7 +181,14 @@ pub fn get_geodesic(a: f64, f: f64, map: &HashMap<(u64, u64), Geodesic>) -> &Geo
 pub fn as_vecs_basic(op_name: &str, arg_count: isize) -> Vec<Vec<f64>> {
     let paths = get_data_paths(op_name).expect("Failed to determine zip and dat paths");
     refresh_unzipped(&paths).expect("Failed to refresh unzipped data file");
-    let file = File::open(paths.path_dat.as_path()).unwrap();
+    let path_dat = paths.path_dat.as_path();
+    let file = match File::open(path_dat) {
+        Ok(val) => val,
+        Err(_error) => {
+            let path_str = path_dat.to_str().expect("Failed to data file path to string during error reporting");
+            panic!("Failed to open data file {}", path_str)
+        }
+    };
     let reader = io::BufReader::new(file);
     let result: Vec<Vec<f64>> = reader.lines().enumerate()
         // Skip the header line
@@ -240,10 +246,16 @@ pub fn test_basic<T>(op_name: &str, arg_count: isize, f: T)
     let paths = get_data_paths(op_name).expect("Failed to determine zip and dat paths");
     refresh_unzipped(&paths).expect("Failed to refresh unzipped data file");
     let file = File::open(paths.path_dat.as_path()).unwrap();
+    test_numeric(&file, 1, arg_count, f);
+}
+
+pub fn test_numeric<T>(file: &File, skip_count: usize, arg_count: isize, f: T)
+ where T: Fn(usize, &Vec<f64>)
+{
     let reader = io::BufReader::new(file);
     reader.lines().enumerate()
-        // Skip the header line
-        .filter(|(i, _line)| *i != 0)
+        // Skip header lines
+        .filter(|(i, _line)| *i >= skip_count)
         .for_each(|(i, line)| {
             let line_safe = line.expect("Failed to read line");
             let items: Vec<f64> = line_safe.split(' ').enumerate()
@@ -308,8 +320,22 @@ impl Clone for DeltaHistogram {
     }
 }
 
+// Round a value for use in DeltaHistogram display.
+// Never round to 0 or 100. Only accept those values naturally.
+fn to_percent(num_part: usize, num_all: usize) -> usize {
+    let percent = 100f64 * num_part as f64 / num_all as f64;
+    let rounded = if percent < 1.0 && num_part != 0 {
+        1
+    } else if percent > 99.0 && num_part != num_all {
+        99
+    } else {
+        percent.round() as usize
+    };
+    rounded
+}
+
 impl Display for DeltaHistogram {
-    // Display a summary, reduced down to a managagle number of buckets.
+    // Display a summary, reduced down to a manageable number of buckets.
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::result::Result<(), std::fmt::Error> {
         const MAX_BUCKETS: usize = 7;
         let mut keys_asc: Vec<isize> = Vec::new();
@@ -357,27 +383,31 @@ impl Display for DeltaHistogram {
             collapsed_from.push(collapse_from);
             collapsed_to.push(collapse_to);
         }
+
+        write!(f, "count {}", num_total)?;
+
+        if self.num_zero > 0 {
+            let percent_zero = to_percent(self.num_zero, num_total); 
+            write!(f, ", zero {}%", percent_zero)?;
+        }
+
         // Convert counts to percentages
-        let num_total_f = num_total as f64;
         histo_reduced.iter_mut().for_each(|(_key, val)| {
-            let percent = 100f64 * *val as f64 / num_total_f;
-            // Never round to 0 or 100. Only accept those values naturally.
-            let rounded = if percent < 1.0 {
-                assert!(*val != 0, "Internal error: Bucket contains no items");
-                1
-            } else if percent > 99.0 && *val != num_total {
-                99
-            } else {
-                percent.round() as usize
-            };
-            *val = rounded;
+            assert!(*val != 0, "Internal error: Bucket contains no items");
+            *val = to_percent(*val, num_total);
         });
-        write!(f, "count {}, zero {}%", num_total, self.num_zero)?;
-        for (key, val) in histo_reduced {
+        for (key, val) in &histo_reduced {
             let gained = collapsed_to.contains(&key);
             write!(f, ", {}e{} {}%", if gained { "~" } else { "" }, key, val)?;
         }
-        write!(f, "inf {}%, nan {}%", self.num_inf, self.num_nan)?;
+        if self.num_inf > 0 {
+            let percent_inf = to_percent(self.num_inf, num_total);
+            write!(f, ", inf {}%", percent_inf)?;
+        }
+        if self.num_nan > 0 {
+            let percent_nan = to_percent(self.num_nan, num_total);
+            write!(f, ", nan {}%", percent_nan)?;
+        }
         Ok(())
     }
 }
