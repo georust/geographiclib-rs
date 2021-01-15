@@ -1,4 +1,7 @@
-// // Note: Won't compile unless geomath is public
+// Note: Real benches won't compile unless geomath is public.
+//       This placeholder main appeases the compiler.
+fn main() {}
+
 
 // extern crate criterion;
 // extern crate geographiclib_rs;
