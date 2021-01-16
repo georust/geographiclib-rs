@@ -539,7 +539,7 @@ mod tests {
     // (since they need to read data files), so they only run if specifically requested.
 
     #[test]
-    #[ignore]
+    #[ignore] // Fails current behavior. Relies on non-Karney outside files. Slow.
     fn test_vs_cpp_geomath_ang_diff() {
         // Line format: x y result=z e-out
         test_basic("Math_AngDiff_x_y_e", 4, |line_num, items| {
@@ -550,7 +550,7 @@ mod tests {
     }
 
     #[test]
-    #[ignore]
+    #[ignore] // Fails current behavior. Relies on non-Karney outside files. Slow.
     fn test_vs_cpp_geomath_ang_normalize() {
         // Line format: x result
         test_basic("Math_AngNormalize", 2, |line_num, items| {
@@ -560,7 +560,7 @@ mod tests {
     }
 
     #[test]
-    #[ignore]
+    #[ignore] // Relies on non-Karney outside files. Slow.
     fn test_vs_cpp_geomath_ang_round() {
         // Line format: x result
         test_basic("Math_AngRound", 2, |line_num, items| {
@@ -570,7 +570,7 @@ mod tests {
     }
 
     #[test]
-    #[ignore]
+    #[ignore] // Relies on non-Karney outside files. Slow.
     fn test_vs_cpp_geomath_atan2d() {
         // Line format: y x result
         let delta_entries = Arc::new(Mutex::new(DeltaEntry::new_vec(
@@ -595,7 +595,7 @@ mod tests {
     // Placeholder: Math_atand
 
     #[test]
-    #[ignore]
+    #[ignore] // Relies on non-Karney outside files.
     fn test_vs_cpp_geomath_consts() {
         // Line format: digits digits10 extra_digits bigendian pi degree GEOGRAPHICLIB_PRECISION GEOGRAPHICLIB_WORDS_BIGENDIAN
         let items = util::read_consts_basic("Math_consts", 8);
@@ -608,7 +608,7 @@ mod tests {
     // Placeholder: Math_eatanhe
 
     #[test]
-    #[ignore]
+    #[ignore] // Relies on non-Karney outside files. Slow.
     fn test_vs_cpp_geomath_lat_fix() {
         // Line format: x result
         test_basic("Math_LatFix", 2, |line_num, items| {
@@ -618,7 +618,7 @@ mod tests {
     }
 
     #[test]
-    #[ignore]
+    #[ignore] // Relies on non-Karney outside files. Slow.
     fn test_vs_cpp_geomath_norm() {
         // Line format: x-in y-in x-out y-out
         test_basic("Math_norm", 4, |line_num, items| {
@@ -629,7 +629,7 @@ mod tests {
     }
 
     #[test]
-    #[ignore]
+    #[ignore] // Relies on non-Karney outside files. Slow.
     fn test_vs_cpp_geomath_polyval() {
         // Line format: N p(N+1) x result
         test_basic("Math_polyval", -1, |line_num, items| {
@@ -647,7 +647,7 @@ mod tests {
     }
 
     #[test]
-    #[ignore]
+    #[ignore] // Fails current behavior. Relies on non-Karney outside files. Slow.
     fn test_vs_cpp_geomath_sincosd() {
         // Line format: x sinx-out cosx-out
         let delta_entries = Arc::new(Mutex::new(DeltaEntry::new_vec(
@@ -669,7 +669,7 @@ mod tests {
     // Placeholder: Math_sind
 
     #[test]
-    #[ignore]
+    #[ignore] // Relies on non-Karney outside files. Slow.
     fn test_vs_cpp_geomath_sq() {
         // Line format: x result
         test_basic("Math_sq", 2, |line_num, items| {
@@ -679,7 +679,7 @@ mod tests {
     }
 
     #[test]
-    #[ignore]
+    #[ignore] // Relies on non-Karney outside files. Slow.
     fn test_vs_cpp_geomath_sum() {
         // Line format: u v result=s t-out
         test_basic("Math_sum", 4, |line_num, items| {
@@ -695,12 +695,12 @@ mod tests {
     // Placeholder: Math_taupf
 
     #[test]
-    #[ignore]
+    #[ignore] // Fails current behavior. Relies on non-Karney outside files. Slow.
     fn test_vs_cpp_geomath_astroid() {
         // Line format: x y result
         // Note: In the geographiclib C++ library, this function is in Geodesic, but in Rust it's in geomath.
         let delta_entries = Arc::new(Mutex::new(DeltaEntry::new_vec(
-            "test_vs_cpp_geomath_sincosd ", &[
+            "test_vs_cpp_geomath_astroid ", &[
                 ("result", 1e-15, false, false),
             ])));
         test_basic("Geodesic_Astroid", 3, |line_num, items| {
@@ -714,7 +714,7 @@ mod tests {
     }
 
     #[test]
-    #[ignore]
+    #[ignore] // Relies on non-Karney outside files. Slow.
     fn test_vs_cpp_geomath_sin_cos_series() {
         // Line format: sinp sinx cosx n c(n+sinp) result
         // Note: In the geographiclib C++ library, this function is in Geodesic, but in Rust it's in geomath.

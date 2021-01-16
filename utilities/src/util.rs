@@ -3,14 +3,11 @@ extern crate geographiclib_rs;
 use geographiclib_rs::Geodesic;
 use std::collections::{HashMap};
 use std::error::Error;
-use std::fs::{self, File};
-use std::io::{self, BufRead, prelude::*};
+use std::fs::{File};
+use std::io::{self, BufRead};
 use std::path;
-use std::time;
 use std::u64;
-use zip;
 
-const ZIP_PATH_RELATIVE: &str = "test_fixtures/geographiclib-instrumented/geographiclib-instrumented-crude-out";
 pub const DAT_PATH_RELATIVE: &str = "test_fixtures/test-data-unzipped";
 
 // Expected paths for zipped and unzipped versions of a file.
@@ -19,53 +16,16 @@ pub struct DataPathPair {
     pub path_dat: path::PathBuf,
 }
 
-// Given an operation name, return the path to the zipped and unzipped dat file for that operation.
-// Note that the unzipped path may point to a location that doesn't exist.
-pub fn get_data_paths(op_name: &str) -> std::io::Result<DataPathPair> {
-    let mut filename_zip = op_name.to_owned();
-    let mut filename_dat = op_name.to_owned();
-    filename_zip.push_str(".dat.zip");
+// Given a file base name, return the standard path to the unzipped dat file.
+// In the case of instrumented cpp output, the file base name is the same as the operation name.
+pub fn get_data_path(name_base: &str) -> std::io::Result<path::PathBuf> {
+    let mut filename_dat = name_base.to_owned();
     filename_dat.push_str(".dat");
-
     let dir_base = std::env::current_dir()?;
     let path_base = dir_base.as_path();
-    let path_zip = path::Path::new(path_base).join(ZIP_PATH_RELATIVE);
     let path_dat = path::Path::new(path_base).join(DAT_PATH_RELATIVE);
-    let result = DataPathPair {
-        path_zip: path_zip.join(filename_zip),
-        path_dat: path_dat.join(filename_dat),
-    };
+    let result = path_dat.join(filename_dat);
     Ok(result)
-}
-
-// Given expected paths to the zipped and unzipped copies of a data file,
-// check whether the unzipped copy is missing, or whether the zipped copy
-// is newer. In either of those cases, unzip a fresh copy of the zipped file.
-pub fn refresh_unzipped(paths: &DataPathPair) -> std::io::Result<()> {
-    let path_zip = paths.path_zip.as_path();
-    let modified_in = path_zip.metadata().expect("Failed to read zip file metadata")
-        .modified().expect("Failed to read zip file modified date");
-    let path_dat = paths.path_dat.as_path();
-    let modified_out = match path_dat.metadata() {
-        Ok(meta) => meta.modified().expect("Failed to read dat file metadata"),
-        Err(_error) => {
-            fs::create_dir_all(path_dat.parent().expect("Failed to create dat folder"))?;
-            time::SystemTime::UNIX_EPOCH
-        }
-    };
-    if modified_out < modified_in {
-        // The unzipped version either doesn't exist, or is older than the zipped version.
-        let file_in = fs::File::open(path_zip).expect("Failed to open zip file");
-        let mut zip_archive = zip::ZipArchive::new(file_in).expect("Failed to read zip archive");
-        if zip_archive.len() != 1 {
-            panic!("Expected zip archive to contain exactly one file");
-        }
-        let mut zip_first = zip_archive.by_index(0).expect("Failed to open first file in zip archive");
-        let mut zip_first_contents = String::new();
-        zip_first.read_to_string(&mut zip_first_contents).expect("Failed to read zip file content");
-        fs::write(path_dat, zip_first_contents).expect("Failed to write zip content to dat file");
-    }
-    Ok(())
 }
 
 // Convert a string to f64, handling various special cases
@@ -128,11 +88,24 @@ pub fn is_delta_worse(a: f64, b: f64) -> bool {
     (a.is_nan() && !b.is_nan()) || a > b
 }
 
+// Given an operation name, read the corresponding C++ instrumented data file.
+pub fn read_cppdat_file(op_name: &str) -> File {
+    let path = get_data_path(op_name).expect("Failed to determine dat file path");
+    match File::open(path.as_path()) {
+        Ok(file) => file,
+        Err(error) => {
+            let path_str = match path.to_str() {
+                Some(val) => val,
+                None => panic!("Failed to open file {} and failed to convert full path to UTF-8 for error reporting.\nError: {}\nYou may need to download zipped output file attachments from https://sourceforge.net/u/alephknot/wiki/Home/ and unzip them to the expected output path.", op_name, error)
+            };
+            panic!("Failed to open file {}\nError: {}\nYou may need to download zipped output file attachments from https://sourceforge.net/u/alephknot/wiki/Home/ and unzip them to the expected output path.", path_str, error);
+        },
+    }
+}
+
 // Extract a the first value from each line, and return as a vector.
 pub fn as_vec_basic(op_name: &str) -> Vec<f64> {
-    let paths = get_data_paths(op_name).expect("Failed to determine zip and dat paths");
-    refresh_unzipped(&paths).expect("Failed to refresh unzipped data file");
-    let file = File::open(paths.path_dat.as_path()).unwrap();
+    let file = read_cppdat_file(op_name);
     let reader = io::BufReader::new(file);
     let result: Vec<f64> = reader.lines().enumerate()
         // Skip the header line
@@ -178,16 +151,7 @@ pub fn get_geodesic(a: f64, f: f64, map: &HashMap<(u64, u64), Geodesic>) -> &Geo
 // Extract a specified number of values from each line,
 // and return as a vector of vectors.
 pub fn as_vecs_basic(op_name: &str, arg_count: isize) -> Vec<Vec<f64>> {
-    let paths = get_data_paths(op_name).expect("Failed to determine zip and dat paths");
-    refresh_unzipped(&paths).expect("Failed to refresh unzipped data file");
-    let path_dat = paths.path_dat.as_path();
-    let file = match File::open(path_dat) {
-        Ok(val) => val,
-        Err(_error) => {
-            let path_str = path_dat.to_str().expect("Failed to data file path to string during error reporting");
-            panic!("Failed to open data file {}", path_str)
-        }
-    };
+    let file = read_cppdat_file(op_name);
     let reader = io::BufReader::new(file);
     let result: Vec<Vec<f64>> = reader.lines().enumerate()
         // Skip the header line
@@ -233,7 +197,7 @@ pub fn read_geodtest() -> File {
         Ok(val) => val,
         Err(_error) => {
             let path_str = path.to_str().expect("Failed to convert GeodTest path to string during error reporting");
-            panic!("Failed to open GeodTest.dat file. It may need to be downloaded and unzipped to: {}", path_str)
+            panic!("Failed to open GeodTest.dat file. It may need to be downloaded and unzipped to: {}\nFor details see https://geographiclib.sourceforge.io/html/geodesic.html#testgeod", path_str)
         }
     };
     file
@@ -245,9 +209,7 @@ pub fn read_geodtest() -> File {
 // arg_count: The number of values expected on the data line, or negative to skip this check.
 // Returns a vector of values reflecting the items on the data line.
 pub fn read_consts_basic(op_name: &str, arg_count: isize) -> Vec<f64> {
-    let paths = get_data_paths(op_name).expect("Failed to determine zip and dat paths");
-    refresh_unzipped(&paths).expect("Failed to refresh unzipped data file");
-    let file = File::open(paths.path_dat.as_path()).unwrap();
+    let file = read_cppdat_file(op_name);
     let reader = io::BufReader::new(file);
     let mut result: Vec<f64> = Vec::new();
     reader.lines().enumerate()
@@ -278,9 +240,7 @@ pub fn read_consts_basic(op_name: &str, arg_count: isize) -> Vec<f64> {
 pub fn test_basic<T>(op_name: &str, arg_count: isize, f: T)
  where T: Fn(usize, &Vec<f64>)
 {
-    let paths = get_data_paths(op_name).expect("Failed to determine zip and dat paths");
-    refresh_unzipped(&paths).expect("Failed to refresh unzipped data file");
-    let file = File::open(paths.path_dat.as_path()).unwrap();
+    let file = read_cppdat_file(op_name);
     test_numeric(&file, 1, arg_count, f);
 }
 

@@ -1666,7 +1666,7 @@ mod tests {
     }
 
     #[test]
-    #[ignore] // Note: ignored because it would fail existing behavior
+    #[ignore] // Fails existing behavior.
     fn test_arcdirect() {
         // Test arc direct
         // Corresponds with ArcDirectCheck from GeodesicTests.java
@@ -2145,7 +2145,7 @@ mod tests {
     }
 
     #[test]
-    #[ignore] // Note: ignored because it would fail existing behavior
+    #[ignore] // Fails existing behavior.
     fn test_std_geodesic_geodsolve2() {
         // Check fix for antipodal prolate bug found 2010-09-04
         let geod = Geodesic::new(6.4e6, -1f64/150.0);
@@ -2242,7 +2242,7 @@ mod tests {
     }
 
     #[test]
-    #[ignore] // Note: ignored because it would fail existing behavior
+    #[ignore] // Fails existing behavior.
     fn test_std_geodesic_geodsolve15() {
         // Initial implementation of Math::eatanhe was wrong for e^2 < 0.  This
         // checks that this is fixed.
@@ -2284,7 +2284,7 @@ mod tests {
     }
 
     #[test]
-    #[ignore] // Note: ignored because it would fail existing behavior
+    #[ignore] // Fails existing behavior.
     fn test_std_geodesic_geodsolve26() {
         // Check 0/0 problem with area calculation on sphere 2015-09-08
         let geod = Geodesic::new(6.4e6, 0.0);
@@ -2294,7 +2294,7 @@ mod tests {
     }
 
     #[test]
-    #[ignore] // Note: ignored because it would fail existing behavior
+    #[ignore] // Fails existing behavior.
     fn test_std_geodesic_geodsolve28() {
         // Check for bad placement of assignment of r.a12 with |f| > 0.01 (bug in
         // Java implementation fixed on 2015-05-19).
@@ -2305,7 +2305,7 @@ mod tests {
     }
 
     #[test]
-    #[ignore] // Note: ignored because it would fail existing behavior
+    #[ignore] // Fails existing behavior.
     fn test_std_geodesic_geodsolve29() {
         // Check longitude unrolling with inverse calculation 2015-09-16
         let geod = Geodesic::new(6.4e6, 0.1);
@@ -2474,7 +2474,7 @@ mod tests {
     }
 
     #[test]
-    #[ignore] // Note: ignored because it would fail existing behavior
+    #[ignore] // Fails existing behavior.
     fn test_std_geodesic_geodsolve76() {
         // The distance from Wellington and Salamanca (a classic failure of
         // Vincenty)
@@ -2487,7 +2487,7 @@ mod tests {
     }
 
     #[test]
-    #[ignore] // Note: ignored because it would fail existing behavior
+    #[ignore] // Fails existing behavior.
     fn test_std_geodesic_geodsolve78() {
         // An example where the NGS calculator fails to converge
         let geod = Geodesic::wgs84();
@@ -2615,11 +2615,24 @@ mod tests {
     // an operation that goes from point 2 to point 1 instead of 1 to 2.
     fn geodtest_reverse_vals(vals_in: &(f64, f64, f64, f64, f64, f64, f64, f64, f64, f64)) -> (f64, f64, f64, f64, f64, f64, f64, f64, f64, f64) {
         let (lat1, lon1, azi1, lat2, lon2, azi2, s12, a12, m12, S12) = *vals_in;
-        (lat2, lon2, azi2, lat1, lon1, azi1, -s12, a12, m12, S12)
+        // In the "Direct from point 2" item of
+        // https://geographiclib.sourceforge.io/html/geodesic.html#testgeod,
+        // Karney essentially uses lat2, lon2, and azi2 as the starting values,
+        // and negates the s12 value. While this creates a direct case that
+        // leads back to lat1 lon1, it doesn't result in a well-rounded set of
+        // values for testing all direct and inverse outputs (for example,
+        // inverse from 2 to 1 will certainly not yield a negative distance).
+        // We reverse the azimuths instead of negating the distance, which is a
+        // little more involved but should make it easier to check a wider range
+        // of outputs.
+        let azi1_reverse = geomath::ang_normalize(azi1 + 180.0);
+        let azi2_reverse = geomath::ang_normalize(azi2 + 180.0);
+        // (lat2, lon2, azi2, lat1, lon1, azi1, -s12, -a12, m12, S12)
+        (lat2, lon2, azi2_reverse, lat1, lon1, azi1_reverse, s12, a12, m12, S12)
     }
 
     #[test]
-    #[ignore]
+    #[ignore] // Fails existing behavior.
     fn test_geodtest_geodesic_direct12() {
         // Line format: lat1 lon1 azi1 lat2 lon2 azi2 s12 a12 m12 S12
         let delta_entries = Arc::new(Mutex::new(DeltaEntry::new_vec(
@@ -2651,7 +2664,7 @@ mod tests {
     }
 
     #[test]
-    #[ignore]
+    #[ignore] // Fails existing behavior. Not 100% sure of reversal function. Slow.
     fn test_geodtest_geodesic_direct21() {
         // Line format: lat1 lon1 azi1 lat2 lon2 azi2 s12 a12 m12 S12
         let delta_entries = Arc::new(Mutex::new(DeltaEntry::new_vec(
@@ -2686,7 +2699,7 @@ mod tests {
     }
 
     #[test]
-    #[ignore]
+    #[ignore] // Fails existing behavior. Slow.
     fn test_geodtest_geodesic_inverse12() {
         // Line format: lat1 lon1 azi1 lat2 lon2 azi2 s12 a12 m12 S12
         let delta_entries = Arc::new(Mutex::new(DeltaEntry::new_vec(
@@ -2718,7 +2731,7 @@ mod tests {
     }
 
     #[test]
-    #[ignore]
+    #[ignore] // Fails existing behavior. Not 100% sure of reversal function. Slow.
     fn test_geodtest_geodesic_inverse21() {
         // Line format: lat1 lon1 azi1 lat2 lon2 azi2 s12 a12 m12 S12
         let delta_entries = Arc::new(Mutex::new(DeltaEntry::new_vec(
@@ -2772,7 +2785,7 @@ mod tests {
     // placeholder: Geodesic_C4f
 
     #[test]
-    #[ignore]
+    #[ignore] // Relies on non-Karney outside files
     fn test_vs_cpp_geodesic_consts() {
         // Format: nA1_ nC1_ nC1p_ nA2_ nC2_ nA3_ nA3x_ nC3_ nC3x_ nC4_ nC4x_ nC_ maxit1_ GEOGRAPHICLIB_GEODESIC_ORDER
         let items = util::read_consts_basic("Geodesic_consts", 14);
@@ -2789,7 +2802,7 @@ mod tests {
     }
 
     #[test]
-    #[ignore]
+    #[ignore] // Fails current behavior. Relies on non-Karney outside files. Slow.
     fn test_vs_cpp_geodesic_gen_direct() {
         // Format: this-in[_a _f] lat1 lon1 azi1 arcmode s12_a12 outmask result=a12 lat2-out lon2-out azi2-out s12-out m12-out M12-out M21-out S12-out
         let delta_entries = Arc::new(Mutex::new(DeltaEntry::new_vec(
@@ -2841,7 +2854,7 @@ mod tests {
     // placeholder: Geodesic_GenDirectLine
 
     #[test]
-    #[ignore]
+    #[ignore] // Fails current behavior. Relies on non-Karney outside files. Slow.
     fn test_vs_cpp_geodesic_gen_inverse_azi() {
         // Format: this-in[_a _f] lat1 lon1 lat2 lon2 outmask result=a12 s12-out azi1-out azi2-out m12-out M12-out M21-out S12-out
         let delta_entries = Arc::new(Mutex::new(DeltaEntry::new_vec(
@@ -2885,7 +2898,7 @@ mod tests {
     }
 
     #[test]
-    #[ignore]
+    #[ignore] // Fails current behavior. Relies on non-Karney outside files. Slow.
     fn test_vs_cpp_geodesic_gen_inverse() {
         // Format: this-in[_a _f] lat1 lon1 lat2 lon2 outmask result=a12 s12-out salp1-out calp1-out salp2-out calp2-out m12-out M12-out M21-out S12-out
         let delta_entries = Arc::new(Mutex::new(DeltaEntry::new_vec(
@@ -2931,7 +2944,7 @@ mod tests {
     }
 
     #[test]
-    #[ignore]
+    #[ignore] // Fails current behavior. Relies on non-Karney outside files. Slow.
     fn test_vs_cpp_geodesic_new() {
         let consts = util::read_consts_basic("Geodesic_consts", 14);
         // consts: nA1_ nC1_ nC1p_ nA2_ nC2_ nA3_ nA3x_ nC3_ nC3x_ nC4_ nC4x_ nC_ maxit1_ GEOGRAPHICLIB_GEODESIC_ORDER
@@ -3024,7 +3037,7 @@ mod tests {
     // placeholder: Geodesic_InverseLine
 
     #[test]
-    #[ignore]
+    #[ignore] // Fails current behavior. Relies on non-Karney outside files. Slow.
     fn test_vs_cpp_geodesic_inverse_start() {
         // Format: this-in[_a _f] sbet1 cbet1 dn1 sbet2 cbet2 dn2 lam12 slam12 clam12 result=sig12 salp1-out calp1-out salp2-out calp2-out dnm-out
         let delta_entries = Arc::new(Mutex::new(DeltaEntry::new_vec(
@@ -3057,7 +3070,7 @@ mod tests {
     }
 
     #[test]
-    #[ignore]
+    #[ignore] // Relies on non-Karney outside files. Slow.
     fn test_vs_cpp_geodesic_lambda12() {
         // Format: this-in[_a _f] sbet1 cbet1 dn1 sbet2 cbet2 dn2 salp1 calp1 slam120 clam120 diffp result=lam12 salp2-out calp2-out sig12-out ssig1-out csig1-out ssig2-out csig2-out eps-out domg12-out dlam12-out
         let delta_entries = Arc::new(Mutex::new(DeltaEntry::new_vec(
@@ -3104,7 +3117,7 @@ mod tests {
     }
 
     #[test]
-    #[ignore]
+    #[ignore] // Fails current behavior. Relies on non-Karney outside files. Slow.
     fn test_vs_cpp_geodesic_lengths() {
         // Format: this-in[_a _f] eps sig12 ssig1 csig1 dn1 ssig2 csig2 dn2 cbet1 cbet2 outmask s12b-out m12b-out m0-out M12-out M21-out
         let delta_entries = Arc::new(Mutex::new(DeltaEntry::new_vec(

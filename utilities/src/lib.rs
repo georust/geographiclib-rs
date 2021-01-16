@@ -1,10 +1,10 @@
-// testing reminder: If you want to see full test output, use "cargo test -- --nocapture".
-// testing reminder: If you want full test output in a predictable order,
-//                   use "cargo test -- --nocapture --test-threads 1"
-// testing reminder: If you want full test output in a predictable order, including long tests,
-//                   use "cargo test -- --ignored --nocapture --test-threads 1"
-// testing reminder: If a new "*_vs_cpp_*" test fails especially badly,
-//                   review the C++ "instrumented-crude" logging for possible bugs there
+// testing tip: If you want full test output in a predictable order, including ignored tests,
+//              use "cargo test -- --include-ignored --nocapture --test-threads 1"
+//              (Note: include-ignored is still only available in nightly as of 2021/01/15, but looks like it's coming to stable soon)
+// testing tip: If you want full test output in a predictable order, including ONLY ignored tests,
+//              use "cargo test -- --ignored --nocapture --test-threads 1"
+// testing tip: If a new "*_vs_cpp_*" test fails especially badly,
+//              review the C++ "instrumented-crude" logging for possible bugs there
 // testing tip: While assert variations are valuable for catching regressions, they're
 //              often of more limited value when trying to _improve_ result precision.
 //              In such cases, use of something like DeltaEntry is often helpful,
