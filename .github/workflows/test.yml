@@ -1,0 +1,15 @@
+on: push
+name: Run tests
+jobs:
+  tests:
+    name: tests
+    runs-on: ubuntu-latest
+    if: "!contains(github.event.head_commit.message, '[skip ci]')"
+    container:
+      image: georust/geo-ci
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+      - run: script/download-test-data.sh
+      - run: cargo test
+      - run: cargo test --features full_test
