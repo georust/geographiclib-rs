@@ -2080,14 +2080,16 @@ mod tests {
     // These tests are flagged as "ignore" because they're slow and not self-contained
     // (since they need to read data files), so they only run if specifically requested.
 
-    fn geodtest_basic<T>(f: T)
+    static FULL_TEST_PATH: &str = "test_fixtures/test_data_unzipped/GeodTest.dat";
+    static SHORT_TEST_PATH: &str = "test_fixtures/test_data_unzipped/GeodTest-short.dat";
+
+    fn geodtest_basic<T>(path: &str, f: T)
     where
         T: Fn(usize, &(f64, f64, f64, f64, f64, f64, f64, f64, f64, f64)),
     {
         let dir_base = std::env::current_dir().expect("Failed to determine current directory");
         let path_base = dir_base.as_path();
-        let pathbuf =
-            std::path::Path::new(path_base).join("test_fixtures/test_data_unzipped/GeodTest.dat");
+        let pathbuf = std::path::Path::new(path_base).join(path);
         let path = pathbuf.as_path();
         let file = match std::fs::File::open(path) {
             Ok(val) => val,
@@ -2095,7 +2097,7 @@ mod tests {
                 let path_str = path
                     .to_str()
                     .expect("Failed to convert GeodTest path to string during error reporting");
-                panic!("Failed to open GeodTest.dat file. It may need to be downloaded and unzipped to: {}\nFor details see https://geographiclib.sourceforge.io/html/geodesic.html#testgeod", path_str)
+                panic!("Failed to open test input file. Run `script/download-test-data.sh` to download test input to: {}\nFor details see https://geographiclib.sourceforge.io/html/geodesic.html#testgeod", path_str)
             }
         };
         let reader = std::io::BufReader::new(file);
@@ -2121,10 +2123,17 @@ mod tests {
     }
 
     #[test]
-    #[ignore] // Slow. Requires external file.
     fn test_geodtest_geodesic_direct12() {
         let g = std::sync::Arc::new(std::sync::Mutex::new(Geodesic::wgs84()));
+
+        let input = if cfg!(feature = "full_test") {
+            FULL_TEST_PATH
+        } else {
+            SHORT_TEST_PATH
+        };
+
         geodtest_basic(
+            input,
             |_line_num, &(lat1, lon1, azi1, lat2, lon2, azi2, s12, a12, m12, S12)| {
                 let g = g.lock().unwrap();
                 let (lat2_out, lon2_out, azi2_out, m12_out, _M12_out, _M21_out, S12_out, a12_out) =
@@ -2140,10 +2149,17 @@ mod tests {
     }
 
     #[test]
-    #[ignore] // Slow. Requires external file.
     fn test_geodtest_geodesic_direct21() {
         let g = std::sync::Arc::new(std::sync::Mutex::new(Geodesic::wgs84()));
+
+        let input = if cfg!(feature = "full_test") {
+            FULL_TEST_PATH
+        } else {
+            SHORT_TEST_PATH
+        };
+
         geodtest_basic(
+            input,
             |_line_num, &(lat1, lon1, azi1, lat2, lon2, azi2, s12, a12, m12, S12)| {
                 let g = g.lock().unwrap();
                 // Reverse some values for 2->1 instead of 1->2
@@ -2162,10 +2178,17 @@ mod tests {
     }
 
     #[test]
-    #[ignore] // Slow. Requires external file.
     fn test_geodtest_geodesic_inverse12() {
         let g = std::sync::Arc::new(std::sync::Mutex::new(Geodesic::wgs84()));
+
+        let input = if cfg!(feature = "full_test") {
+            FULL_TEST_PATH
+        } else {
+            SHORT_TEST_PATH
+        };
+
         geodtest_basic(
+            input,
             |_line_num, &(lat1, lon1, azi1, lat2, lon2, azi2, s12, a12, m12, S12)| {
                 let g = g.lock().unwrap();
                 let (s12_out, azi1_out, azi2_out, m12_out, _M12_out, _M21_out, S12_out, a12_out) =

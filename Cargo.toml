@@ -11,6 +11,9 @@ keywords = ["gis", "geo", "geography", "geospatial"]
 documentation = "https://docs.rs/geographiclib-rs"
 readme = "README.md"
 
+[features]
+full_test = []
+
 [dependencies]
 lazy_static = "1.4.0"
 
