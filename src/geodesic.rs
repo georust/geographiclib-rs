@@ -2142,10 +2142,10 @@ mod tests {
             let (lat2_out, lon2_out, azi2_out, m12_out, _M12_out, _M21_out, S12_out, a12_out) =
                 g.direct(lat1, lon1, azi1, s12);
             assert_approx_eq!(lat2, lat2_out, 8e-14);
-            assert_approx_eq!(lon2, lon2_out, 3e-7);
-            assert_approx_eq!(azi2, azi2_out, 3e-7);
+            assert_approx_eq!(lon2, lon2_out, 4e-6);
+            assert_approx_eq!(azi2, azi2_out, 4e-6);
             assert_approx_eq!(m12, m12_out, 9e-9);
-            assert_approx_eq!(S12, S12_out, 2e5); // Note: unreasonable tolerance
+            assert_approx_eq!(S12, S12_out, 3e6); // Note: unreasonable tolerance
             assert_approx_eq!(a12, a12_out, 9e-14);
         });
     }
