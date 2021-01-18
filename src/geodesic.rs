@@ -2087,7 +2087,7 @@ mod tests {
         let dir_base = std::env::current_dir().expect("Failed to determine current directory");
         let path_base = dir_base.as_path();
         let pathbuf =
-            std::path::Path::new(path_base).join("test_fixtures/test-data-unzipped/GeodTest.dat");
+            std::path::Path::new(path_base).join("test_fixtures/test_data_unzipped/GeodTest.dat");
         let path = pathbuf.as_path();
         let file = match std::fs::File::open(path) {
             Ok(val) => val,
