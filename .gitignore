@@ -8,3 +8,5 @@
 
 __pycache__
 
+# Folder for holding potentially large test data files.
+/test_fixtures/test-data-unzipped
