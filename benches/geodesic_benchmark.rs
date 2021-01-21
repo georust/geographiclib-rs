@@ -8,10 +8,21 @@ use geographiclib_rs::{DirectGeodesic, InverseGeodesic};
 use std::fs::File;
 use std::io::{BufRead, BufReader};
 
-fn geodesic_direct_benchmark(c: &mut Criterion) {
-    const INPUT_FOR_DIRECT: &'static str = "test_fixtures/GeodTest-100.dat";
+const FULL_TEST_PATH: &str = &"test_fixtures/test_data_unzipped/GeodTest.dat";
+const SHORT_TEST_PATH: &str = "test_fixtures/test_data_unzipped/GeodTest-short.dat";
+const BUILTIN_TEST_PATH: &str = "test_fixtures/GeodTest-100.dat";
+fn test_input_path() -> &'static str {
+    if cfg!(feature = "test_full") {
+        FULL_TEST_PATH
+    } else if cfg!(feature = "test_short") {
+        SHORT_TEST_PATH
+    } else {
+        BUILTIN_TEST_PATH
+    }
+}
 
-    let file = File::open(INPUT_FOR_DIRECT).unwrap();
+fn geodesic_direct_benchmark(c: &mut Criterion) {
+    let file = File::open(test_input_path()).unwrap();
     let reader = BufReader::new(file);
     let inputs: Vec<(f64, f64, f64, f64)> = reader
         .lines()
@@ -43,9 +54,7 @@ fn geodesic_direct_benchmark(c: &mut Criterion) {
 }
 
 fn geodesic_inverse_benchmark(c: &mut Criterion) {
-    const INPUT_FOR_INVERSE: &'static str = "test_fixtures/GeodTest-100.dat";
-
-    let file = File::open(INPUT_FOR_INVERSE).unwrap();
+    let file = File::open(test_input_path()).unwrap();
     let reader = BufReader::new(file);
     let inputs: Vec<(f64, f64, f64, f64)> = reader
         .lines()
