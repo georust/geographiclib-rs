@@ -12,7 +12,13 @@ documentation = "https://docs.rs/geographiclib-rs"
 readme = "README.md"
 
 [features]
-full_test = []
+# Run tests against Karney's GeodTest.dat test cases. 
+# You must run script/download-test-data.sh before using this feature
+test_full = []
+
+# Run tests against Karney's abridged GeodTest-short.dat test cases. 
+# You must run script/download-test-data.sh before using this feature
+test_short = []
 
 [dependencies]
 lazy_static = "1.4.0"

@@ -2584,6 +2584,16 @@ mod tests {
 
     static FULL_TEST_PATH: &str = "test_fixtures/test_data_unzipped/GeodTest.dat";
     static SHORT_TEST_PATH: &str = "test_fixtures/test_data_unzipped/GeodTest-short.dat";
+    static BUILTIN_TEST_PATH: &str = "test_fixtures/GeodTest-100.dat";
+    fn test_input_path() -> &'static str {
+        if cfg!(feature = "test_full") {
+            FULL_TEST_PATH
+        } else if cfg!(feature = "test_short") {
+            SHORT_TEST_PATH
+        } else {
+            BUILTIN_TEST_PATH
+        }
+    }
 
     fn geodtest_basic<T>(path: &str, f: T)
     where
@@ -2628,14 +2638,8 @@ mod tests {
     fn test_geodtest_geodesic_direct12() {
         let g = std::sync::Arc::new(std::sync::Mutex::new(Geodesic::wgs84()));
 
-        let input = if cfg!(feature = "full_test") {
-            FULL_TEST_PATH
-        } else {
-            SHORT_TEST_PATH
-        };
-
         geodtest_basic(
-            input,
+            test_input_path(),
             |_line_num, &(lat1, lon1, azi1, lat2, lon2, azi2, s12, a12, m12, S12)| {
                 let g = g.lock().unwrap();
                 let (lat2_out, lon2_out, azi2_out, m12_out, _M12_out, _M21_out, S12_out, a12_out) =
@@ -2654,14 +2658,8 @@ mod tests {
     fn test_geodtest_geodesic_direct21() {
         let g = std::sync::Arc::new(std::sync::Mutex::new(Geodesic::wgs84()));
 
-        let input = if cfg!(feature = "full_test") {
-            FULL_TEST_PATH
-        } else {
-            SHORT_TEST_PATH
-        };
-
         geodtest_basic(
-            input,
+            test_input_path(),
             |_line_num, &(lat1, lon1, azi1, lat2, lon2, azi2, s12, a12, m12, S12)| {
                 let g = g.lock().unwrap();
                 // Reverse some values for 2->1 instead of 1->2
@@ -2683,14 +2681,8 @@ mod tests {
     fn test_geodtest_geodesic_inverse12() {
         let g = std::sync::Arc::new(std::sync::Mutex::new(Geodesic::wgs84()));
 
-        let input = if cfg!(feature = "full_test") {
-            FULL_TEST_PATH
-        } else {
-            SHORT_TEST_PATH
-        };
-
         geodtest_basic(
-            input,
+            test_input_path(),
             |_line_num, &(lat1, lon1, azi1, lat2, lon2, azi2, s12, a12, m12, S12)| {
                 let g = g.lock().unwrap();
                 let (s12_out, azi1_out, azi2_out, m12_out, _M12_out, _M21_out, S12_out, a12_out) =
