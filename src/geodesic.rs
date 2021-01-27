@@ -2457,12 +2457,11 @@ mod tests {
     }
 
     #[test]
-    #[ignore] // Fails existing behavior.
     fn test_std_geodesic_geodsolve76() {
         // The distance from Wellington and Salamanca (a classic failure of
         // Vincenty)
         let geod = Geodesic::wgs84();
-        let (azi1, azi2, s12) = 
+        let (s12, azi1, azi2, _a12) = 
             geod.inverse(-(41.0+19.0/60.0), 174.0+49.0/60.0, 40.0+58.0/60.0, -(5.0+30.0/60.0));
         assert_approx_eq!(azi1, 160.39137649664, 0.5e-11);
         assert_approx_eq!(azi2,  19.50042925176, 0.5e-11);
