@@ -232,6 +232,10 @@ pub fn atan2d(y: f64, x: f64) -> f64 {
     ang
 }
 
+pub fn eatanhe(x: f64, es: f64) -> f64 {
+    if es > 0.0 { es * (es * x).atanh() } else { -es * (es * x).atan() }
+}
+
 // Functions that used to be inside Geodesic
 pub fn sin_cos_series(sinp: bool, sinx: f64, cosx: f64, c: &[f64]) -> f64 {
     let mut k = c.len();

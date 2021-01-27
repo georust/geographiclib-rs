@@ -99,18 +99,16 @@ impl Geodesic {
         let _ep2 = _e2 / geomath::sq(_f1);
         let _n = f / (2.0 - f);
         let _b = a * _f1;
-        let _c2 = (geomath::sq(a)
-            + geomath::sq(_b)
-                * (if _e2 == 0.0 {
-                    1.0
-                } else {
-                    if _e2 > 0.0 {
-                        _e2.sqrt().atanh()
-                    } else {
-                        (-_e2).sqrt().atanh()
-                    }
-                } / _e2.abs().sqrt()))
-            / 2.0;
+        let _c2 = (geomath::sq(a) + geomath::sq(_b)
+            * (if _e2 == 0.0 {
+                1.0
+            } else {
+                geomath::eatanhe(
+                    1.0,
+                    (if f < 0.0 { -1.0 } else { 1.0 }) * _e2.abs().sqrt()
+                ) / _e2
+            }
+            )) / 2.0;
         let _etol2 = 0.1 * tol2_ / (f.abs().max(0.001) * (1.0 - f / 2.0).min(1.0) / 2.0).sqrt();
 
         let mut _A3x: [f64; GEODESIC_ORDER as usize] = [0.0; GEODESIC_ORDER as usize];
@@ -2219,7 +2217,6 @@ mod tests {
     }
 
     #[test]
-    #[ignore] // Fails existing behavior.
     fn test_std_geodesic_geodsolve15() {
         // Initial implementation of Math::eatanhe was wrong for e^2 < 0.  This
         // checks that this is fixed.
@@ -2261,7 +2258,6 @@ mod tests {
     }
 
     #[test]
-    #[ignore] // Fails existing behavior.
     fn test_std_geodesic_geodsolve26() {
         // Check 0/0 problem with area calculation on sphere 2015-09-08
         let geod = Geodesic::new(6.4e6, 0.0);
