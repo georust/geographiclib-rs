@@ -2,8 +2,8 @@ extern crate criterion;
 extern crate geographiclib;
 extern crate geographiclib_rs;
 
-use std::time::Duration;
 use criterion::{criterion_group, criterion_main, Criterion};
+use std::time::Duration;
 
 use geographiclib_rs::{DirectGeodesic, InverseGeodesic};
 use std::fs::File;

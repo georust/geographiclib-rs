@@ -233,7 +233,11 @@ pub fn atan2d(y: f64, x: f64) -> f64 {
 }
 
 pub fn eatanhe(x: f64, es: f64) -> f64 {
-    if es > 0.0 { es * (es * x).atanh() } else { -es * (es * x).atan() }
+    if es > 0.0 {
+        es * (es * x).atanh()
+    } else {
+        -es * (es * x).atan()
+    }
 }
 
 // Functions that used to be inside Geodesic

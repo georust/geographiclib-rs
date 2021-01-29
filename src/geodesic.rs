@@ -10,7 +10,7 @@ pub const WGS84_A: f64 = 6378137.0;
 // Evaluating this as 1000000000.0 / (298257223563f64) reduces the
 // round-off error by about 10%.  However, expressing the flattening as
 // 1/298.257223563 is well ingrained.
-pub const WGS84_F: f64 = 1.0 / ( (298257223563f64) / 1000000000.0 );
+pub const WGS84_F: f64 = 1.0 / ((298257223563f64) / 1000000000.0);
 
 #[derive(Debug, Copy, Clone)]
 pub struct Geodesic {
@@ -102,16 +102,15 @@ impl Geodesic {
         let _ep2 = _e2 / geomath::sq(_f1);
         let _n = f / (2.0 - f);
         let _b = a * _f1;
-        let _c2 = (geomath::sq(a) + geomath::sq(_b)
-            * (if _e2 == 0.0 {
-                1.0
-            } else {
-                geomath::eatanhe(
-                    1.0,
-                    (if f < 0.0 { -1.0 } else { 1.0 }) * _e2.abs().sqrt()
-                ) / _e2
-            }
-            )) / 2.0;
+        let _c2 = (geomath::sq(a)
+            + geomath::sq(_b)
+                * (if _e2 == 0.0 {
+                    1.0
+                } else {
+                    geomath::eatanhe(1.0, (if f < 0.0 { -1.0 } else { 1.0 }) * _e2.abs().sqrt())
+                        / _e2
+                }))
+            / 2.0;
         let _etol2 = 0.1 * tol2_ / (f.abs().max(0.001) * (1.0 - f / 2.0).min(1.0) / 2.0).sqrt();
 
         let mut _A3x: [f64; GEODESIC_ORDER as usize] = [0.0; GEODESIC_ORDER as usize];
@@ -1305,11 +1304,11 @@ impl InverseGeodesic<(f64, f64, f64, f64, f64, f64, f64, f64)> for Geodesic {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::geodesicline::GeodesicLine;
     use assert_approx_eq::assert_approx_eq;
     use std::io::BufRead;
-    use crate::geodesicline::GeodesicLine;
 
-    const TESTCASES: &[(f64,f64,f64,f64,f64,f64,f64,f64,f64,f64,f64,f64)] = &[
+    const TESTCASES: &[(f64, f64, f64, f64, f64, f64, f64, f64, f64, f64, f64, f64)] = &[
         (
             35.60777,
             -139.44815,
@@ -1659,7 +1658,9 @@ mod tests {
     fn test_arcdirect() {
         // Corresponds with ArcDirectCheck from Java, or test_arcdirect from Python
         let geod = Geodesic::wgs84();
-        for (_line_num, (lat1, lon1, azi1, lat2, lon2, azi2, s12, a12, m12, M12, M21, S12)) in TESTCASES.iter().enumerate() {
+        for (_line_num, (lat1, lon1, azi1, lat2, lon2, azi2, s12, a12, m12, M12, M21, S12)) in
+            TESTCASES.iter().enumerate()
+        {
             let (
                 _computed_a12,
                 computed_lat2,
@@ -2122,7 +2123,7 @@ mod tests {
     #[test]
     fn test_std_geodesic_geodsolve2() {
         // Check fix for antipodal prolate bug found 2010-09-04
-        let geod = Geodesic::new(6.4e6, -1f64/150.0);
+        let geod = Geodesic::new(6.4e6, -1f64 / 150.0);
         let (s12, azi1, azi2, _a12) = geod.inverse(0.07476, 0.0, -0.07476, 180.0);
         assert_approx_eq!(azi1, 90.00078, 0.5e-5);
         assert_approx_eq!(azi2, 90.00078, 0.5e-5);
@@ -2161,9 +2162,19 @@ mod tests {
         // Check fix for volatile sbet12a bug found 2011-06-25 (gcc 4.4.4
         // x86 -O3).  Found again on 2012-03-27 with tdm-mingw32 (g++ 4.6.1).
         let geod = Geodesic::wgs84();
-        let s12: f64 = geod.inverse(88.202499451857, 0.0, -88.202499451857, 179.981022032992859592);
+        let s12: f64 = geod.inverse(
+            88.202499451857,
+            0.0,
+            -88.202499451857,
+            179.981022032992859592,
+        );
         assert_approx_eq!(s12, 20003898.214, 0.5e-3);
-        let s12: f64 = geod.inverse(89.333123580033, 0.0, -89.333123580032997687, 179.99295812360148422);
+        let s12: f64 = geod.inverse(
+            89.333123580033,
+            0.0,
+            -89.333123580032997687,
+            179.99295812360148422,
+        );
         assert_approx_eq!(s12, 20003926.881, 0.5e-3);
     }
 
@@ -2171,7 +2182,12 @@ mod tests {
     fn test_std_geodesic_geodsolve9() {
         // Check fix for volatile x bug found 2011-06-25 (gcc 4.4.4 x86 -O3)
         let geod = Geodesic::wgs84();
-        let s12: f64 = geod.inverse(56.320923501171, 0.0, -56.320923501171, 179.664747671772880215);
+        let s12: f64 = geod.inverse(
+            56.320923501171,
+            0.0,
+            -56.320923501171,
+            179.664747671772880215,
+        );
         assert_approx_eq!(s12, 19993558.287, 0.5e-3);
     }
 
@@ -2180,7 +2196,12 @@ mod tests {
         // Check fix for adjust tol1_ bug found 2011-06-25 (Visual Studio
         // 10 rel + debug)
         let geod = Geodesic::wgs84();
-        let s12: f64 = geod.inverse(52.784459512564, 0.0, -52.784459512563990912, 179.634407464943777557);
+        let s12: f64 = geod.inverse(
+            52.784459512564,
+            0.0,
+            -52.784459512563990912,
+            179.634407464943777557,
+        );
         assert_approx_eq!(s12, 19991596.095, 0.5e-3);
     }
 
@@ -2189,7 +2210,12 @@ mod tests {
         // Check fix for bet2 = -bet1 bug found 2011-06-25 (Visual Studio
         // 10 rel + debug)
         let geod = Geodesic::wgs84();
-        let s12: f64 = geod.inverse(48.522876735459, 0.0, -48.52287673545898293, 179.599720456223079643);
+        let s12: f64 = geod.inverse(
+            48.522876735459,
+            0.0,
+            -48.52287673545898293,
+            179.599720456223079643,
+        );
         assert_approx_eq!(s12, 19989144.774, 0.5e-3);
     }
 
@@ -2219,7 +2245,7 @@ mod tests {
     fn test_std_geodesic_geodsolve15() {
         // Initial implementation of Math::eatanhe was wrong for e^2 < 0.  This
         // checks that this is fixed.
-        let geod = Geodesic::new(6.4e6, -1f64/150.0);
+        let geod = Geodesic::new(6.4e6, -1f64 / 150.0);
         let (_lat2, _lon2, _azi2, _m12, _M12, _M21, S12, _a12) = geod.direct(1.0, 2.0, 3.0, 4.0);
         assert_approx_eq!(S12, 23700.0, 0.5);
     }
@@ -2227,9 +2253,15 @@ mod tests {
     #[test]
     fn test_std_geodesic_geodsolve17() {
         // Check fix for LONG_UNROLL bug found on 2015-05-07
-        let geod = Geodesic::new(6.4e6, -1f64/150.0);
-        let (_a12, lat2, lon2, azi2, _s12, _m12, _M12, _M21, _S12) =
-            geod._gen_direct(40.0, -75.0, -10.0, false, 2e7, caps::STANDARD | caps::LONG_UNROLL);
+        let geod = Geodesic::new(6.4e6, -1f64 / 150.0);
+        let (_a12, lat2, lon2, azi2, _s12, _m12, _M12, _M21, _S12) = geod._gen_direct(
+            40.0,
+            -75.0,
+            -10.0,
+            false,
+            2e7,
+            caps::STANDARD | caps::LONG_UNROLL,
+        );
         assert_approx_eq!(lat2, -39.0, 1.0);
         assert_approx_eq!(lon2, -254.0, 1.0);
         assert_approx_eq!(azi2, -170.0, 1.0);
@@ -2241,8 +2273,7 @@ mod tests {
         assert_approx_eq!(lon2, -254.0, 1.0);
         assert_approx_eq!(azi2, -170.0, 1.0);
 
-        let (lat2, lon2, azi2) =
-            geod.direct(40.0, -75.0, -10.0, 2e7);
+        let (lat2, lon2, azi2) = geod.direct(40.0, -75.0, -10.0, 2e7);
         assert_approx_eq!(lat2, -39.0, 1.0);
         assert_approx_eq!(lon2, 105.0, 1.0);
         assert_approx_eq!(azi2, -170.0, 1.0);
@@ -2329,7 +2360,7 @@ mod tests {
         assert_approx_eq!(azi2.abs(), 180.0, 0.5e-5);
         assert_approx_eq!(s12, 19994492.0, 0.5);
 
-        let geod = Geodesic::new(6.4e6, -1.0/300.0);
+        let geod = Geodesic::new(6.4e6, -1.0 / 300.0);
         let (s12, azi1, azi2, _a12) = geod.inverse(0.0, 0.0, 0.0, 179.0);
         assert_approx_eq!(azi1, 90.0, 0.5e-5);
         assert_approx_eq!(azi2, 90.0, 0.5e-5);
@@ -2377,8 +2408,14 @@ mod tests {
     fn test_std_geodesic_geodsolve61() {
         // Make sure small negative azimuths are west-going
         let geod = Geodesic::wgs84();
-        let (_a12, lat2, lon2, azi2, _s12, _m12, _M12, _M21, _S12) =
-            geod._gen_direct(45.0, 0.0, -0.000000000000000003, false, 1e7, caps::STANDARD | caps::LONG_UNROLL);
+        let (_a12, lat2, lon2, azi2, _s12, _m12, _M12, _M21, _S12) = geod._gen_direct(
+            45.0,
+            0.0,
+            -0.000000000000000003,
+            false,
+            1e7,
+            caps::STANDARD | caps::LONG_UNROLL,
+        );
         assert_approx_eq!(lat2, 45.30632, 0.5e-5);
         assert_approx_eq!(lon2, -180.0, 0.5e-5);
         assert_approx_eq!(azi2.abs(), 180.0, 0.5e-5);
@@ -2439,11 +2476,11 @@ mod tests {
             geod._gen_inverse_azi(54.1589, 15.3872, 54.1591, 15.3877, caps::ALL);
         assert_approx_eq!(azi1, 55.723110355, 5e-9);
         assert_approx_eq!(azi2, 55.723515675, 5e-9);
-        assert_approx_eq!(s12,  39.527686385, 5e-9);
-        assert_approx_eq!(a12,   0.000355495, 5e-9);
-        assert_approx_eq!(m12,  39.527686385, 5e-9);
-        assert_approx_eq!(M12,   0.999999995, 5e-9);
-        assert_approx_eq!(M21,   0.999999995, 5e-9);
+        assert_approx_eq!(s12, 39.527686385, 5e-9);
+        assert_approx_eq!(a12, 0.000355495, 5e-9);
+        assert_approx_eq!(m12, 39.527686385, 5e-9);
+        assert_approx_eq!(M12, 0.999999995, 5e-9);
+        assert_approx_eq!(M21, 0.999999995, 5e-9);
         assert_approx_eq!(S12, 286698586.30197, 5e-4);
     }
 
@@ -2452,22 +2489,25 @@ mod tests {
         // The distance from Wellington and Salamanca (a classic failure of
         // Vincenty)
         let geod = Geodesic::wgs84();
-        let (s12, azi1, azi2, _a12) = 
-            geod.inverse(-(41.0+19.0/60.0), 174.0+49.0/60.0, 40.0+58.0/60.0, -(5.0+30.0/60.0));
+        let (s12, azi1, azi2, _a12) = geod.inverse(
+            -(41.0 + 19.0 / 60.0),
+            174.0 + 49.0 / 60.0,
+            40.0 + 58.0 / 60.0,
+            -(5.0 + 30.0 / 60.0),
+        );
         assert_approx_eq!(azi1, 160.39137649664, 0.5e-11);
-        assert_approx_eq!(azi2,  19.50042925176, 0.5e-11);
-        assert_approx_eq!(s12,  19960543.857179, 0.5e-6);
+        assert_approx_eq!(azi2, 19.50042925176, 0.5e-11);
+        assert_approx_eq!(s12, 19960543.857179, 0.5e-6);
     }
 
     #[test]
     fn test_std_geodesic_geodsolve78() {
         // An example where the NGS calculator fails to converge
         let geod = Geodesic::wgs84();
-        let (s12, azi1, azi2, _a12) = 
-            geod.inverse(27.2, 0.0, -27.1, 179.5);
-        assert_approx_eq!(azi1,  45.82468716758, 0.5e-11);
+        let (s12, azi1, azi2, _a12) = geod.inverse(27.2, 0.0, -27.1, 179.5);
+        assert_approx_eq!(azi1, 45.82468716758, 0.5e-11);
         assert_approx_eq!(azi2, 134.22776532670, 0.5e-11);
-        assert_approx_eq!(s12,  19974354.765767, 0.5e-6);
+        assert_approx_eq!(s12, 19974354.765767, 0.5e-6);
     }
 
     #[test]
@@ -2491,7 +2531,7 @@ mod tests {
         assert_approx_eq!(s12, 0.0, 1e-8);
         assert_approx_eq!(azi1, 180.0, 1e-13);
         assert_approx_eq!(azi2, 180.0, 1e-13);
-        assert_approx_eq!(m12, 0.0,  1e-8);
+        assert_approx_eq!(m12, 0.0, 1e-8);
         assert_approx_eq!(M12, 1.0, 1e-15);
         assert_approx_eq!(M21, 1.0, 1e-15);
         assert_approx_eq!(S12, 0.0, 1e-10);
@@ -2552,7 +2592,6 @@ mod tests {
         assert!(lon2.is_nan());
         assert!(azi2.is_nan());
     }
-
 
     // *_geodtest_* tests are based on Karney's GeodTest*.dat test datasets.
     // A description of these files' content can be found at:
