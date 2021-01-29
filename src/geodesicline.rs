@@ -19,8 +19,8 @@ pub struct GeodesicLine {
     _C1a: [f64; GEODESIC_ORDER as usize + 1],
     _C1pa: [f64; GEODESIC_ORDER as usize + 1],
     _C2a: [f64; GEODESIC_ORDER as usize + 1],
-    _C3a: [f64; GEODESIC_ORDER as usize + 1],
-    _C4a: [f64; GEODESIC_ORDER as usize + 1],
+    _C3a: [f64; GEODESIC_ORDER as usize],
+    _C4a: [f64; GEODESIC_ORDER as usize],
     _b: f64,
     _c2: f64,
     _calp0: f64,
@@ -78,15 +78,14 @@ impl GeodesicLine {
         let _c2 = geod._c2;
         let _f1 = geod._f1;
         let caps = caps | caps::LATITUDE | caps::AZIMUTH | caps::LONG_UNROLL;
-        let lat1 = geomath::lat_fix(lat1);
-        let lon1 = lon1;
         let (azi1, salp1, calp1) = if salp1.is_nan() || calp1.is_nan() {
-            let (salp1, calp1) = geomath::sincosd(geomath::ang_round(azi1));
             let azi1 = geomath::ang_normalize(azi1);
+            let (salp1, calp1) = geomath::sincosd(geomath::ang_round(azi1));
             (azi1, salp1, calp1)
         } else {
             (azi1, salp1, calp1)
         };
+        let lat1 = geomath::lat_fix(lat1);
 
         let (mut sbet1, cbet1) = geomath::sincosd(geomath::ang_round(lat1));
         sbet1 *= _f1;
@@ -136,7 +135,7 @@ impl GeodesicLine {
             _B21 = geomath::sin_cos_series(true, _ssig1, _csig1, &_C2a);
         }
 
-        let mut _C3a: [f64; GEODESIC_ORDER as usize + 1] = [0.0; GEODESIC_ORDER as usize + 1];
+        let mut _C3a: [f64; GEODESIC_ORDER as usize] = [0.0; GEODESIC_ORDER as usize];
         let mut _A3c = 0.0;
         let mut _B31 = 0.0;
         if caps & caps::CAP_C3 != 0 {
@@ -145,7 +144,7 @@ impl GeodesicLine {
             _B31 = geomath::sin_cos_series(true, _ssig1, _csig1, &_C3a);
         }
 
-        let mut _C4a: [f64; GEODESIC_ORDER as usize + 1] = [0.0; GEODESIC_ORDER as usize + 1];
+        let mut _C4a: [f64; GEODESIC_ORDER as usize] = [0.0; GEODESIC_ORDER as usize];
         let mut _A4 = 0.0;
         let mut _B41 = 0.0;
         if caps & caps::CAP_C4 != 0 {
@@ -230,16 +229,10 @@ impl GeodesicLine {
             sig12 = s12_a12.to_radians();
             let res = geomath::sincosd(s12_a12);
             ssig12 = res.0;
-            csig12 = res.0;
+            csig12 = res.1;
         } else {
             // tau12 = s12_a12 / (self._b * (1 + self._A1m1))
-            // tau12 = tau12 if Math.isfinite(tau12) else Math.nan
             let tau12 = s12_a12 / (self._b * (1.0 + self._A1m1));
-            let tau12 = if tau12.is_finite() {
-                tau12
-            } else {
-                std::f64::NAN
-            };
 
             let s = tau12.sin();
             let c = tau12.cos();
@@ -258,7 +251,7 @@ impl GeodesicLine {
                 csig2 = self._csig1 * csig12 - self._ssig1 * ssig12;
                 B12 = geomath::sin_cos_series(true, ssig2, csig2, &self._C1a);
                 let serr = (1.0 + self._A1m1) * (sig12 + (B12 - self._B11)) - s12_a12 / self._b;
-                sig12 = sig12 - serr / (1.0 + self._k2 * ssig2.sqrt()).sqrt();
+                sig12 = sig12 - serr / (1.0 + self._k2 * geomath::sq(ssig2)).sqrt();
                 ssig12 = sig12.sin();
                 csig12 = sig12.cos();
             }

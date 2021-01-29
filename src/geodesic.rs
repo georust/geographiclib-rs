@@ -7,7 +7,10 @@ use crate::geomath;
 use std::f64::consts::PI;
 
 pub const WGS84_A: f64 = 6378137.0;
-pub const WGS84_F: f64 = 1.0 / 298.257223563;
+// Evaluating this as 1000000000.0 / (298257223563f64) reduces the
+// round-off error by about 10%.  However, expressing the flattening as
+// 1/298.257223563 is well ingrained.
+pub const WGS84_F: f64 = 1.0 / ( (298257223563f64) / 1000000000.0 );
 
 #[derive(Debug, Copy, Clone)]
 pub struct Geodesic {
@@ -914,11 +917,6 @@ impl Geodesic {
         if !arcmode {
             outmask = outmask | caps::DISTANCE_IN;
         };
-        let lon1 = if outmask & caps::LONG_UNROLL != 0 {
-            lon1
-        } else {
-            geomath::ang_normalize(lon1)
-        };
 
         let line =
             geodesicline::GeodesicLine::new(self, lat1, lon1, azi1, Some(outmask), None, None);
@@ -1309,6 +1307,7 @@ mod tests {
     use super::*;
     use assert_approx_eq::assert_approx_eq;
     use std::io::BufRead;
+    use crate::geodesicline::GeodesicLine;
 
     const TESTCASES: &[(f64,f64,f64,f64,f64,f64,f64,f64,f64,f64,f64,f64)] = &[
         (
@@ -2235,13 +2234,12 @@ mod tests {
         assert_approx_eq!(lon2, -254.0, 1.0);
         assert_approx_eq!(azi2, -170.0, 1.0);
 
-        // GeodesicLine.position doesn't appear to be supported in geographiclib-rs as of 2021/01/18
-        // let line = geod.line(40.0, -75.0, -10.0);
-        // let (_a12, lat2, lon2, azi2, _s12, _m12, _M12, _M21, _S12) =
-        //     line.position(2e7, caps::STANDARD | caps::LONG_UNROLL);
-        // assert_approx_eq!(lat2, -39.0, 1.0);
-        // assert_approx_eq!(lon2, -254.0, 1.0);
-        // assert_approx_eq!(azi2, -170.0, 1.0);
+        let line = GeodesicLine::new(&geod, 40.0, -75.0, -10.0, None, None, None);
+        let (_a12, lat2, lon2, azi2, _s12, _m12, _M12, _M21, _S12) =
+            line._gen_position(false, 2e7, caps::STANDARD | caps::LONG_UNROLL);
+        assert_approx_eq!(lat2, -39.0, 1.0);
+        assert_approx_eq!(lon2, -254.0, 1.0);
+        assert_approx_eq!(azi2, -170.0, 1.0);
 
         let (lat2, lon2, azi2) =
             geod.direct(40.0, -75.0, -10.0, 2e7);
@@ -2249,12 +2247,11 @@ mod tests {
         assert_approx_eq!(lon2, 105.0, 1.0);
         assert_approx_eq!(azi2, -170.0, 1.0);
 
-        // GeodesicLine.position doesn't appear to be supported in geographiclib-rs as of 2021/01/18
-        // let (_a12, lat2, lon2, azi2, _s12, _m12, _M12, _M21, _S12) =
-        //     line.position(2e7);
-        // assert_approx_eq!(lat2, -39.0, 1.0);
-        // assert_approx_eq!(lon2, 105.0, 1.0);
-        // assert_approx_eq!(azi2, -170.0, 1.0);
+        let (_a12, lat2, lon2, azi2, _s12, _m12, _M12, _M21, _S12) =
+            line._gen_position(false, 2e7, caps::STANDARD);
+        assert_approx_eq!(lat2, -39.0, 1.0);
+        assert_approx_eq!(lon2, 105.0, 1.0);
+        assert_approx_eq!(azi2, -170.0, 1.0);
     }
 
     #[test]
@@ -2267,7 +2264,6 @@ mod tests {
     }
 
     #[test]
-    #[ignore] // Fails existing behavior.
     fn test_std_geodesic_geodsolve28() {
         // Check for bad placement of assignment of r.a12 with |f| > 0.01 (bug in
         // Java implementation fixed on 2015-05-19).
@@ -2389,10 +2385,10 @@ mod tests {
         // geographiclib-rs does not appear to support Geodesic.inverse_line or
         // or GeodesicLine.position as of 2021/01/18.
         // let line = geod.inverse_line(45, 0, 80, -0.000000000000000003);
-        // let foo = line.position(1e7, caps::STANDARD | caps::LONG_UNROLL);
-        // log_assert_delta("test_std_geodesic_geodsolve61", "lat2  b", lat2, 45.30632, 0.5e-5, false);
-        // log_assert_delta("test_std_geodesic_geodsolve61", "lon2  b", lon2, -180, 0.5e-5, false);
-        // log_assert_delta("test_std_geodesic_geodsolve61", "azi2.abs b", azi2.abs(), 180, 0.5e-5, false);
+        // let res = line.position(1e7, caps::STANDARD | caps::LONG_UNROLL);
+        // assert_approx_eq!(lat2, 45.30632, 0.5e-5);
+        // assert_approx_eq!(lon2, -180, 0.5e-5);
+        // assert_approx_eq!(azi2.abs(), 180, 0.5e-5);
     }
 
     // #[test]
@@ -2512,10 +2508,10 @@ mod tests {
         assert_approx_eq!(S12, 127516405431022.0, 0.5);
 
         // An incapable line which can't take distance as input
-        // todo: review whether and how this is supported in geographiclib-rs
-        // GeodesicLine line = geod.line(1, 2, 90, GeodesicMask.LATITUDE);
-        // GeodesicData dir = line.Position(1000, GeodesicMask.NONE);
-        // log_assert_delta("test_std_geodesic_geodsolve80", "a12", a12, , false);
+        let line = GeodesicLine::new(&geod, 1.0, 2.0, 90.0, Some(caps::LATITUDE), None, None);
+        let (a12, _lat2, _lon2, _azi2, _s12, _m12, _M12, _M21, _S12) =
+            line._gen_position(false, 1000.0, caps::CAP_NONE);
+        assert!(a12.is_nan());
     }
 
     #[test]
