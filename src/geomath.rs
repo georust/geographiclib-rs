@@ -51,17 +51,16 @@ pub fn sum(u: f64, v: f64) -> (f64, f64) {
 }
 
 // Evaluate a polynomial
-pub fn polyval(n: i64, p: &[f64], s: usize, x: f64) -> f64 {
-    let mut s = s;
-    let mut n = n;
-    let mut y = if n < 0 { 0.0 } else { p[s] };
-    assert!((n as usize) < (std::usize::MAX - s));
-    while n > 0 {
-        n -= 1;
-        s += 1;
-        y = y * x + p[s];
+pub fn polyval(n: isize, p: &[f64], x: f64) -> f64 {
+    if n < 0 {
+        0.0
+    } else {
+        let mut y = p[0];
+        for val in &p[1..=n as usize] {
+            y = y * x + val;
+        }
+        y
     }
-    y
 }
 
 // Round an angle so taht small values underflow to 0
@@ -300,7 +299,7 @@ pub fn astroid(x: f64, y: f64) -> f64 {
 pub fn _A1m1f(eps: f64, geodesic_order: i64) -> f64 {
     const COEFF: [f64; 5] = [1.0, 4.0, 64.0, 0.0, 256.0];
     let m: i64 = geodesic_order / 2;
-    let t = polyval(m, &COEFF, 0, sq(eps)) / COEFF[(m + 1) as usize] as f64;
+    let t = polyval(m as isize, &COEFF, sq(eps)) / COEFF[(m + 1) as usize] as f64;
     (t + eps) / (1.0 - eps)
 }
 
@@ -315,7 +314,7 @@ pub fn _C1f(eps: f64, c: &mut [f64], geodesic_order: i64) {
     for l in 1..=geodesic_order {
         let m = ((geodesic_order - l) / 2) as i64;
         c[l as usize] =
-            d * polyval(m, &COEFF, o as usize, eps2) / COEFF[(o + m + 1) as usize] as f64;
+            d * polyval(m as isize, &COEFF[o as usize..], eps2) / COEFF[(o + m + 1) as usize] as f64;
         o += m + 2;
         d *= eps;
     }
@@ -332,7 +331,7 @@ pub fn _C1pf(eps: f64, c: &mut [f64], geodesic_order: i64) {
     for l in 1..=geodesic_order {
         let m = (geodesic_order - l) / 2;
         c[l as usize] =
-            d * polyval(m as i64, &COEFF, o as usize, eps2) / COEFF[(o + m + 1) as usize] as f64;
+            d * polyval(m as isize, &COEFF[o as usize..], eps2) / COEFF[(o + m + 1) as usize] as f64;
         o += m + 2;
         d *= eps;
     }
@@ -341,7 +340,7 @@ pub fn _C1pf(eps: f64, c: &mut [f64], geodesic_order: i64) {
 pub fn _A2m1f(eps: f64, geodesic_order: i64) -> f64 {
     const COEFF: [f64; 5] = [-11.0, -28.0, -192.0, 0.0, 256.0];
     let m: i64 = geodesic_order / 2;
-    let t = polyval(m, &COEFF, 0, sq(eps)) / COEFF[(m + 1) as usize] as f64;
+    let t = polyval(m as isize, &COEFF, sq(eps)) / COEFF[(m + 1) as usize] as f64;
     (t - eps) / (1.0 + eps)
 }
 
@@ -356,7 +355,7 @@ pub fn _C2f(eps: f64, c: &mut [f64], geodesic_order: i64) {
     for l in 1..=geodesic_order {
         let m = (geodesic_order - l) / 2;
         c[l as usize] =
-            d * polyval(m as i64, &COEFF, o as usize, eps2) / COEFF[(o + m + 1) as usize] as f64;
+            d * polyval(m as isize, &COEFF[o as usize..], eps2) / COEFF[(o + m + 1) as usize] as f64;
         o += m + 2;
         d *= eps;
     }
