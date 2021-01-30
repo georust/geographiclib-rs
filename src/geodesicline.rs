@@ -87,22 +87,22 @@ impl GeodesicLine {
         };
         let lat1 = geomath::lat_fix(lat1);
 
-        let (mut sbet1, cbet1) = geomath::sincosd(geomath::ang_round(lat1));
+        let (mut sbet1, mut cbet1) = geomath::sincosd(geomath::ang_round(lat1));
         sbet1 *= _f1;
-        let (sbet1, mut cbet1) = geomath::norm(sbet1, cbet1);
+        geomath::norm(&mut sbet1, &mut cbet1);
         cbet1 = tiny_.max(cbet1);
         let _dn1 = (1.0 + geod._ep2 * geomath::sq(sbet1)).sqrt();
         let _salp0 = salp1 * cbet1;
         let _calp0 = calp1.hypot(salp1 * sbet1);
-        let _ssig1 = sbet1;
+        let mut _ssig1 = sbet1;
         let _somg1 = _salp0 * sbet1;
-        let _csig1 = if sbet1 != 0.0 || calp1 != 0.0 {
+        let mut _csig1 = if sbet1 != 0.0 || calp1 != 0.0 {
             cbet1 * calp1
         } else {
             1.0
         };
         let _comg1 = _csig1;
-        let (_ssig1, _csig1) = geomath::norm(_ssig1, _csig1);
+        geomath::norm(&mut _ssig1, &mut _csig1);
         let _k2 = geomath::sq(_calp0) * geod._ep2;
         let eps = _k2 / (2.0 * (1.0 + (1.0 + _k2).sqrt()) + _k2);
 

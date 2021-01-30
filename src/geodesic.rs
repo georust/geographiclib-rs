@@ -344,9 +344,7 @@ impl Geodesic {
                         } else {
                             1.0 - comg12
                         });
-            let res = geomath::norm(salp2, calp2);
-            salp2 = res.0;
-            calp2 = res.1;
+            geomath::norm(&mut salp2, &mut calp2);
             sig12 = ssig12.atan2(csig12);
         } else if self._n.abs() >= 0.1
             || csig12 >= 0.0
@@ -415,9 +413,7 @@ impl Geodesic {
             }
         }
         if !(salp1 <= 0.0) {
-            let res = geomath::norm(salp1, calp1);
-            salp1 = res.0;
-            calp1 = res.1;
+            geomath::norm(&mut salp1, &mut calp1);
         } else {
             salp1 = 1.0;
             calp1 = 0.0;
@@ -452,9 +448,7 @@ impl Geodesic {
         let somg1 = salp0 * sbet1;
         let mut csig1 = *calp1 * cbet1;
         let comg1 = *calp1 * cbet1;
-        let res = geomath::norm(ssig1, csig1);
-        ssig1 = res.0;
-        csig1 = res.1;
+        geomath::norm(&mut ssig1, &mut csig1);
 
         let salp2 = if cbet2 != cbet1 { salp0 / cbet2 } else { salp1 };
         let calp2 = if cbet2 != cbet1 || sbet2.abs() != -sbet1 {
@@ -473,9 +467,7 @@ impl Geodesic {
         let somg2 = salp0 * sbet2;
         let mut csig2 = calp2 * cbet2;
         let comg2 = calp2 * cbet2;
-        let res = geomath::norm(ssig2, csig2);
-        ssig2 = res.0;
-        csig2 = res.1;
+        geomath::norm(&mut ssig2, &mut csig2);
 
         let sig12 = ((csig1 * ssig2 - ssig1 * csig2).max(0.0)).atan2(csig1 * csig2 + ssig1 * ssig2);
         let somg12 = (comg1 * somg2 - somg1 * comg2).max(0.0);
@@ -594,16 +586,16 @@ impl Geodesic {
         lat1 *= latsign;
         lat2 *= latsign;
 
-        let (mut sbet1, cbet1) = geomath::sincosd(lat1);
+        let (mut sbet1, mut cbet1) = geomath::sincosd(lat1);
         sbet1 *= self._f1;
 
-        let (sbet1, mut cbet1) = geomath::norm(sbet1, cbet1);
+        geomath::norm(&mut sbet1, &mut cbet1);
         cbet1 = cbet1.max(self.tiny_);
 
-        let (mut sbet2, cbet2) = geomath::sincosd(lat2);
+        let (mut sbet2, mut cbet2) = geomath::sincosd(lat2);
         sbet2 *= self._f1;
 
-        let (mut sbet2, mut cbet2) = geomath::norm(sbet2, cbet2);
+        geomath::norm(&mut sbet2, &mut cbet2);
         cbet2 = cbet2.max(self.tiny_);
 
         if cbet1 < -sbet1 {
@@ -780,9 +772,7 @@ impl Geodesic {
                         if nsalp1 > 0.0 && dalp1.abs() < PI {
                             calp1 = calp1 * cdalp1 - salp1 * sdalp1;
                             salp1 = nsalp1;
-                            let res = geomath::norm(salp1, calp1);
-                            salp1 = res.0;
-                            calp1 = res.1;
+                            geomath::norm(&mut salp1, &mut calp1);
                             tripn = v.abs() <= 16.0 * self.tol0_;
                             continue;
                         }
@@ -790,9 +780,7 @@ impl Geodesic {
 
                     salp1 = (salp1a + salp1b) / 2.0;
                     calp1 = (calp1a + calp1b) / 2.0;
-                    let res = geomath::norm(salp1, calp1);
-                    salp1 = res.0;
-                    calp1 = res.1;
+                    geomath::norm(&mut salp1, &mut calp1);
                     tripn = false;
                     tripb = (salp1a - salp1).abs() + (calp1a - calp1) < self.tolb_
                         || (salp1 - salp1b).abs() + (calp1 - calp1b) < self.tolb_;
@@ -840,12 +828,8 @@ impl Geodesic {
                 let k2 = geomath::sq(calp0) * self._ep2;
                 eps = k2 / (2.0 * (1.0 + (1.0 + k2).sqrt()) + k2);
                 let A4 = geomath::sq(self.a) * calp0 * salp0 * self._e2;
-                let res = geomath::norm(ssig1, csig1);
-                ssig1 = res.0;
-                csig1 = res.1;
-                let res = geomath::norm(ssig2, csig2);
-                ssig2 = res.0;
-                csig2 = res.1;
+                geomath::norm(&mut ssig1, &mut csig1);
+                geomath::norm(&mut ssig2, &mut csig2);
                 let mut C4a: [f64; CARR_SIZE] = [0.0; CARR_SIZE];
                 self._C4f(eps, &mut C4a);
                 let B41 = geomath::sin_cos_series(false, ssig1, csig1, &C4a);

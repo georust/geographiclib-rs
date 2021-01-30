@@ -33,9 +33,10 @@ pub fn cbrt(x: f64) -> f64 {
 }
 
 // Normalize a two-vector
-pub fn norm(x: f64, y: f64) -> (f64, f64) {
-    let r = x.hypot(y);
-    (x / r, y / r)
+pub fn norm(x: &mut f64, y: &mut f64) {
+    let r = x.hypot(*y);
+    *x /= r;
+    *y /= r;
 }
 
 // Error free transformation of a sum
