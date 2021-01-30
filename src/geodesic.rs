@@ -2258,10 +2258,9 @@ mod tests {
     }
 
     #[test]
-    #[ignore] // Fails existing behavior.
     fn test_std_geodesic_geodsolve29() {
         // Check longitude unrolling with inverse calculation 2015-09-16
-        let geod = Geodesic::new(6.4e6, 0.1);
+        let geod = Geodesic::wgs84();
         let (_a12, s12, _salp1, _calp1, _salp2, _calp2, _m12, _M12, _M21, _S12) =
             geod._gen_inverse(0.0, 539.0, 0.0, 181.0, caps::STANDARD);
         // Note: This is also supposed to check adjusted longitudes, but geographiclib-rs
