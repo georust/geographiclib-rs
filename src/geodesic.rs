@@ -122,7 +122,7 @@ impl Geodesic {
         let mut k = 0;
         for j in (0..GEODESIC_ORDER).rev() {
             let m = j.min(GEODESIC_ORDER as i64 - j - 1);
-            _A3x[k as usize] = geomath::polyval(m, &COEFF_A3, o as usize, _n)
+            _A3x[k as usize] = geomath::polyval(m as isize, &COEFF_A3[o as usize..], _n)
                 / COEFF_A3[(o + m + 1) as usize] as f64;
             k += 1;
             o += m + 2;
@@ -135,7 +135,7 @@ impl Geodesic {
         for l in 1..GEODESIC_ORDER {
             for j in (l..GEODESIC_ORDER).rev() {
                 let m = j.min(GEODESIC_ORDER as i64 - j - 1);
-                _C3x[k as usize] = geomath::polyval(m, &COEFF_C3, o as usize, _n)
+                _C3x[k as usize] = geomath::polyval(m as isize, &COEFF_C3[o as usize..], _n)
                     / COEFF_C3[(o + m + 1) as usize] as f64;
                 k += 1;
                 o += m + 2;
@@ -149,7 +149,7 @@ impl Geodesic {
         for l in 0..GEODESIC_ORDER {
             for j in (l..GEODESIC_ORDER).rev() {
                 let m = GEODESIC_ORDER as i64 - j - 1;
-                _C4x[k as usize] = geomath::polyval(m, &COEFF_C4, o as usize, _n)
+                _C4x[k as usize] = geomath::polyval(m as isize, &COEFF_C4[o as usize..], _n)
                     / COEFF_C4[(o + m + 1) as usize] as f64;
                 k += 1;
                 o += m + 2;
@@ -186,27 +186,27 @@ impl Geodesic {
     }
 
     pub fn _A3f(&self, eps: f64) -> f64 {
-        geomath::polyval(self.GEODESIC_ORDER - 1, &self._A3x, 0, eps)
+        geomath::polyval(self.GEODESIC_ORDER as isize - 1, &self._A3x, eps)
     }
 
     pub fn _C3f(&self, eps: f64, c: &mut [f64]) {
         let mut mult = 1.0;
-        let mut o = 0.0;
-        for l in 1..self.GEODESIC_ORDER {
-            let m = self.GEODESIC_ORDER - l - 1;
+        let mut o = 0;
+        for l in 1..self.GEODESIC_ORDER as usize {
+            let m = self.GEODESIC_ORDER as usize - l - 1;
             mult *= eps;
-            c[l as usize] = mult * geomath::polyval(m, &self._C3x, o as usize, eps);
-            o += m as f64 + 1.0;
+            c[l] = mult * geomath::polyval(m as isize, &self._C3x[o..], eps);
+            o += m + 1;
         }
     }
 
     pub fn _C4f(&self, eps: f64, c: &mut [f64]) {
         let mut mult = 1.0;
-        let mut o = 0.0;
-        for l in 0..self.GEODESIC_ORDER {
-            let m = self.GEODESIC_ORDER - l - 1;
-            c[l as usize] = mult * geomath::polyval(m, &self._C4x, o as usize, eps);
-            o += m as f64 + 1.0;
+        let mut o = 0;
+        for l in 0..self.GEODESIC_ORDER as usize {
+            let m = self.GEODESIC_ORDER as usize - l - 1;
+            c[l] = mult * geomath::polyval(m as isize, &self._C4x[o..], eps);
+            o += m + 1;
             mult *= eps;
         }
     }
