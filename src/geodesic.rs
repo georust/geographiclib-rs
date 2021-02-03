@@ -1638,7 +1638,6 @@ mod tests {
     }
 
     #[test]
-    #[ignore] // Fails existing behavior.
     fn test_arcdirect() {
         // Corresponds with ArcDirectCheck from Java, or test_arcdirect from Python
         let geod = Geodesic::wgs84();
