@@ -161,4 +161,21 @@ mod tests {
         assert_eq!(lat, 50.899043656956295);
         assert_eq!(lon, 1.7935283011976253);
     }
+
+    #[test]
+    fn nan() {
+        // Paris
+        let lat0 = 48.0 + 50.0 / 60.0;
+        let lon0 = 2.0 + 20.0 / 60.0;
+
+        let proj = Gnomonic::wgs84();
+    
+        let lat = -3.0;
+        let lon = -178.4;
+    
+        let (x, y, _, _) = proj.forward(lat0, lon0, lat, lon);
+    
+        assert!(x.is_nan());
+        assert!(y.is_nan());
+    }
 }
