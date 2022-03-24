@@ -2651,7 +2651,7 @@ mod tests {
                 let g = g.lock().unwrap();
                 let (lat2_out, lon2_out, azi2_out, m12_out, _M12_out, _M21_out, S12_out, a12_out) =
                     g.direct(lat1, lon1, azi1, s12);
-                assert_relative_eq!(lat2, lat2_out, epsilon = 8e-14);
+                assert_relative_eq!(lat2, lat2_out, epsilon = 1e-13);
                 assert_relative_eq!(lon2, lon2_out, epsilon = 2e-8);
                 assert_relative_eq!(azi2, azi2_out, epsilon = 2e-8);
                 assert_relative_eq!(m12, m12_out, epsilon = 9e-9);
@@ -2677,7 +2677,7 @@ mod tests {
                 assert_relative_eq!(lat2, lat2_out, epsilon = 8e-14);
                 assert_relative_eq!(lon2, lon2_out, epsilon = 4e-6);
                 assert_relative_eq!(azi2, azi2_out, epsilon = 4e-6);
-                assert_relative_eq!(m12, m12_out, epsilon = 9e-9);
+                assert_relative_eq!(m12, m12_out, epsilon = 1e-8);
                 assert_relative_eq!(S12, S12_out, epsilon = 3e6); // Note: unreasonable tolerance
                 assert_relative_eq!(a12, a12_out, epsilon = 9e-14);
             },
