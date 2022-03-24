@@ -363,21 +363,22 @@ pub fn _C2f(eps: f64, c: &mut [f64], geodesic_order: i64) {
 
 #[cfg(test)]
 mod tests {
+    use approx::assert_relative_eq;
     use super::*;
     // Results for the assertions are taken by running the python implementation
 
     #[test]
     fn test_sincosd() {
         let res = sincosd(-77.03196);
-        assert_eq!(res.0, -0.9744953925159129);
-        assert_eq!(res.1, 0.22440750870961693);
+        assert_relative_eq!(res.0, -0.9744953925159129);
+        assert_relative_eq!(res.1, 0.22440750870961693);
 
         let res = sincosd(69.48894);
-        assert_eq!(res.0, 0.9366045700708676);
-        assert_eq!(res.1, 0.3503881837653281);
+        assert_relative_eq!(res.0, 0.9366045700708676);
+        assert_relative_eq!(res.1, 0.3503881837653281);
         let res = sincosd(-1.0);
-        assert_eq!(res.0, -0.01745240643728351);
-        assert_eq!(res.1, 0.9998476951563913);
+        assert_relative_eq!(res.0, -0.01745240643728351);
+        assert_relative_eq!(res.1, 0.9998476951563913);
     }
 
     #[test]

@@ -21,10 +21,10 @@ let northeast_azimuth = 45.0;
 
 let (lat, lon, az) = g.direct(jfk_lat, jfk_lon, northeast_azimuth, 10e6);
 
-use assert_approx_eq::assert_approx_eq;
-assert_approx_eq!(lat, 32.621100463725796);
-assert_approx_eq!(lon, 49.05248709295982);
-assert_approx_eq!(az,  140.4059858768007);
+use approx::assert_relative_eq;
+assert_relative_eq!(lat, 32.621100463725796);
+assert_relative_eq!(lon, 49.05248709295982);
+assert_relative_eq!(az,  140.4059858768007);
 ```
 
 ```rust
@@ -36,8 +36,8 @@ let p1 = (34.095925, -118.2884237);
 let p2 = (59.4323439, 24.7341649);
 let s12: f64 = g.inverse(p1.0, p1.1, p2.0, p2.1);
 
-use assert_approx_eq::assert_approx_eq;
-assert_approx_eq!(s12, 9094718.72751138);
+use approx::assert_relative_eq;
+assert_relative_eq!(s12, 9094718.72751138);
 ``` 
 
 ## Benchmarking
