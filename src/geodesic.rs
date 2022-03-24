@@ -940,10 +940,10 @@ impl Geodesic {
 /// let g = Geodesic::wgs84();
 /// let (lat, lon, az) = g.direct(40.64, -73.78, 45.0, 10e6);
 ///
-/// use assert_approx_eq::assert_approx_eq;
-/// assert_approx_eq!(lat, 32.621100463725796);
-/// assert_approx_eq!(lon, 49.05248709295982);
-/// assert_approx_eq!(az,  140.4059858768007);
+/// use approx::assert_relative_eq;
+/// assert_relative_eq!(lat, 32.621100463725796);
+/// assert_relative_eq!(lon, 49.052487092959836);
+/// assert_relative_eq!(az,  140.4059858768007);
 /// ```
 pub trait DirectGeodesic<T> {
     fn direct(&self, lat1: f64, lon1: f64, azi1: f64, s12: f64) -> T;
@@ -1115,8 +1115,8 @@ impl DirectGeodesic<(f64, f64, f64, f64, f64, f64, f64, f64)> for Geodesic {
 /// let p2 = (59.4323439, 24.7341649);
 /// let s12: f64 = g.inverse(p1.0, p1.1, p2.0, p2.1);
 ///
-/// use assert_approx_eq::assert_approx_eq;
-/// assert_approx_eq!(s12, 9094718.72751138);
+/// use approx::assert_relative_eq;
+/// assert_relative_eq!(s12, 9094718.72751138);
 /// ```
 pub trait InverseGeodesic<T> {
     fn inverse(&self, lat1: f64, lon1: f64, lat2: f64, lon2: f64) -> T;
@@ -1286,7 +1286,7 @@ impl InverseGeodesic<(f64, f64, f64, f64, f64, f64, f64, f64)> for Geodesic {
 mod tests {
     use super::*;
     use crate::geodesicline::GeodesicLine;
-    use assert_approx_eq::assert_approx_eq;
+    use approx::assert_relative_eq;
     use std::io::BufRead;
 
     const TESTCASES: &[(f64, f64, f64, f64, f64, f64, f64, f64, f64, f64, f64, f64)] = &[
@@ -1592,14 +1592,14 @@ mod tests {
                 computed_M21,
                 computed_S12,
             ) = geod._gen_inverse_azi(*lat1, *lon1, *lat2, *lon2, caps::ALL | caps::LONG_UNROLL);
-            assert_approx_eq!(computed_azi1, azi1, 1e-13f64);
-            assert_approx_eq!(computed_azi2, azi2, 1e-13f64);
-            assert_approx_eq!(computed_s12, s12, 1e-8f64);
-            assert_approx_eq!(computed_a12, a12, 1e-13f64);
-            assert_approx_eq!(computed_m12, m12, 1e-8f64);
-            assert_approx_eq!(computed_M12, M12, 1e-15f64);
-            assert_approx_eq!(computed_M21, M21, 1e-15f64);
-            assert_approx_eq!(computed_S12, S12, 0.1f64);
+            assert_relative_eq!(computed_azi1, azi1, epsilon = 1e-13f64);
+            assert_relative_eq!(computed_azi2, azi2, epsilon = 1e-13f64);
+            assert_relative_eq!(computed_s12, s12, epsilon = 1e-8f64);
+            assert_relative_eq!(computed_a12, a12, epsilon = 1e-13f64);
+            assert_relative_eq!(computed_m12, m12, epsilon = 1e-8f64);
+            assert_relative_eq!(computed_M12, M12, epsilon = 1e-15f64);
+            assert_relative_eq!(computed_M21, M21, epsilon = 1e-15f64);
+            assert_relative_eq!(computed_S12, S12, epsilon = 0.1f64);
         }
 
         // Test direct
@@ -1622,14 +1622,14 @@ mod tests {
                 *s12,
                 caps::ALL | caps::LONG_UNROLL,
             );
-            assert_approx_eq!(computed_lat2, lat2, 1e-13f64);
-            assert_approx_eq!(computed_lon2, lon2, 1e-13f64);
-            assert_approx_eq!(computed_azi2, azi2, 1e-13f64);
-            assert_approx_eq!(computed_a12, a12, 1e-13f64);
-            assert_approx_eq!(computed_m12, m12, 1e-8f64);
-            assert_approx_eq!(computed_M12, M12, 1e-15f64);
-            assert_approx_eq!(computed_M21, M21, 1e-15f64);
-            assert_approx_eq!(computed_S12, S12, 0.1f64);
+            assert_relative_eq!(computed_lat2, lat2, epsilon = 1e-13f64);
+            assert_relative_eq!(computed_lon2, lon2, epsilon = 1e-13f64);
+            assert_relative_eq!(computed_azi2, azi2, epsilon = 1e-13f64);
+            assert_relative_eq!(computed_a12, a12, epsilon = 1e-13f64);
+            assert_relative_eq!(computed_m12, m12, epsilon = 1e-8f64);
+            assert_relative_eq!(computed_M12, M12, epsilon = 1e-15f64);
+            assert_relative_eq!(computed_M21, M21, epsilon = 1e-15f64);
+            assert_relative_eq!(computed_S12, S12, epsilon = 0.1f64);
         }
         Ok(())
     }
@@ -1659,14 +1659,14 @@ mod tests {
                 *a12,
                 caps::ALL | caps::LONG_UNROLL,
             );
-            assert_approx_eq!(computed_lat2, lat2, 1e-13);
-            assert_approx_eq!(computed_lon2, lon2, 1e-13);
-            assert_approx_eq!(computed_azi2, azi2, 1e-13);
-            assert_approx_eq!(computed_s12, s12, 1e-8);
-            assert_approx_eq!(computed_m12, m12, 1e-8);
-            assert_approx_eq!(computed_M12, M12, 1e-15);
-            assert_approx_eq!(computed_M21, M21, 1e-15);
-            assert_approx_eq!(computed_S12, S12, 0.1);
+            assert_relative_eq!(computed_lat2, lat2, epsilon = 1e-13);
+            assert_relative_eq!(computed_lon2, lon2, epsilon = 1e-13);
+            assert_relative_eq!(computed_azi2, azi2, epsilon = 1e-13);
+            assert_relative_eq!(computed_s12, s12, epsilon = 1e-8);
+            assert_relative_eq!(computed_m12, m12, epsilon = 1e-8);
+            assert_relative_eq!(computed_M12, M12, epsilon = 1e-15);
+            assert_relative_eq!(computed_M21, M21, epsilon = 1e-15);
+            assert_relative_eq!(computed_S12, S12, epsilon = 0.1);
         }
     }
 
@@ -1703,8 +1703,8 @@ mod tests {
             &mut vec![0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0],
         );
         assert_eq!(res.0, -1.0);
-        assert_approx_eq!(res.1, 0.7095310092765433, 1e-13);
-        assert_approx_eq!(res.2, 0.7046742132893822, 1e-13);
+        assert_relative_eq!(res.1, 0.7095310092765433, epsilon = 1e-13);
+        assert_relative_eq!(res.2, 0.7046742132893822, epsilon = 1e-13);
         assert_eq!(res.3.is_nan(), true);
         assert_eq!(res.4.is_nan(), true);
         assert_eq!(res.5, 1.0000002548969817);
@@ -1723,8 +1723,8 @@ mod tests {
             &mut vec![0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0],
         );
         assert_eq!(res.0, -1.0);
-        assert_approx_eq!(res.1, 0.7095310092765433, 1e-13);
-        assert_approx_eq!(res.2, 0.7046742132893822, 1e-13);
+        assert_relative_eq!(res.1, 0.7095310092765433, epsilon = 1e-13);
+        assert_relative_eq!(res.2, 0.7046742132893822, epsilon = 1e-13);
         assert_eq!(res.3.is_nan(), true);
         assert_eq!(res.4.is_nan(), true);
         assert_eq!(res.5, 1.0000002548969817);
@@ -1757,7 +1757,7 @@ mod tests {
         assert_eq!(res1.5, 0.9996954065111039);
         assert_eq!(res1.6, -0.0);
         assert_eq!(res1.7, 1.0);
-        assert_approx_eq!(res1.8, 0.0008355095326524276, 1e-13);
+        assert_relative_eq!(res1.8, 0.0008355095326524276, epsilon = 1e-13);
         assert_eq!(res1.9, -5.8708496511415445e-05);
         assert_eq!(res1.10, 0.034900275148485);
 
@@ -2086,18 +2086,18 @@ mod tests {
     fn test_std_geodesic_geodsolve0() {
         let geod = Geodesic::wgs84();
         let (s12, azi1, azi2, _a12) = geod.inverse(40.6, -73.8, 49.01666667, 2.55);
-        assert_approx_eq!(azi1, 53.47022, 0.5e-5);
-        assert_approx_eq!(azi2, 111.59367, 0.5e-5);
-        assert_approx_eq!(s12, 5853226.0, 0.5);
+        assert_relative_eq!(azi1, 53.47022, epsilon = 0.5e-5);
+        assert_relative_eq!(azi2, 111.59367, epsilon = 0.5e-5);
+        assert_relative_eq!(s12, 5853226.0, epsilon = 0.5);
     }
 
     #[test]
     fn test_std_geodesic_geodsolve1() {
         let geod = Geodesic::wgs84();
         let (lat2, lon2, azi2) = geod.direct(40.63972222, -73.77888889, 53.5, 5850e3);
-        assert_approx_eq!(lat2, 49.01467, 0.5e-5);
-        assert_approx_eq!(lon2, 2.56106, 0.5e-5);
-        assert_approx_eq!(azi2, 111.62947, 0.5e-5);
+        assert_relative_eq!(lat2, 49.01467, epsilon = 0.5e-5);
+        assert_relative_eq!(lon2, 2.56106, epsilon = 0.5e-5);
+        assert_relative_eq!(azi2, 111.62947, epsilon = 0.5e-5);
     }
 
     #[test]
@@ -2105,13 +2105,13 @@ mod tests {
         // Check fix for antipodal prolate bug found 2010-09-04
         let geod = Geodesic::new(6.4e6, -1f64 / 150.0);
         let (s12, azi1, azi2, _a12) = geod.inverse(0.07476, 0.0, -0.07476, 180.0);
-        assert_approx_eq!(azi1, 90.00078, 0.5e-5);
-        assert_approx_eq!(azi2, 90.00078, 0.5e-5);
-        assert_approx_eq!(s12, 20106193.0, 0.5);
+        assert_relative_eq!(azi1, 90.00078, epsilon = 0.5e-5);
+        assert_relative_eq!(azi2, 90.00078, epsilon = 0.5e-5);
+        assert_relative_eq!(s12, 20106193.0, epsilon = 0.5);
         let (s12, azi1, azi2, _a12) = geod.inverse(0.1, 0.0, -0.1, 180.0);
-        assert_approx_eq!(azi1, 90.00105, 0.5e-5);
-        assert_approx_eq!(azi2, 90.00105, 0.5e-5);
-        assert_approx_eq!(s12, 20106193.0, 0.5);
+        assert_relative_eq!(azi1, 90.00105, epsilon = 0.5e-5);
+        assert_relative_eq!(azi2, 90.00105, epsilon = 0.5e-5);
+        assert_relative_eq!(s12, 20106193.0, epsilon = 0.5);
     }
 
     #[test]
@@ -2119,7 +2119,7 @@ mod tests {
         // Check fix for short line bug found 2010-05-21
         let geod = Geodesic::wgs84();
         let s12: f64 = geod.inverse(36.493349428792, 0.0, 36.49334942879201, 0.0000008);
-        assert_approx_eq!(s12, 0.072, 0.5e-3);
+        assert_relative_eq!(s12, 0.072, epsilon = 0.5e-3);
     }
 
     #[test]
@@ -2127,13 +2127,13 @@ mod tests {
         // Check fix for point2=pole bug found 2010-05-03
         let geod = Geodesic::wgs84();
         let (lat2, lon2, azi2) = geod.direct(0.01777745589997, 30.0, 0.0, 10e6);
-        assert_approx_eq!(lat2, 90.0, 0.5e-5);
+        assert_relative_eq!(lat2, 90.0, epsilon = 0.5e-5);
         if lon2 < 0.0 {
-            assert_approx_eq!(lon2, -150.0, 0.5e-5);
-            assert_approx_eq!(azi2.abs(), 180.0, 0.5e-5);
+            assert_relative_eq!(lon2, -150.0, epsilon = 0.5e-5);
+            assert_relative_eq!(azi2.abs(), 180.0, epsilon = 0.5e-5);
         } else {
-            assert_approx_eq!(lon2, 30.0, 0.5e-5);
-            assert_approx_eq!(azi2, 0.0, 0.5e-5);
+            assert_relative_eq!(lon2, 30.0, epsilon = 0.5e-5);
+            assert_relative_eq!(azi2, 0.0, epsilon = 0.5e-5);
         }
     }
 
@@ -2148,14 +2148,14 @@ mod tests {
             -88.202499451857,
             179.981022032992859592,
         );
-        assert_approx_eq!(s12, 20003898.214, 0.5e-3);
+        assert_relative_eq!(s12, 20003898.214, epsilon = 0.5e-3);
         let s12: f64 = geod.inverse(
             89.333123580033,
             0.0,
             -89.333123580032997687,
             179.99295812360148422,
         );
-        assert_approx_eq!(s12, 20003926.881, 0.5e-3);
+        assert_relative_eq!(s12, 20003926.881, epsilon = 0.5e-3);
     }
 
     #[test]
@@ -2168,7 +2168,7 @@ mod tests {
             -56.320923501171,
             179.664747671772880215,
         );
-        assert_approx_eq!(s12, 19993558.287, 0.5e-3);
+        assert_relative_eq!(s12, 19993558.287, epsilon = 0.5e-3);
     }
 
     #[test]
@@ -2182,7 +2182,7 @@ mod tests {
             -52.784459512563990912,
             179.634407464943777557,
         );
-        assert_approx_eq!(s12, 19991596.095, 0.5e-3);
+        assert_relative_eq!(s12, 19991596.095, epsilon = 0.5e-3);
     }
 
     #[test]
@@ -2196,7 +2196,7 @@ mod tests {
             -48.52287673545898293,
             179.599720456223079643,
         );
-        assert_approx_eq!(s12, 19989144.774, 0.5e-3);
+        assert_relative_eq!(s12, 19989144.774, epsilon = 0.5e-3);
     }
 
     #[test]
@@ -2206,9 +2206,9 @@ mod tests {
         // <stefan.gunther@embl.de>; fixed 2012-10-07
         let geod = Geodesic::new(89.8, -1.83);
         let (s12, azi1, azi2, _a12) = geod.inverse(0.0, 0.0, -10.0, 160.0);
-        assert_approx_eq!(azi1, 120.27, 1e-2);
-        assert_approx_eq!(azi2, 105.15, 1e-2);
-        assert_approx_eq!(s12, 266.7, 1e-1);
+        assert_relative_eq!(azi1, 120.27, epsilon = 1e-2);
+        assert_relative_eq!(azi2, 105.15, epsilon = 1e-2);
+        assert_relative_eq!(s12, 266.7, epsilon = 1e-1);
     }
 
     #[test]
@@ -2227,7 +2227,7 @@ mod tests {
         // checks that this is fixed.
         let geod = Geodesic::new(6.4e6, -1f64 / 150.0);
         let (_lat2, _lon2, _azi2, _m12, _M12, _M21, S12, _a12) = geod.direct(1.0, 2.0, 3.0, 4.0);
-        assert_approx_eq!(S12, 23700.0, 0.5);
+        assert_relative_eq!(S12, 23700.0, epsilon = 0.5);
     }
 
     #[test]
@@ -2242,27 +2242,27 @@ mod tests {
             2e7,
             caps::STANDARD | caps::LONG_UNROLL,
         );
-        assert_approx_eq!(lat2, -39.0, 1.0);
-        assert_approx_eq!(lon2, -254.0, 1.0);
-        assert_approx_eq!(azi2, -170.0, 1.0);
+        assert_relative_eq!(lat2, -39.0, epsilon = 1.0);
+        assert_relative_eq!(lon2, -254.0, epsilon = 1.0);
+        assert_relative_eq!(azi2, -170.0, epsilon = 1.0);
 
         let line = GeodesicLine::new(&geod, 40.0, -75.0, -10.0, None, None, None);
         let (_a12, lat2, lon2, azi2, _s12, _m12, _M12, _M21, _S12) =
             line._gen_position(false, 2e7, caps::STANDARD | caps::LONG_UNROLL);
-        assert_approx_eq!(lat2, -39.0, 1.0);
-        assert_approx_eq!(lon2, -254.0, 1.0);
-        assert_approx_eq!(azi2, -170.0, 1.0);
+        assert_relative_eq!(lat2, -39.0, epsilon = 1.0);
+        assert_relative_eq!(lon2, -254.0, epsilon = 1.0);
+        assert_relative_eq!(azi2, -170.0, epsilon = 1.0);
 
         let (lat2, lon2, azi2) = geod.direct(40.0, -75.0, -10.0, 2e7);
-        assert_approx_eq!(lat2, -39.0, 1.0);
-        assert_approx_eq!(lon2, 105.0, 1.0);
-        assert_approx_eq!(azi2, -170.0, 1.0);
+        assert_relative_eq!(lat2, -39.0, epsilon = 1.0);
+        assert_relative_eq!(lon2, 105.0, epsilon = 1.0);
+        assert_relative_eq!(azi2, -170.0, epsilon = 1.0);
 
         let (_a12, lat2, lon2, azi2, _s12, _m12, _M12, _M21, _S12) =
             line._gen_position(false, 2e7, caps::STANDARD);
-        assert_approx_eq!(lat2, -39.0, 1.0);
-        assert_approx_eq!(lon2, 105.0, 1.0);
-        assert_approx_eq!(azi2, -170.0, 1.0);
+        assert_relative_eq!(lat2, -39.0, epsilon = 1.0);
+        assert_relative_eq!(lon2, 105.0, epsilon = 1.0);
+        assert_relative_eq!(azi2, -170.0, epsilon = 1.0);
     }
 
     #[test]
@@ -2271,7 +2271,7 @@ mod tests {
         let geod = Geodesic::new(6.4e6, 0.0);
         let (_a12, _s12, _salp1, _calp1, _salp2, _calp2, _m12, _M12, _M21, S12) =
             geod._gen_inverse(1.0, 2.0, 3.0, 4.0, caps::AREA);
-        assert_approx_eq!(S12, 49911046115.0, 0.5);
+        assert_relative_eq!(S12, 49911046115.0, epsilon = 0.5);
     }
 
     #[test]
@@ -2281,7 +2281,7 @@ mod tests {
         let geod = Geodesic::new(6.4e6, 0.1);
         let (a12, _lat2, _lon2, _azi2, _s12, _m12, _M12, _M21, _S12) =
             geod._gen_direct(1.0, 2.0, 10.0, false, 5e6, caps::STANDARD);
-        assert_approx_eq!(a12, 48.55570690, 0.5e-8);
+        assert_relative_eq!(a12, 48.55570690, epsilon = 0.5e-8);
     }
 
     #[test]
@@ -2292,14 +2292,14 @@ mod tests {
             geod._gen_inverse(0.0, 539.0, 0.0, 181.0, caps::STANDARD);
         // Note: This is also supposed to check adjusted longitudes, but geographiclib-rs
         //       doesn't seem to support that as of 2021/01/18.
-        // assert_approx_eq!(lon1, 179, 1e-10);
-        // assert_approx_eq!(lon2, -179, 1e-10);
-        assert_approx_eq!(s12, 222639.0, 0.5);
+        // assert_relative_eq!(lon1, 179, epsilon = 1e-10);
+        // assert_relative_eq!(lon2, -179, epsilon = 1e-10);
+        assert_relative_eq!(s12, 222639.0, epsilon = 0.5);
         let (_a12, s12, _salp1, _calp1, _salp2, _calp2, _m12, _M12, _M21, _S12) =
             geod._gen_inverse(0.0, 539.0, 0.0, 181.0, caps::STANDARD | caps::LONG_UNROLL);
-        // assert_approx_eq!(lon1, 539, 1e-10);
-        // assert_approx_eq!(lon2, 541, 1e-10);
-        assert_approx_eq!(s12, 222639.0, 0.5);
+        // assert_relative_eq!(lon1, 539, epsilon = 1e-10);
+        // assert_relative_eq!(lon2, 541, epsilon = 1e-10);
+        assert_relative_eq!(s12, 222639.0, epsilon = 0.5);
     }
 
     #[test]
@@ -2309,53 +2309,53 @@ mod tests {
         // fmod(-0.0, 360.0) = +0.0.
         let geod = Geodesic::wgs84();
         let (s12, azi1, azi2, _a12) = geod.inverse(0.0, 0.0, 0.0, 179.0);
-        assert_approx_eq!(azi1, 90.0, 0.5e-5);
-        assert_approx_eq!(azi2, 90.0, 0.5e-5);
-        assert_approx_eq!(s12, 19926189.0, 0.5);
+        assert_relative_eq!(azi1, 90.0, epsilon = 0.5e-5);
+        assert_relative_eq!(azi2, 90.0, epsilon = 0.5e-5);
+        assert_relative_eq!(s12, 19926189.0, epsilon = 0.5);
         let (s12, azi1, azi2, _a12) = geod.inverse(0.0, 0.0, 0.0, 179.5);
-        assert_approx_eq!(azi1, 55.96650, 0.5e-5);
-        assert_approx_eq!(azi2, 124.03350, 0.5e-5);
-        assert_approx_eq!(s12, 19980862.0, 0.5);
+        assert_relative_eq!(azi1, 55.96650, epsilon = 0.5e-5);
+        assert_relative_eq!(azi2, 124.03350, epsilon = 0.5e-5);
+        assert_relative_eq!(s12, 19980862.0, epsilon = 0.5);
         let (s12, azi1, azi2, _a12) = geod.inverse(0.0, 0.0, 0.0, 180.0);
-        assert_approx_eq!(azi1, 0.0, 0.5e-5);
-        assert_approx_eq!(azi2.abs(), 180.0, 0.5e-5);
-        assert_approx_eq!(s12, 20003931.0, 0.5);
+        assert_relative_eq!(azi1, 0.0, epsilon = 0.5e-5);
+        assert_relative_eq!(azi2.abs(), 180.0, epsilon = 0.5e-5);
+        assert_relative_eq!(s12, 20003931.0, epsilon = 0.5);
         let (s12, azi1, azi2, _a12) = geod.inverse(0.0, 0.0, 1.0, 180.0);
-        assert_approx_eq!(azi1, 0.0, 0.5e-5);
-        assert_approx_eq!(azi2.abs(), 180.0, 0.5e-5);
-        assert_approx_eq!(s12, 19893357.0, 0.5);
+        assert_relative_eq!(azi1, 0.0, epsilon = 0.5e-5);
+        assert_relative_eq!(azi2.abs(), 180.0, epsilon = 0.5e-5);
+        assert_relative_eq!(s12, 19893357.0, epsilon = 0.5);
 
         let geod = Geodesic::new(6.4e6, 0.0);
         let (s12, azi1, azi2, _a12) = geod.inverse(0.0, 0.0, 0.0, 179.0);
-        assert_approx_eq!(azi1, 90.0, 0.5e-5);
-        assert_approx_eq!(azi2, 90.0, 0.5e-5);
-        assert_approx_eq!(s12, 19994492.0, 0.5);
+        assert_relative_eq!(azi1, 90.0, epsilon = 0.5e-5);
+        assert_relative_eq!(azi2, 90.0, epsilon = 0.5e-5);
+        assert_relative_eq!(s12, 19994492.0, epsilon = 0.5);
         let (s12, azi1, azi2, _a12) = geod.inverse(0.0, 0.0, 0.0, 180.0);
-        assert_approx_eq!(azi1, 0.0, 0.5e-5);
-        assert_approx_eq!(azi2.abs(), 180.0, 0.5e-5);
-        assert_approx_eq!(s12, 20106193.0, 0.5);
+        assert_relative_eq!(azi1, 0.0, epsilon = 0.5e-5);
+        assert_relative_eq!(azi2.abs(), 180.0, epsilon = 0.5e-5);
+        assert_relative_eq!(s12, 20106193.0, epsilon = 0.5);
         let (s12, azi1, azi2, _a12) = geod.inverse(0.0, 0.0, 1.0, 180.0);
-        assert_approx_eq!(azi1, 0.0, 0.5e-5);
-        assert_approx_eq!(azi2.abs(), 180.0, 0.5e-5);
-        assert_approx_eq!(s12, 19994492.0, 0.5);
+        assert_relative_eq!(azi1, 0.0, epsilon = 0.5e-5);
+        assert_relative_eq!(azi2.abs(), 180.0, epsilon = 0.5e-5);
+        assert_relative_eq!(s12, 19994492.0, epsilon = 0.5);
 
         let geod = Geodesic::new(6.4e6, -1.0 / 300.0);
         let (s12, azi1, azi2, _a12) = geod.inverse(0.0, 0.0, 0.0, 179.0);
-        assert_approx_eq!(azi1, 90.0, 0.5e-5);
-        assert_approx_eq!(azi2, 90.0, 0.5e-5);
-        assert_approx_eq!(s12, 19994492.0, 0.5);
+        assert_relative_eq!(azi1, 90.0, epsilon = 0.5e-5);
+        assert_relative_eq!(azi2, 90.0, epsilon = 0.5e-5);
+        assert_relative_eq!(s12, 19994492.0, epsilon = 0.5);
         let (s12, azi1, azi2, _a12) = geod.inverse(0.0, 0.0, 0.0, 180.0);
-        assert_approx_eq!(azi1, 90.0, 0.5e-5);
-        assert_approx_eq!(azi2, 90.0, 0.5e-5);
-        assert_approx_eq!(s12, 20106193.0, 0.5);
+        assert_relative_eq!(azi1, 90.0, epsilon = 0.5e-5);
+        assert_relative_eq!(azi2, 90.0, epsilon = 0.5e-5);
+        assert_relative_eq!(s12, 20106193.0, epsilon = 0.5);
         let (s12, azi1, azi2, _a12) = geod.inverse(0.0, 0.0, 0.5, 180.0);
-        assert_approx_eq!(azi1, 33.02493, 0.5e-5);
-        assert_approx_eq!(azi2, 146.97364, 0.5e-5);
-        assert_approx_eq!(s12, 20082617.0, 0.5);
+        assert_relative_eq!(azi1, 33.02493, epsilon = 0.5e-5);
+        assert_relative_eq!(azi2, 146.97364, epsilon = 0.5e-5);
+        assert_relative_eq!(s12, 20082617.0, epsilon = 0.5);
         let (s12, azi1, azi2, _a12) = geod.inverse(0.0, 0.0, 1.0, 180.0);
-        assert_approx_eq!(azi1, 0.0, 0.5e-5);
-        assert_approx_eq!(azi2.abs(), 180.0, 0.5e-5);
-        assert_approx_eq!(s12, 20027270.0, 0.5);
+        assert_relative_eq!(azi1, 0.0, epsilon = 0.5e-5);
+        assert_relative_eq!(azi2.abs(), 180.0, epsilon = 0.5e-5);
+        assert_relative_eq!(s12, 20027270.0, epsilon = 0.5);
     }
 
     #[test]
@@ -2378,9 +2378,9 @@ mod tests {
         // Check for points close with longitudes close to 180 deg apart.
         let geod = Geodesic::wgs84();
         let (s12, azi1, azi2, _a12) = geod.inverse(5.0, 0.00000000000001, 10.0, 180.0);
-        assert_approx_eq!(azi1, 0.000000000000035, 1.5e-14);
-        assert_approx_eq!(azi2, 179.99999999999996, 1.5e-14);
-        assert_approx_eq!(s12, 18345191.174332713, 5e-9);
+        assert_relative_eq!(azi1, 0.000000000000035, epsilon = 1.5e-14);
+        assert_relative_eq!(azi2, 179.99999999999996, epsilon = 1.5e-14);
+        assert_relative_eq!(s12, 18345191.174332713, epsilon = 5e-9);
     }
 
     #[test]
@@ -2395,16 +2395,16 @@ mod tests {
             1e7,
             caps::STANDARD | caps::LONG_UNROLL,
         );
-        assert_approx_eq!(lat2, 45.30632, 0.5e-5);
-        assert_approx_eq!(lon2, -180.0, 0.5e-5);
-        assert_approx_eq!(azi2.abs(), 180.0, 0.5e-5);
+        assert_relative_eq!(lat2, 45.30632, epsilon = 0.5e-5);
+        assert_relative_eq!(lon2, -180.0, epsilon = 0.5e-5);
+        assert_relative_eq!(azi2.abs(), 180.0, epsilon = 0.5e-5);
         // geographiclib-rs does not appear to support Geodesic.inverse_line or
         // or GeodesicLine.position as of 2021/01/18.
         // let line = geod.inverse_line(45, 0, 80, -0.000000000000000003);
         // let res = line.position(1e7, caps::STANDARD | caps::LONG_UNROLL);
-        // assert_approx_eq!(lat2, 45.30632, 0.5e-5);
-        // assert_approx_eq!(lon2, -180, 0.5e-5);
-        // assert_approx_eq!(azi2.abs(), 180, 0.5e-5);
+        // assert_relative_eq!(lat2, 45.30632, epsilon = 0.5e-5);
+        // assert_relative_eq!(lon2, -180, epsilon = 0.5e-5);
+        // assert_relative_eq!(azi2.abs(), 180, epsilon = 0.5e-5);
     }
 
     // #[test]
@@ -2440,9 +2440,9 @@ mod tests {
         // (converting -0.0 to +0.0).
         let geod = Geodesic::wgs84();
         let (lat2, lon2, azi2) = geod.direct(90.0, 10.0, 180.0, -1e6);
-        assert_approx_eq!(lat2, 81.04623, 0.5e-5);
-        assert_approx_eq!(lon2, -170.0, 0.5e-5);
-        assert_approx_eq!(azi2, 0.0, 0.5e-5);
+        assert_relative_eq!(lat2, 81.04623, epsilon = 0.5e-5);
+        assert_relative_eq!(lon2, -170.0, epsilon = 0.5e-5);
+        assert_relative_eq!(azi2, 0.0, epsilon = 0.5e-5);
         assert!(azi2.is_sign_positive());
     }
 
@@ -2453,14 +2453,14 @@ mod tests {
         let geod = Geodesic::wgs84();
         let (a12, s12, azi1, azi2, m12, M12, M21, S12) =
             geod._gen_inverse_azi(54.1589, 15.3872, 54.1591, 15.3877, caps::ALL);
-        assert_approx_eq!(azi1, 55.723110355, 5e-9);
-        assert_approx_eq!(azi2, 55.723515675, 5e-9);
-        assert_approx_eq!(s12, 39.527686385, 5e-9);
-        assert_approx_eq!(a12, 0.000355495, 5e-9);
-        assert_approx_eq!(m12, 39.527686385, 5e-9);
-        assert_approx_eq!(M12, 0.999999995, 5e-9);
-        assert_approx_eq!(M21, 0.999999995, 5e-9);
-        assert_approx_eq!(S12, 286698586.30197, 5e-4);
+        assert_relative_eq!(azi1, 55.723110355, epsilon = 5e-9);
+        assert_relative_eq!(azi2, 55.723515675, epsilon = 5e-9);
+        assert_relative_eq!(s12, 39.527686385, epsilon = 5e-9);
+        assert_relative_eq!(a12, 0.000355495, epsilon = 5e-9);
+        assert_relative_eq!(m12, 39.527686385, epsilon = 5e-9);
+        assert_relative_eq!(M12, 0.999999995, epsilon = 5e-9);
+        assert_relative_eq!(M21, 0.999999995, epsilon = 5e-9);
+        assert_relative_eq!(S12, 286698586.30197, epsilon = 5e-4);
     }
 
     #[test]
@@ -2474,9 +2474,9 @@ mod tests {
             40.0 + 58.0 / 60.0,
             -(5.0 + 30.0 / 60.0),
         );
-        assert_approx_eq!(azi1, 160.39137649664, 0.5e-11);
-        assert_approx_eq!(azi2, 19.50042925176, 0.5e-11);
-        assert_approx_eq!(s12, 19960543.857179, 0.5e-6);
+        assert_relative_eq!(azi1, 160.39137649664, epsilon = 0.5e-11);
+        assert_relative_eq!(azi2, 19.50042925176, epsilon = 0.5e-11);
+        assert_relative_eq!(s12, 19960543.857179, epsilon = 0.5e-6);
     }
 
     #[test]
@@ -2484,9 +2484,9 @@ mod tests {
         // An example where the NGS calculator fails to converge
         let geod = Geodesic::wgs84();
         let (s12, azi1, azi2, _a12) = geod.inverse(27.2, 0.0, -27.1, 179.5);
-        assert_approx_eq!(azi1, 45.82468716758, 0.5e-11);
-        assert_approx_eq!(azi2, 134.22776532670, 0.5e-11);
-        assert_approx_eq!(s12, 19974354.765767, 0.5e-6);
+        assert_relative_eq!(azi1, 45.82468716758, epsilon = 0.5e-11);
+        assert_relative_eq!(azi2, 134.22776532670, epsilon = 0.5e-11);
+        assert_relative_eq!(s12, 19974354.765767, epsilon = 0.5e-6);
     }
 
     #[test]
@@ -2496,35 +2496,35 @@ mod tests {
         let geod = Geodesic::wgs84();
         let (_a12, _s12, _salp1, _calp1, _salp2, _calp2, _m12, M12, M21, _S12) =
             geod._gen_inverse(0.0, 0.0, 0.0, 90.0, caps::GEODESICSCALE);
-        assert_approx_eq!(M12, -0.00528427534, 0.5e-10);
-        assert_approx_eq!(M21, -0.00528427534, 0.5e-10);
+        assert_relative_eq!(M12, -0.00528427534, epsilon = 0.5e-10);
+        assert_relative_eq!(M21, -0.00528427534, epsilon = 0.5e-10);
 
         let (_a12, _s12, _salp1, _calp1, _salp2, _calp2, _m12, M12, M21, _S12) =
             geod._gen_inverse(0.0, 0.0, 1e-6, 1e-6, caps::GEODESICSCALE);
-        assert_approx_eq!(M12, 1.0, 0.5e-10);
-        assert_approx_eq!(M21, 1.0, 0.5e-10);
+        assert_relative_eq!(M12, 1.0, epsilon = 0.5e-10);
+        assert_relative_eq!(M21, 1.0, epsilon = 0.5e-10);
 
         let (a12, s12, azi1, azi2, m12, M12, M21, S12) =
             geod._gen_inverse_azi(20.001, 0.0, 20.001, 0.0, caps::ALL);
-        assert_approx_eq!(a12, 0.0, 1e-13);
-        assert_approx_eq!(s12, 0.0, 1e-8);
-        assert_approx_eq!(azi1, 180.0, 1e-13);
-        assert_approx_eq!(azi2, 180.0, 1e-13);
-        assert_approx_eq!(m12, 0.0, 1e-8);
-        assert_approx_eq!(M12, 1.0, 1e-15);
-        assert_approx_eq!(M21, 1.0, 1e-15);
-        assert_approx_eq!(S12, 0.0, 1e-10);
+        assert_relative_eq!(a12, 0.0, epsilon = 1e-13);
+        assert_relative_eq!(s12, 0.0, epsilon = 1e-8);
+        assert_relative_eq!(azi1, 180.0, epsilon = 1e-13);
+        assert_relative_eq!(azi2, 180.0, epsilon = 1e-13);
+        assert_relative_eq!(m12, 0.0, epsilon = 1e-8);
+        assert_relative_eq!(M12, 1.0, epsilon = 1e-15);
+        assert_relative_eq!(M21, 1.0, epsilon = 1e-15);
+        assert_relative_eq!(S12, 0.0, epsilon = 1e-10);
 
         let (a12, s12, azi1, azi2, m12, M12, M21, S12) =
             geod._gen_inverse_azi(90.0, 0.0, 90.0, 180.0, caps::ALL);
-        assert_approx_eq!(a12, 0.0, 1e-13);
-        assert_approx_eq!(s12, 0.0, 1e-8);
-        assert_approx_eq!(azi1, 0.0, 1e-13);
-        assert_approx_eq!(azi2, 180.0, 1e-13);
-        assert_approx_eq!(m12, 0.0, 1e-8);
-        assert_approx_eq!(M12, 1.0, 1e-15);
-        assert_approx_eq!(M21, 1.0, 1e-15);
-        assert_approx_eq!(S12, 127516405431022.0, 0.5);
+        assert_relative_eq!(a12, 0.0, epsilon = 1e-13);
+        assert_relative_eq!(s12, 0.0, epsilon = 1e-8);
+        assert_relative_eq!(azi1, 0.0, epsilon = 1e-13);
+        assert_relative_eq!(azi2, 180.0, epsilon = 1e-13);
+        assert_relative_eq!(m12, 0.0, epsilon = 1e-8);
+        assert_relative_eq!(M12, 1.0, epsilon = 1e-15);
+        assert_relative_eq!(M21, 1.0, epsilon = 1e-15);
+        assert_relative_eq!(S12, 127516405431022.0, epsilon = 0.5);
 
         // An incapable line which can't take distance as input
         let line = GeodesicLine::new(&geod, 1.0, 2.0, 90.0, Some(caps::LATITUDE), None, None);
@@ -2651,12 +2651,12 @@ mod tests {
                 let g = g.lock().unwrap();
                 let (lat2_out, lon2_out, azi2_out, m12_out, _M12_out, _M21_out, S12_out, a12_out) =
                     g.direct(lat1, lon1, azi1, s12);
-                assert_approx_eq!(lat2, lat2_out, 8e-14);
-                assert_approx_eq!(lon2, lon2_out, 2e-8);
-                assert_approx_eq!(azi2, azi2_out, 2e-8);
-                assert_approx_eq!(m12, m12_out, 9e-9);
-                assert_approx_eq!(S12, S12_out, 2e4); // Note: unreasonable tolerance
-                assert_approx_eq!(a12, a12_out, 9e-14);
+                assert_relative_eq!(lat2, lat2_out, epsilon = 1e-13);
+                assert_relative_eq!(lon2, lon2_out, epsilon = 2e-8);
+                assert_relative_eq!(azi2, azi2_out, epsilon = 2e-8);
+                assert_relative_eq!(m12, m12_out, epsilon = 9e-9);
+                assert_relative_eq!(S12, S12_out, epsilon = 2e4); // Note: unreasonable tolerance
+                assert_relative_eq!(a12, a12_out, epsilon = 9e-14);
             },
         );
     }
@@ -2674,12 +2674,12 @@ mod tests {
                     (lat2, lon2, azi2, lat1, lon1, azi1, -s12, -a12, -m12, -S12);
                 let (lat2_out, lon2_out, azi2_out, m12_out, _M12_out, _M21_out, S12_out, a12_out) =
                     g.direct(lat1, lon1, azi1, s12);
-                assert_approx_eq!(lat2, lat2_out, 8e-14);
-                assert_approx_eq!(lon2, lon2_out, 4e-6);
-                assert_approx_eq!(azi2, azi2_out, 4e-6);
-                assert_approx_eq!(m12, m12_out, 9e-9);
-                assert_approx_eq!(S12, S12_out, 3e6); // Note: unreasonable tolerance
-                assert_approx_eq!(a12, a12_out, 9e-14);
+                assert_relative_eq!(lat2, lat2_out, epsilon = 8e-14);
+                assert_relative_eq!(lon2, lon2_out, epsilon = 4e-6);
+                assert_relative_eq!(azi2, azi2_out, epsilon = 4e-6);
+                assert_relative_eq!(m12, m12_out, epsilon = 1e-8);
+                assert_relative_eq!(S12, S12_out, epsilon = 3e6); // Note: unreasonable tolerance
+                assert_relative_eq!(a12, a12_out, epsilon = 9e-14);
             },
         );
     }
@@ -2694,18 +2694,18 @@ mod tests {
                 let g = g.lock().unwrap();
                 let (s12_out, azi1_out, azi2_out, m12_out, _M12_out, _M21_out, S12_out, a12_out) =
                     g.inverse(lat1, lon1, lat2, lon2);
-                assert_approx_eq!(s12, s12_out, 8e-9);
-                assert_approx_eq!(azi1, azi1_out, 2e-2);
-                assert_approx_eq!(azi2, azi2_out, 2e-2);
-                assert_approx_eq!(m12, m12_out, 5e-5);
+                assert_relative_eq!(s12, s12_out, epsilon = 8e-9);
+                assert_relative_eq!(azi1, azi1_out, epsilon = 2e-2);
+                assert_relative_eq!(azi2, azi2_out, epsilon = 2e-2);
+                assert_relative_eq!(m12, m12_out, epsilon = 5e-5);
                 // Our area calculation differs significantly (~1e7) from the value in GeodTest.dat for
                 // line 400001, BUT our value also perfectly matches the value returned by GeographicLib
                 // (C++) 1.51. Here's the problem line, for reference:
                 // 4.199535552987 0 90 -4.199535552987 179.398106343454992238 90 19970505.608097404994 180 0 
                 if line_num != 400001 {
-                    assert_approx_eq!(S12, S12_out, 3e10); // Note: unreasonable tolerance
+                    assert_relative_eq!(S12, S12_out, epsilon = 3e10); // Note: unreasonable tolerance
                 }
-                assert_approx_eq!(a12, a12_out, 2e-10);
+                assert_relative_eq!(a12, a12_out, epsilon = 2e-10);
             },
         );
     }
