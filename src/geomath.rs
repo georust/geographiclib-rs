@@ -78,12 +78,10 @@ pub fn ang_round(x: f64) -> f64 {
     };
     if x == 0.0 {
         0.0
+    } else if x < 0.0 {
+        -y
     } else {
-        if x < 0.0 {
-            -y
-        } else {
-            y
-        }
+        y
     }
 }
 
@@ -102,12 +100,10 @@ fn remainder(x: f64, y: f64) -> f64 {
     // (z if z < y/2 else z -y))
     if z < -y / 2.0 {
         z + y
+    } else if z < y / 2.0 {
+        z
     } else {
-        if z < y / 2.0 {
-            z
-        } else {
-            z - y
-        }
+        z - y
     }
 }
 

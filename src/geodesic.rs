@@ -602,10 +602,8 @@ impl Geodesic {
             if cbet2 == cbet1 {
                 sbet2 = if sbet2 < 0.0 { sbet1 } else { -sbet1 };
             }
-        } else {
-            if sbet2.abs() == -sbet1 {
-                cbet2 = cbet1;
-            }
+        } else if sbet2.abs() == -sbet1 {
+            cbet2 = cbet1;
         }
 
         let dn1 = (1.0 + self._ep2 * geomath::sq(sbet1)).sqrt();
