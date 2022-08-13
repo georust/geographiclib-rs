@@ -9,11 +9,11 @@ use geographiclib_rs::{DirectGeodesic, InverseGeodesic};
 use std::fs::File;
 use std::io::{BufRead, BufReader};
 
-const TEST_MODE_FULL: &str = &"full";
-const TEST_MODE_SHORT: &str = &"short";
-const TEST_MODE_DEFAULT: &str = &"default";
+const TEST_MODE_FULL: &str = "full";
+const TEST_MODE_SHORT: &str = "short";
+const TEST_MODE_DEFAULT: &str = "default";
 
-const FULL_TEST_PATH: &str = &"test_fixtures/test_data_unzipped/GeodTest.dat";
+const FULL_TEST_PATH: &str = "test_fixtures/test_data_unzipped/GeodTest.dat";
 const SHORT_TEST_PATH: &str = "test_fixtures/test_data_unzipped/GeodTest-short.dat";
 const BUILTIN_TEST_PATH: &str = "test_fixtures/GeodTest-100.dat";
 fn test_input_path() -> (&'static str, &'static str) {

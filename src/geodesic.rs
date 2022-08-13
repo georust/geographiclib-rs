@@ -251,12 +251,12 @@ impl Geodesic {
             A1 = 1.0 + A1;
         }
         if outmask & caps::DISTANCE != 0 {
-            let B1 = geomath::sin_cos_series(true, ssig2, csig2, &C1a)
-                - geomath::sin_cos_series(true, ssig1, csig1, &C1a);
+            let B1 = geomath::sin_cos_series(true, ssig2, csig2, C1a)
+                - geomath::sin_cos_series(true, ssig1, csig1, C1a);
             s12b = A1 * (sig12 + B1);
             if outmask & (caps::REDUCEDLENGTH | caps::GEODESICSCALE) != 0 {
-                let B2 = geomath::sin_cos_series(true, ssig2, csig2, &C2a)
-                    - geomath::sin_cos_series(true, ssig1, csig1, &C2a);
+                let B2 = geomath::sin_cos_series(true, ssig2, csig2, C2a)
+                    - geomath::sin_cos_series(true, ssig1, csig1, C2a);
                 J12 = m0x * sig12 + (A1 * B1 - A2 * B2);
             }
         } else if outmask & (caps::REDUCEDLENGTH | caps::GEODESICSCALE) != 0 {
@@ -264,8 +264,8 @@ impl Geodesic {
                 C2a[l as usize] = A1 * C1a[l as usize] - A2 * C2a[l as usize];
             }
             J12 = m0x * sig12
-                + (geomath::sin_cos_series(true, ssig2, csig2, &C2a)
-                    - geomath::sin_cos_series(true, ssig1, csig1, &C2a));
+                + (geomath::sin_cos_series(true, ssig2, csig2, C2a)
+                    - geomath::sin_cos_series(true, ssig1, csig1, C2a));
         }
         if outmask & caps::REDUCEDLENGTH != 0 {
             m0 = m0x;
@@ -476,8 +476,8 @@ impl Geodesic {
         let k2 = geomath::sq(calp0) * self._ep2;
         let eps = k2 / (2.0 * (1.0 + (1.0 + k2).sqrt()) + k2);
         self._C3f(eps, C3a);
-        let B312 = geomath::sin_cos_series(true, ssig2, csig2, &C3a)
-            - geomath::sin_cos_series(true, ssig1, csig1, &C3a);
+        let B312 = geomath::sin_cos_series(true, ssig2, csig2, C3a)
+            - geomath::sin_cos_series(true, ssig1, csig1, C3a);
         let domg12 = -self.f * self._A3f(eps) * salp0 * (sig12 + B312);
         let lam12 = eta + domg12;
 
