@@ -210,9 +210,7 @@ pub fn atan2d(y: f64, x: f64) -> f64 {
     let mut x = x;
     let mut y = y;
     let mut q = if y.abs() > x.abs() {
-        let _x = x;
-        x = y;
-        y = _x;
+        std::mem::swap(&mut x, &mut y);
         2.0
     } else {
         0.0

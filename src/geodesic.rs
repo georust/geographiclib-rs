@@ -580,9 +580,7 @@ impl Geodesic {
         let swapp = if lat1.abs() < lat2.abs() { -1.0 } else { 1.0 };
         if swapp < 0.0 {
             lonsign *= -1.0;
-            let _l = lat2;
-            lat2 = lat1;
-            lat1 = _l;
+            std::mem::swap(&mut lat2, &mut lat1);
         }
         let latsign = if lat1 < 0.0 { 1.0 } else { -1.0 };
         lat1 *= latsign;
@@ -868,16 +866,12 @@ impl Geodesic {
         }
 
         if swapp < 0.0 {
-            let _s = salp2;
-            salp2 = salp1;
-            salp1 = _s;
-            let _c = calp2;
-            calp2 = calp1;
-            calp1 = _c;
+            std::mem::swap(&mut salp2, &mut salp1);
+
+            std::mem::swap(&mut calp2, &mut calp1);
+
             if outmask & caps::GEODESICSCALE != 0 {
-                let _m = M21;
-                M21 = M12;
-                M12 = _m;
+                std::mem::swap(&mut M21, &mut M12);
             }
         }
         salp1 *= swapp * lonsign;
