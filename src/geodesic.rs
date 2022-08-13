@@ -417,7 +417,8 @@ impl Geodesic {
                 calp1 = sbet12a - cbet2 * sbet1 * geomath::sq(somg12) / (1.0 - comg12);
             }
         }
-        if salp1 > 0.0 {
+        println!("{:?}", salp1);
+        if salp1 > 0.0 || salp1.is_nan() {
             geomath::norm(&mut salp1, &mut calp1);
         } else {
             salp1 = 1.0;
@@ -754,7 +755,10 @@ impl Geodesic {
                     domg12 = res.9;
                     let dv = res.10;
 
-                    if tripb || v.abs() < if tripn { 8.0 } else { 1.0 } * self.tol0_ {
+                    if tripb
+                        || v.abs() < if tripn { 8.0 } else { 1.0 } * self.tol0_
+                        || v.abs().is_nan()
+                    {
                         break;
                     };
                     if v > 0.0 && (numit > self.maxit1_ || calp1 / salp1 > calp1b / salp1b) {
