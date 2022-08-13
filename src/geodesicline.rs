@@ -251,7 +251,7 @@ impl GeodesicLine {
                 csig2 = self._csig1 * csig12 - self._ssig1 * ssig12;
                 B12 = geomath::sin_cos_series(true, ssig2, csig2, &self._C1a);
                 let serr = (1.0 + self._A1m1) * (sig12 + (B12 - self._B11)) - s12_a12 / self._b;
-                sig12 = sig12 - serr / (1.0 + self._k2 * geomath::sq(ssig2)).sqrt();
+                sig12 -= serr / (1.0 + self._k2 * geomath::sq(ssig2)).sqrt();
                 ssig12 = sig12.sin();
                 csig12 = sig12.cos();
             }

@@ -172,7 +172,7 @@ pub fn sincosd(x: f64) -> (f64, f64) {
     let c = r.cos();
 
     // q = q % 4
-    q = q % 4;
+    q %= 4;
 
     // if q == 1:
     //     s, c =  c, -s
@@ -227,7 +227,7 @@ pub fn atan2d(y: f64, x: f64) -> f64 {
     } else if q == 2.0 {
         ang = 90.0 - ang;
     } else if q == 3.0 {
-        ang = -90.0 + ang;
+        ang += -90.0;
     }
     ang
 }
@@ -252,7 +252,7 @@ pub fn sin_cos_series(sinp: bool, sinx: f64, cosx: f64, c: &[f64]) -> f64 {
     } else {
         0.0
     };
-    n = n / 2;
+    n /= 2;
     while n > 0 {
         n -= 1;
         k -= 1;

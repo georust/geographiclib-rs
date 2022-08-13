@@ -249,9 +249,9 @@ impl Geodesic {
                 A2 = geomath::_A2m1f(eps, self.GEODESIC_ORDER);
                 geomath::_C2f(eps, C2a, self.GEODESIC_ORDER);
                 m0x = A1 - A2;
-                A2 = 1.0 + A2;
+                A2 += 1.0;
             }
-            A1 = 1.0 + A1;
+            A1 += 1.0;
         }
         if outmask & caps::DISTANCE != 0 {
             let B1 = geomath::sin_cos_series(true, ssig2, csig2, C1a)
@@ -898,7 +898,7 @@ impl Geodesic {
         mut outmask: u64,
     ) -> (f64, f64, f64, f64, f64, f64, f64, f64, f64) {
         if !arcmode {
-            outmask = outmask | caps::DISTANCE_IN;
+            outmask |= caps::DISTANCE_IN
         };
 
         let line =
