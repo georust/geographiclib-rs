@@ -284,7 +284,7 @@ impl GeodesicLine {
         if outmask & caps::LONGITUDE != 0 {
             let somg2 = self._salp0 * ssig2;
             let comg2 = csig2;
-            let E = (1.0 as f64).copysign(self._salp0);
+            let E = 1.0_f64.copysign(self._salp0);
             let omg12 = if outmask & caps::LONG_UNROLL != 0 {
                 E * (sig12 - (ssig2.atan2(csig2) - self._ssig1.atan2(self._csig1))
                     + ((E * somg2).atan2(comg2) - (E * self._somg1).atan2(self._comg1)))
