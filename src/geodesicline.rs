@@ -411,10 +411,10 @@ mod tests {
         assert_eq!(res.2, 0.00023398621812867812);
         assert_eq!(res.3, 10.000000002727887);
         assert_eq!(res.4, 150.0);
-        assert_eq!(res.5.is_nan(), true);
-        assert_eq!(res.6.is_nan(), true);
-        assert_eq!(res.7.is_nan(), true);
-        assert_eq!(res.8.is_nan(), true);
+        assert!(res.5.is_nan());
+        assert!(res.6.is_nan());
+        assert!(res.7.is_nan());
+        assert!(res.8.is_nan());
     }
 
     #[test]
@@ -440,7 +440,7 @@ mod tests {
         assert_eq!(gl._csig1, 1.0);
         assert_eq!(gl._comg1, 1.0);
         assert_eq!(gl._k2, geod._ep2);
-        assert_eq!(gl._s13.is_nan(), true);
-        assert_eq!(gl._a13.is_nan(), true);
+        assert!(gl._s13.is_nan());
+        assert!(gl._a13.is_nan());
     }
 }

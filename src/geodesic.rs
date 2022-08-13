@@ -1678,10 +1678,10 @@ mod tests {
         assert_eq!(res.3, 0.7047823085448635);
         assert_eq!(res.4, 0.7095309793242709);
         assert_eq!(res.5, 0.7046742434480923);
-        assert_eq!(res.6.is_nan(), true);
-        assert_eq!(res.7.is_nan(), true);
-        assert_eq!(res.8.is_nan(), true);
-        assert_eq!(res.9.is_nan(), true);
+        assert!(res.6.is_nan());
+        assert!(res.7.is_nan());
+        assert!(res.8.is_nan());
+        assert!(res.9.is_nan());
     }
 
     #[test]
@@ -1703,8 +1703,8 @@ mod tests {
         assert_eq!(res.0, -1.0);
         assert_relative_eq!(res.1, 0.7095310092765433, epsilon = 1e-13);
         assert_relative_eq!(res.2, 0.7046742132893822, epsilon = 1e-13);
-        assert_eq!(res.3.is_nan(), true);
-        assert_eq!(res.4.is_nan(), true);
+        assert!(res.3.is_nan());
+        assert!(res.4.is_nan());
         assert_eq!(res.5, 1.0000002548969817);
 
         let res = geod._InverseStart(
@@ -1723,8 +1723,8 @@ mod tests {
         assert_eq!(res.0, -1.0);
         assert_relative_eq!(res.1, 0.7095310092765433, epsilon = 1e-13);
         assert_relative_eq!(res.2, 0.7046742132893822, epsilon = 1e-13);
-        assert_eq!(res.3.is_nan(), true);
-        assert_eq!(res.4.is_nan(), true);
+        assert!(res.3.is_nan());
+        assert!(res.4.is_nan());
         assert_eq!(res.5, 1.0000002548969817);
     }
 
@@ -1832,11 +1832,11 @@ mod tests {
             &mut c1a,
             &mut c2a,
         );
-        assert_eq!(res1.0.is_nan(), true);
+        assert!(res1.0.is_nan());
         assert_eq!(res1.1, 0.024679842274314294);
         assert_eq!(res1.2, 0.0016717180169067588);
-        assert_eq!(res1.3.is_nan(), true);
-        assert_eq!(res1.4.is_nan(), true);
+        assert!(res1.3.is_nan());
+        assert!(res1.4.is_nan());
 
         let res2 = geod._Lengths(
             0.0008355096040059597,
@@ -1869,11 +1869,11 @@ mod tests {
                 1.2789961247944744e-20,
             ],
         );
-        assert_eq!(res2.0.is_nan(), true);
+        assert!(res2.0.is_nan());
         assert_eq!(res2.1, 0.02467984121870759);
         assert_eq!(res2.2, 0.0016717181597332804);
-        assert_eq!(res2.3.is_nan(), true);
-        assert_eq!(res2.4.is_nan(), true);
+        assert!(res2.3.is_nan());
+        assert!(res2.4.is_nan());
 
         let res3 = geod._Lengths(
             0.0008355096040059597,
@@ -1907,10 +1907,10 @@ mod tests {
             ],
         );
         assert_eq!(res3.0, 0.024682347295447677);
-        assert_eq!(res3.1.is_nan(), true);
-        assert_eq!(res3.2.is_nan(), true);
-        assert_eq!(res3.3.is_nan(), true);
-        assert_eq!(res3.4.is_nan(), true);
+        assert!(res3.1.is_nan());
+        assert!(res3.2.is_nan());
+        assert!(res3.3.is_nan());
+        assert!(res3.4.is_nan());
 
         let res = geod._Lengths(
             0.0007122620325664751,
@@ -1944,10 +1944,10 @@ mod tests {
             ],
         );
         assert_eq!(res.0, 1.4056304412645388);
-        assert_eq!(res.1.is_nan(), true);
-        assert_eq!(res.2.is_nan(), true);
-        assert_eq!(res.3.is_nan(), true);
-        assert_eq!(res.4.is_nan(), true);
+        assert!(res.1.is_nan());
+        assert!(res.2.is_nan());
+        assert!(res.3.is_nan());
+        assert!(res.4.is_nan());
     }
 
     #[test]
