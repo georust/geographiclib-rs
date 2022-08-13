@@ -119,12 +119,10 @@ impl Geodesic {
 
         // Call a3coeff
         let mut o: i64 = 0;
-        let mut k = 0;
-        for j in (0..GEODESIC_ORDER).rev() {
+        for (k, j) in (0..GEODESIC_ORDER).rev().enumerate() {
             let m = j.min(GEODESIC_ORDER as i64 - j - 1);
             _A3x[k as usize] = geomath::polyval(m as isize, &COEFF_A3[o as usize..], _n)
                 / COEFF_A3[(o + m + 1) as usize] as f64;
-            k += 1;
             o += m + 2;
         }
 
