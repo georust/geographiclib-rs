@@ -214,6 +214,7 @@ impl Geodesic {
         }
     }
 
+    #[allow(clippy::too_many_arguments)]
     pub fn _Lengths(
         &self,
         eps: f64,
@@ -284,6 +285,7 @@ impl Geodesic {
         (s12b, m12b, m0, M12, M21)
     }
 
+    #[allow(clippy::too_many_arguments)]
     pub fn _InverseStart(
         &self,
         sbet1: f64,
@@ -423,6 +425,7 @@ impl Geodesic {
         (sig12, salp1, calp1, salp2, calp2, dnm)
     }
 
+    #[allow(clippy::too_many_arguments)]
     pub fn _Lambda12(
         &self,
         sbet1: f64,
