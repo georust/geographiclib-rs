@@ -313,8 +313,8 @@ pub fn _C1f(eps: f64, c: &mut [f64], geodesic_order: i64) {
     let mut o = 0;
     for l in 1..=geodesic_order {
         let m = ((geodesic_order - l) / 2) as i64;
-        c[l as usize] =
-            d * polyval(m as isize, &COEFF[o as usize..], eps2) / COEFF[(o + m + 1) as usize] as f64;
+        c[l as usize] = d * polyval(m as isize, &COEFF[o as usize..], eps2)
+            / COEFF[(o + m + 1) as usize] as f64;
         o += m + 2;
         d *= eps;
     }
@@ -330,8 +330,8 @@ pub fn _C1pf(eps: f64, c: &mut [f64], geodesic_order: i64) {
     let mut o = 0;
     for l in 1..=geodesic_order {
         let m = (geodesic_order - l) / 2;
-        c[l as usize] =
-            d * polyval(m as isize, &COEFF[o as usize..], eps2) / COEFF[(o + m + 1) as usize] as f64;
+        c[l as usize] = d * polyval(m as isize, &COEFF[o as usize..], eps2)
+            / COEFF[(o + m + 1) as usize] as f64;
         o += m + 2;
         d *= eps;
     }
@@ -354,8 +354,8 @@ pub fn _C2f(eps: f64, c: &mut [f64], geodesic_order: i64) {
     let mut o = 0;
     for l in 1..=geodesic_order {
         let m = (geodesic_order - l) / 2;
-        c[l as usize] =
-            d * polyval(m as isize, &COEFF[o as usize..], eps2) / COEFF[(o + m + 1) as usize] as f64;
+        c[l as usize] = d * polyval(m as isize, &COEFF[o as usize..], eps2)
+            / COEFF[(o + m + 1) as usize] as f64;
         o += m + 2;
         d *= eps;
     }
@@ -363,8 +363,8 @@ pub fn _C2f(eps: f64, c: &mut [f64], geodesic_order: i64) {
 
 #[cfg(test)]
 mod tests {
-    use approx::assert_relative_eq;
     use super::*;
+    use approx::assert_relative_eq;
     // Results for the assertions are taken by running the python implementation
 
     #[test]

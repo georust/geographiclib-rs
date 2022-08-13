@@ -2701,7 +2701,7 @@ mod tests {
                 // Our area calculation differs significantly (~1e7) from the value in GeodTest.dat for
                 // line 400001, BUT our value also perfectly matches the value returned by GeographicLib
                 // (C++) 1.51. Here's the problem line, for reference:
-                // 4.199535552987 0 90 -4.199535552987 179.398106343454992238 90 19970505.608097404994 180 0 
+                // 4.199535552987 0 90 -4.199535552987 179.398106343454992238 90 19970505.608097404994 180 0
                 if line_num != 400001 {
                     assert_relative_eq!(S12, S12_out, epsilon = 3e10); // Note: unreasonable tolerance
                 }
