@@ -4,7 +4,7 @@ use crate::geodesiccapability as caps;
 use crate::geodesicline;
 use crate::geomath;
 
-use std::f64::consts::PI;
+use std::f64::consts::{FRAC_1_SQRT_2, PI};
 
 pub const WGS84_A: f64 = 6378137.0;
 // Evaluating this as 1000000000.0 / (298257223563f64) reduces the
@@ -842,7 +842,7 @@ impl Geodesic {
             }
 
             let alp12: f64;
-            if !meridian && comg12 > -0.7071 && sbet2 - sbet1 < 1.75 {
+            if !meridian && comg12 > -FRAC_1_SQRT_2 && sbet2 - sbet1 < 1.75 {
                 let domg12 = 1.0 + comg12;
                 let dbet1 = 1.0 + cbet1;
                 let dbet2 = 1.0 + cbet2;
