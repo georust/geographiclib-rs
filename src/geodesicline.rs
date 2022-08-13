@@ -34,15 +34,15 @@ pub struct GeodesicLine {
     _somg1: f64,
     _ssig1: f64,
     _stau1: f64,
-    a13: f64,
-    a: f64,
+    _a13: f64,
+    _a: f64,
     azi1: f64,
     calp1: f64,
     caps: u64,
     f: f64,
     lat1: f64,
     lon1: f64,
-    s13: f64,
+    _s13: f64,
     salp1: f64,
 }
 
@@ -72,7 +72,7 @@ impl GeodesicLine {
         // This was taken from geodesic, putting it here for convenience
         let tiny_ = geomath::get_min_val().sqrt();
 
-        let a = geod.a;
+        let _a = geod.a;
         let f = geod.f;
         let _b = geod._b;
         let _c2 = geod._c2;
@@ -149,12 +149,12 @@ impl GeodesicLine {
         let mut _B41 = 0.0;
         if caps & caps::CAP_C4 != 0 {
             geod._C4f(eps, &mut _C4a);
-            _A4 = geomath::sq(a) * _calp0 * _salp0 * geod._e2;
+            _A4 = geomath::sq(_a) * _calp0 * _salp0 * geod._e2;
             _B41 = geomath::sin_cos_series(false, _ssig1, _csig1, &_C4a);
         }
 
-        let s13 = std::f64::NAN;
-        let a13 = std::f64::NAN;
+        let _s13 = std::f64::NAN;
+        let _a13 = std::f64::NAN;
 
         GeodesicLine {
             tiny_,
@@ -184,15 +184,15 @@ impl GeodesicLine {
             _somg1,
             _ssig1,
             _stau1,
-            a,
-            a13,
+            _a,
+            _a13,
             azi1,
             calp1,
             caps,
             f,
             lat1,
             lon1,
-            s13,
+            _s13,
             salp1,
         }
     }
@@ -421,7 +421,7 @@ mod tests {
     fn test_init() {
         let geod = Geodesic::wgs84();
         let gl = GeodesicLine::new(&geod, 0.0, 0.0, 0.0, None, None, None);
-        assert_eq!(gl.a, 6378137.0);
+        assert_eq!(gl._a, 6378137.0);
         assert_eq!(gl.f, 0.0033528106647474805);
         assert_eq!(gl._b, 6356752.314245179);
         assert_eq!(gl._c2, 40589732499314.76);
@@ -440,7 +440,7 @@ mod tests {
         assert_eq!(gl._csig1, 1.0);
         assert_eq!(gl._comg1, 1.0);
         assert_eq!(gl._k2, geod._ep2);
-        assert_eq!(gl.s13.is_nan(), true);
-        assert_eq!(gl.a13.is_nan(), true);
+        assert_eq!(gl._s13.is_nan(), true);
+        assert_eq!(gl._a13.is_nan(), true);
     }
 }

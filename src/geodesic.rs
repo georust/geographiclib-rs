@@ -24,19 +24,19 @@ pub struct Geodesic {
     pub _c2: f64,
     _etol2: f64,
     _A3x: [f64; GEODESIC_ORDER as usize],
-    _C3x: [f64; nC3x_ as usize],
-    _C4x: [f64; nC4x_ as usize],
+    _C3x: [f64; _nC3x_ as usize],
+    _C4x: [f64; _nC4x_ as usize],
 
     pub GEODESIC_ORDER: i64,
-    nC3x_: i64,
-    nC4x_: i64,
+    _nC3x_: i64,
+    _nC4x_: i64,
     maxit1_: u64,
     maxit2_: u64,
 
     pub tiny_: f64,
     tol0_: f64,
     tol1_: f64,
-    tol2_: f64,
+    _tol2_: f64,
     tolb_: f64,
     xthresh_: f64,
 }
@@ -82,9 +82,9 @@ const COEFF_C4: [f64; 77] = [
 
 pub const GEODESIC_ORDER: i64 = 6;
 #[allow(non_upper_case_globals)]
-const nC3x_: i64 = 15;
+const _nC3x_: i64 = 15;
 #[allow(non_upper_case_globals)]
-const nC4x_: i64 = 21;
+const _nC4x_: i64 = 21;
 
 impl Geodesic {
     pub fn new(a: f64, f: f64) -> Self {
@@ -93,9 +93,9 @@ impl Geodesic {
         let tiny_ = geomath::get_min_val().sqrt();
         let tol0_ = geomath::get_epsilon();
         let tol1_ = 200.0 * tol0_;
-        let tol2_ = tol0_.sqrt();
-        let tolb_ = tol0_ * tol2_;
-        let xthresh_ = 1000.0 * tol2_;
+        let _tol2_ = tol0_.sqrt();
+        let tolb_ = tol0_ * _tol2_;
+        let xthresh_ = 1000.0 * _tol2_;
 
         let _f1 = 1.0 - f;
         let _e2 = f * (2.0 - f);
@@ -111,11 +111,11 @@ impl Geodesic {
                         / _e2
                 }))
             / 2.0;
-        let _etol2 = 0.1 * tol2_ / (f.abs().max(0.001) * (1.0 - f / 2.0).min(1.0) / 2.0).sqrt();
+        let _etol2 = 0.1 * _tol2_ / (f.abs().max(0.001) * (1.0 - f / 2.0).min(1.0) / 2.0).sqrt();
 
         let mut _A3x: [f64; GEODESIC_ORDER as usize] = [0.0; GEODESIC_ORDER as usize];
-        let mut _C3x: [f64; nC3x_ as usize] = [0.0; nC3x_ as usize];
-        let mut _C4x: [f64; nC4x_ as usize] = [0.0; nC4x_ as usize];
+        let mut _C3x: [f64; _nC3x_ as usize] = [0.0; _nC3x_ as usize];
+        let mut _C4x: [f64; _nC4x_ as usize] = [0.0; _nC4x_ as usize];
 
         // Call a3coeff
         let mut o: i64 = 0;
@@ -171,15 +171,15 @@ impl Geodesic {
             _C4x,
 
             GEODESIC_ORDER,
-            nC3x_,
-            nC4x_,
+            _nC3x_,
+            _nC4x_,
             maxit1_,
             maxit2_,
 
             tiny_,
             tol0_,
             tol1_,
-            tol2_,
+            _tol2_,
             tolb_,
             xthresh_,
         }
