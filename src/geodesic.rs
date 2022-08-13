@@ -47,7 +47,7 @@ lazy_static! {
 
 impl Geodesic {
     pub fn wgs84() -> Self {
-        WGS84_GEOD.clone()
+        *WGS84_GEOD
     }
 
     pub fn equatorial_radius(&self) -> f64 {
