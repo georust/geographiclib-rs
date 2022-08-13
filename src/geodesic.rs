@@ -1,4 +1,5 @@
 #![allow(non_snake_case)]
+#![allow(clippy::excessive_precision)]
 
 use crate::geodesiccapability as caps;
 use crate::geodesicline;
