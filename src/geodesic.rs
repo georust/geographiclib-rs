@@ -190,10 +190,15 @@ impl Geodesic {
     pub fn _C3f(&self, eps: f64, c: &mut [f64]) {
         let mut mult = 1.0;
         let mut o = 0;
-        for l in 1..self.GEODESIC_ORDER as usize {
+        for (l, c_item) in c
+            .iter_mut()
+            .enumerate()
+            .take(self.GEODESIC_ORDER as usize)
+            .skip(1)
+        {
             let m = self.GEODESIC_ORDER as usize - l - 1;
             mult *= eps;
-            c[l] = mult * geomath::polyval(m as isize, &self._C3x[o..], eps);
+            *c_item = mult * geomath::polyval(m as isize, &self._C3x[o..], eps);
             o += m + 1;
         }
     }
@@ -201,9 +206,9 @@ impl Geodesic {
     pub fn _C4f(&self, eps: f64, c: &mut [f64]) {
         let mut mult = 1.0;
         let mut o = 0;
-        for l in 0..self.GEODESIC_ORDER as usize {
+        for (l, c_item) in c.iter_mut().enumerate().take(self.GEODESIC_ORDER as usize) {
             let m = self.GEODESIC_ORDER as usize - l - 1;
-            c[l] = mult * geomath::polyval(m as isize, &self._C4x[o..], eps);
+            *c_item = mult * geomath::polyval(m as isize, &self._C4x[o..], eps);
             o += m + 1;
             mult *= eps;
         }
