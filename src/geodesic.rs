@@ -1288,6 +1288,7 @@ mod tests {
     use approx::assert_relative_eq;
     use std::io::BufRead;
 
+    #[allow(clippy::type_complexity)]
     const TESTCASES: &[(f64, f64, f64, f64, f64, f64, f64, f64, f64, f64, f64, f64)] = &[
         (
             35.60777,
