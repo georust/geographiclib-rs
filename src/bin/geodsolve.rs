@@ -70,7 +70,7 @@ impl Runner {
     }
 
     fn handle_line(&self, line: String) {
-        let fields: Vec<f64> = line.split(" ").map(|s| s.parse::<f64>().unwrap()).collect();
+        let fields: Vec<f64> = line.split(' ').map(|s| s.parse::<f64>().unwrap()).collect();
         let output_fields = if self.is_inverse {
             self.compute_inverse(&fields)
         } else {

@@ -34,7 +34,7 @@ fn geodesic_direct_benchmark(c: &mut Criterion) {
         .lines()
         .map(|line| {
             let line = line.unwrap();
-            let fields: Vec<f64> = line.split(" ").map(|s| s.parse::<f64>().unwrap()).collect();
+            let fields: Vec<f64> = line.split(' ').map(|s| s.parse::<f64>().unwrap()).collect();
             (fields[0], fields[1], fields[2], fields[6])
         })
         .collect();
@@ -81,7 +81,7 @@ fn geodesic_inverse_benchmark(c: &mut Criterion) {
         .lines()
         .map(|line| {
             let line = line.unwrap();
-            let fields: Vec<f64> = line.split(" ").map(|s| s.parse::<f64>().unwrap()).collect();
+            let fields: Vec<f64> = line.split(' ').map(|s| s.parse::<f64>().unwrap()).collect();
             (fields[0], fields[1], fields[3], fields[4])
         })
         .collect();
