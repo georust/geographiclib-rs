@@ -848,6 +848,8 @@ impl Geodesic {
                 comg12 = omg12.cos();
             }
 
+            // We're diverging from Karney's implementation here 
+            // which uses the hardcoded constant: -0.7071 for FRAC_1_SQRT_2
             let alp12: f64;
             if !meridian && comg12 > -FRAC_1_SQRT_2 && sbet2 - sbet1 < 1.75 {
                 let domg12 = 1.0 + comg12;
