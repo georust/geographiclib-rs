@@ -13,7 +13,7 @@ pub const WGS84_A: f64 = 6378137.0;
 // 1/298.257223563 is well ingrained.
 pub const WGS84_F: f64 = 1.0 / ((298257223563f64) / 1000000000.0);
 
-#[derive(Debug, Copy, Clone)]
+#[derive(Copy, Clone, PartialEq, PartialOrd, Debug, Default)]
 pub struct Geodesic {
     pub a: f64,
     pub f: f64,
