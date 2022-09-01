@@ -5,7 +5,7 @@ use crate::geodesiccapability as caps;
 use crate::geomath;
 use std::collections::HashMap;
 
-#[derive(Copy, Clone, PartialEq, PartialOrd, Debug, Default)]
+#[derive(Copy, Clone, PartialEq, PartialOrd, Debug)]
 pub struct GeodesicLine {
     tiny_: f64, // This should be moved to consts
     _A1m1: f64,
