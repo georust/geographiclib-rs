@@ -1,4 +1,5 @@
 #![allow(non_snake_case)]
+#![allow(clippy::excessive_precision)]
 
 pub const DIGITS: u64 = 53;
 pub const TWO: f64 = 2.0;
@@ -78,12 +79,10 @@ pub fn ang_round(x: f64) -> f64 {
     };
     if x == 0.0 {
         0.0
+    } else if x < 0.0 {
+        -y
     } else {
-        if x < 0.0 {
-            -y
-        } else {
-            y
-        }
+        y
     }
 }
 
@@ -102,12 +101,10 @@ fn remainder(x: f64, y: f64) -> f64 {
     // (z if z < y/2 else z -y))
     if z < -y / 2.0 {
         z + y
+    } else if z < y / 2.0 {
+        z
     } else {
-        if z < y / 2.0 {
-            z
-        } else {
-            z - y
-        }
+        z - y
     }
 }
 
@@ -172,7 +169,7 @@ pub fn sincosd(x: f64) -> (f64, f64) {
     let c = r.cos();
 
     // q = q % 4
-    q = q % 4;
+    q %= 4;
 
     // if q == 1:
     //     s, c =  c, -s
@@ -210,9 +207,7 @@ pub fn atan2d(y: f64, x: f64) -> f64 {
     let mut x = x;
     let mut y = y;
     let mut q = if y.abs() > x.abs() {
-        let _x = x;
-        x = y;
-        y = _x;
+        std::mem::swap(&mut x, &mut y);
         2.0
     } else {
         0.0
@@ -227,7 +222,7 @@ pub fn atan2d(y: f64, x: f64) -> f64 {
     } else if q == 2.0 {
         ang = 90.0 - ang;
     } else if q == 3.0 {
-        ang = -90.0 + ang;
+        ang += -90.0;
     }
     ang
 }
@@ -252,7 +247,7 @@ pub fn sin_cos_series(sinp: bool, sinx: f64, cosx: f64, c: &[f64]) -> f64 {
     } else {
         0.0
     };
-    n = n / 2;
+    n /= 2;
     while n > 0 {
         n -= 1;
         k -= 1;
@@ -313,8 +308,8 @@ pub fn _C1f(eps: f64, c: &mut [f64], geodesic_order: i64) {
     let mut o = 0;
     for l in 1..=geodesic_order {
         let m = ((geodesic_order - l) / 2) as i64;
-        c[l as usize] =
-            d * polyval(m as isize, &COEFF[o as usize..], eps2) / COEFF[(o + m + 1) as usize] as f64;
+        c[l as usize] = d * polyval(m as isize, &COEFF[o as usize..], eps2)
+            / COEFF[(o + m + 1) as usize] as f64;
         o += m + 2;
         d *= eps;
     }
@@ -330,8 +325,8 @@ pub fn _C1pf(eps: f64, c: &mut [f64], geodesic_order: i64) {
     let mut o = 0;
     for l in 1..=geodesic_order {
         let m = (geodesic_order - l) / 2;
-        c[l as usize] =
-            d * polyval(m as isize, &COEFF[o as usize..], eps2) / COEFF[(o + m + 1) as usize] as f64;
+        c[l as usize] = d * polyval(m as isize, &COEFF[o as usize..], eps2)
+            / COEFF[(o + m + 1) as usize] as f64;
         o += m + 2;
         d *= eps;
     }
@@ -354,8 +349,8 @@ pub fn _C2f(eps: f64, c: &mut [f64], geodesic_order: i64) {
     let mut o = 0;
     for l in 1..=geodesic_order {
         let m = (geodesic_order - l) / 2;
-        c[l as usize] =
-            d * polyval(m as isize, &COEFF[o as usize..], eps2) / COEFF[(o + m + 1) as usize] as f64;
+        c[l as usize] = d * polyval(m as isize, &COEFF[o as usize..], eps2)
+            / COEFF[(o + m + 1) as usize] as f64;
         o += m + 2;
         d *= eps;
     }
@@ -363,8 +358,8 @@ pub fn _C2f(eps: f64, c: &mut [f64], geodesic_order: i64) {
 
 #[cfg(test)]
 mod tests {
-    use approx::assert_relative_eq;
     use super::*;
+    use approx::assert_relative_eq;
     // Results for the assertions are taken by running the python implementation
 
     #[test]
@@ -457,7 +452,7 @@ mod tests {
                 false,
                 -0.8928657853278468,
                 0.45032287238256896,
-                &vec![
+                &[
                     0.6660771734724675,
                     1.5757752625233906e-05,
                     3.8461688963148916e-09,
@@ -474,7 +469,7 @@ mod tests {
                 false,
                 -0.8928657853278468,
                 0.45032287238256896,
-                &vec![0., 1., 2., 3., 4., 5.],
+                &[0., 1., 2., 3., 4., 5.],
             ),
             1.8998562852254026
         );
@@ -483,7 +478,7 @@ mod tests {
                 true,
                 0.2969032234925426,
                 0.9549075745221299,
-                &vec![
+                &[
                     0.0,
                     -0.0003561309485314716,
                     -3.170731714689771e-08,
@@ -500,7 +495,7 @@ mod tests {
                 true,
                 -0.8928657853278468,
                 0.45032287238256896,
-                &vec![
+                &[
                     0.0,
                     -0.0003561309485314716,
                     -3.170731714689771e-08,
@@ -514,7 +509,7 @@ mod tests {
         );
 
         assert_eq!(
-            sin_cos_series(true, 0.12, 0.21, &vec![1.0, 2.0]),
+            sin_cos_series(true, 0.12, 0.21, &[1.0, 2.0]),
             0.10079999999999999
         );
         assert_eq!(
@@ -522,7 +517,7 @@ mod tests {
                 true,
                 -0.024679833885152578,
                 0.9996954065111039,
-                &vec![
+                &[
                     0.0,
                     -0.0008355098973052918,
                     -1.7444619952659748e-07,

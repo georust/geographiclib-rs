@@ -9,11 +9,11 @@ use geographiclib_rs::{DirectGeodesic, InverseGeodesic};
 use std::fs::File;
 use std::io::{BufRead, BufReader};
 
-const TEST_MODE_FULL: &str = &"full";
-const TEST_MODE_SHORT: &str = &"short";
-const TEST_MODE_DEFAULT: &str = &"default";
+const TEST_MODE_FULL: &str = "full";
+const TEST_MODE_SHORT: &str = "short";
+const TEST_MODE_DEFAULT: &str = "default";
 
-const FULL_TEST_PATH: &str = &"test_fixtures/test_data_unzipped/GeodTest.dat";
+const FULL_TEST_PATH: &str = "test_fixtures/test_data_unzipped/GeodTest.dat";
 const SHORT_TEST_PATH: &str = "test_fixtures/test_data_unzipped/GeodTest-short.dat";
 const BUILTIN_TEST_PATH: &str = "test_fixtures/GeodTest-100.dat";
 fn test_input_path() -> (&'static str, &'static str) {
@@ -34,7 +34,7 @@ fn geodesic_direct_benchmark(c: &mut Criterion) {
         .lines()
         .map(|line| {
             let line = line.unwrap();
-            let fields: Vec<f64> = line.split(" ").map(|s| s.parse::<f64>().unwrap()).collect();
+            let fields: Vec<f64> = line.split(' ').map(|s| s.parse::<f64>().unwrap()).collect();
             (fields[0], fields[1], fields[2], fields[6])
         })
         .collect();
@@ -81,7 +81,7 @@ fn geodesic_inverse_benchmark(c: &mut Criterion) {
         .lines()
         .map(|line| {
             let line = line.unwrap();
-            let fields: Vec<f64> = line.split(" ").map(|s| s.parse::<f64>().unwrap()).collect();
+            let fields: Vec<f64> = line.split(' ').map(|s| s.parse::<f64>().unwrap()).collect();
             (fields[0], fields[1], fields[3], fields[4])
         })
         .collect();

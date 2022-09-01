@@ -1,10 +1,11 @@
 #![allow(non_snake_case)]
+#![allow(clippy::excessive_precision)]
 
 use crate::geodesiccapability as caps;
 use crate::geodesicline;
 use crate::geomath;
 
-use std::f64::consts::PI;
+use std::f64::consts::{FRAC_1_SQRT_2, PI};
 
 pub const WGS84_A: f64 = 6378137.0;
 // Evaluating this as 1000000000.0 / (298257223563f64) reduces the
@@ -12,7 +13,7 @@ pub const WGS84_A: f64 = 6378137.0;
 // 1/298.257223563 is well ingrained.
 pub const WGS84_F: f64 = 1.0 / ((298257223563f64) / 1000000000.0);
 
-#[derive(Debug, Copy, Clone)]
+#[derive(Copy, Clone, PartialEq, PartialOrd, Debug)]
 pub struct Geodesic {
     pub a: f64,
     pub f: f64,
@@ -24,19 +25,19 @@ pub struct Geodesic {
     pub _c2: f64,
     _etol2: f64,
     _A3x: [f64; GEODESIC_ORDER as usize],
-    _C3x: [f64; nC3x_ as usize],
-    _C4x: [f64; nC4x_ as usize],
+    _C3x: [f64; _nC3x_ as usize],
+    _C4x: [f64; _nC4x_ as usize],
 
     pub GEODESIC_ORDER: i64,
-    nC3x_: i64,
-    nC4x_: i64,
+    _nC3x_: i64,
+    _nC4x_: i64,
     maxit1_: u64,
     maxit2_: u64,
 
     pub tiny_: f64,
     tol0_: f64,
     tol1_: f64,
-    tol2_: f64,
+    _tol2_: f64,
     tolb_: f64,
     xthresh_: f64,
 }
@@ -47,7 +48,7 @@ lazy_static! {
 
 impl Geodesic {
     pub fn wgs84() -> Self {
-        WGS84_GEOD.clone()
+        *WGS84_GEOD
     }
 
     pub fn equatorial_radius(&self) -> f64 {
@@ -82,9 +83,9 @@ const COEFF_C4: [f64; 77] = [
 
 pub const GEODESIC_ORDER: i64 = 6;
 #[allow(non_upper_case_globals)]
-const nC3x_: i64 = 15;
+const _nC3x_: i64 = 15;
 #[allow(non_upper_case_globals)]
-const nC4x_: i64 = 21;
+const _nC4x_: i64 = 21;
 
 impl Geodesic {
     pub fn new(a: f64, f: f64) -> Self {
@@ -93,9 +94,9 @@ impl Geodesic {
         let tiny_ = geomath::get_min_val().sqrt();
         let tol0_ = geomath::get_epsilon();
         let tol1_ = 200.0 * tol0_;
-        let tol2_ = tol0_.sqrt();
-        let tolb_ = tol0_ * tol2_;
-        let xthresh_ = 1000.0 * tol2_;
+        let _tol2_ = tol0_.sqrt();
+        let tolb_ = tol0_ * _tol2_;
+        let xthresh_ = 1000.0 * _tol2_;
 
         let _f1 = 1.0 - f;
         let _e2 = f * (2.0 - f);
@@ -111,20 +112,18 @@ impl Geodesic {
                         / _e2
                 }))
             / 2.0;
-        let _etol2 = 0.1 * tol2_ / (f.abs().max(0.001) * (1.0 - f / 2.0).min(1.0) / 2.0).sqrt();
+        let _etol2 = 0.1 * _tol2_ / (f.abs().max(0.001) * (1.0 - f / 2.0).min(1.0) / 2.0).sqrt();
 
         let mut _A3x: [f64; GEODESIC_ORDER as usize] = [0.0; GEODESIC_ORDER as usize];
-        let mut _C3x: [f64; nC3x_ as usize] = [0.0; nC3x_ as usize];
-        let mut _C4x: [f64; nC4x_ as usize] = [0.0; nC4x_ as usize];
+        let mut _C3x: [f64; _nC3x_ as usize] = [0.0; _nC3x_ as usize];
+        let mut _C4x: [f64; _nC4x_ as usize] = [0.0; _nC4x_ as usize];
 
         // Call a3coeff
         let mut o: i64 = 0;
-        let mut k = 0;
-        for j in (0..GEODESIC_ORDER).rev() {
+        for (k, j) in (0..GEODESIC_ORDER).rev().enumerate() {
             let m = j.min(GEODESIC_ORDER as i64 - j - 1);
             _A3x[k as usize] = geomath::polyval(m as isize, &COEFF_A3[o as usize..], _n)
                 / COEFF_A3[(o + m + 1) as usize] as f64;
-            k += 1;
             o += m + 2;
         }
 
@@ -171,15 +170,15 @@ impl Geodesic {
             _C4x,
 
             GEODESIC_ORDER,
-            nC3x_,
-            nC4x_,
+            _nC3x_,
+            _nC4x_,
             maxit1_,
             maxit2_,
 
             tiny_,
             tol0_,
             tol1_,
-            tol2_,
+            _tol2_,
             tolb_,
             xthresh_,
         }
@@ -192,10 +191,15 @@ impl Geodesic {
     pub fn _C3f(&self, eps: f64, c: &mut [f64]) {
         let mut mult = 1.0;
         let mut o = 0;
-        for l in 1..self.GEODESIC_ORDER as usize {
+        for (l, c_item) in c
+            .iter_mut()
+            .enumerate()
+            .take(self.GEODESIC_ORDER as usize)
+            .skip(1)
+        {
             let m = self.GEODESIC_ORDER as usize - l - 1;
             mult *= eps;
-            c[l] = mult * geomath::polyval(m as isize, &self._C3x[o..], eps);
+            *c_item = mult * geomath::polyval(m as isize, &self._C3x[o..], eps);
             o += m + 1;
         }
     }
@@ -203,14 +207,15 @@ impl Geodesic {
     pub fn _C4f(&self, eps: f64, c: &mut [f64]) {
         let mut mult = 1.0;
         let mut o = 0;
-        for l in 0..self.GEODESIC_ORDER as usize {
+        for (l, c_item) in c.iter_mut().enumerate().take(self.GEODESIC_ORDER as usize) {
             let m = self.GEODESIC_ORDER as usize - l - 1;
-            c[l] = mult * geomath::polyval(m as isize, &self._C4x[o..], eps);
+            *c_item = mult * geomath::polyval(m as isize, &self._C4x[o..], eps);
             o += m + 1;
             mult *= eps;
         }
     }
 
+    #[allow(clippy::too_many_arguments)]
     pub fn _Lengths(
         &self,
         eps: f64,
@@ -246,17 +251,17 @@ impl Geodesic {
                 A2 = geomath::_A2m1f(eps, self.GEODESIC_ORDER);
                 geomath::_C2f(eps, C2a, self.GEODESIC_ORDER);
                 m0x = A1 - A2;
-                A2 = 1.0 + A2;
+                A2 += 1.0;
             }
-            A1 = 1.0 + A1;
+            A1 += 1.0;
         }
         if outmask & caps::DISTANCE != 0 {
-            let B1 = geomath::sin_cos_series(true, ssig2, csig2, &C1a)
-                - geomath::sin_cos_series(true, ssig1, csig1, &C1a);
+            let B1 = geomath::sin_cos_series(true, ssig2, csig2, C1a)
+                - geomath::sin_cos_series(true, ssig1, csig1, C1a);
             s12b = A1 * (sig12 + B1);
             if outmask & (caps::REDUCEDLENGTH | caps::GEODESICSCALE) != 0 {
-                let B2 = geomath::sin_cos_series(true, ssig2, csig2, &C2a)
-                    - geomath::sin_cos_series(true, ssig1, csig1, &C2a);
+                let B2 = geomath::sin_cos_series(true, ssig2, csig2, C2a)
+                    - geomath::sin_cos_series(true, ssig1, csig1, C2a);
                 J12 = m0x * sig12 + (A1 * B1 - A2 * B2);
             }
         } else if outmask & (caps::REDUCEDLENGTH | caps::GEODESICSCALE) != 0 {
@@ -264,8 +269,8 @@ impl Geodesic {
                 C2a[l as usize] = A1 * C1a[l as usize] - A2 * C2a[l as usize];
             }
             J12 = m0x * sig12
-                + (geomath::sin_cos_series(true, ssig2, csig2, &C2a)
-                    - geomath::sin_cos_series(true, ssig1, csig1, &C2a));
+                + (geomath::sin_cos_series(true, ssig2, csig2, C2a)
+                    - geomath::sin_cos_series(true, ssig1, csig1, C2a));
         }
         if outmask & caps::REDUCEDLENGTH != 0 {
             m0 = m0x;
@@ -281,6 +286,7 @@ impl Geodesic {
         (s12b, m12b, m0, M12, M21)
     }
 
+    #[allow(clippy::too_many_arguments)]
     pub fn _InverseStart(
         &self,
         sbet1: f64,
@@ -411,7 +417,8 @@ impl Geodesic {
                 calp1 = sbet12a - cbet2 * sbet1 * geomath::sq(somg12) / (1.0 - comg12);
             }
         }
-        if !(salp1 <= 0.0) {
+
+        if salp1 > 0.0 || salp1.is_nan() {
             geomath::norm(&mut salp1, &mut calp1);
         } else {
             salp1 = 1.0;
@@ -420,6 +427,7 @@ impl Geodesic {
         (sig12, salp1, calp1, salp2, calp2, dnm)
     }
 
+    #[allow(clippy::too_many_arguments)]
     pub fn _Lambda12(
         &self,
         sbet1: f64,
@@ -476,8 +484,8 @@ impl Geodesic {
         let k2 = geomath::sq(calp0) * self._ep2;
         let eps = k2 / (2.0 * (1.0 + (1.0 + k2).sqrt()) + k2);
         self._C3f(eps, C3a);
-        let B312 = geomath::sin_cos_series(true, ssig2, csig2, &C3a)
-            - geomath::sin_cos_series(true, ssig1, csig1, &C3a);
+        let B312 = geomath::sin_cos_series(true, ssig2, csig2, C3a)
+            - geomath::sin_cos_series(true, ssig1, csig1, C3a);
         let domg12 = -self.f * self._A3f(eps) * salp0 * (sig12 + B312);
         let lam12 = eta + domg12;
 
@@ -577,9 +585,7 @@ impl Geodesic {
         let swapp = if lat1.abs() < lat2.abs() { -1.0 } else { 1.0 };
         if swapp < 0.0 {
             lonsign *= -1.0;
-            let _l = lat2;
-            lat2 = lat1;
-            lat1 = _l;
+            std::mem::swap(&mut lat2, &mut lat1);
         }
         let latsign = if lat1 < 0.0 { 1.0 } else { -1.0 };
         lat1 *= latsign;
@@ -601,10 +607,8 @@ impl Geodesic {
             if cbet2 == cbet1 {
                 sbet2 = if sbet2 < 0.0 { sbet1 } else { -sbet1 };
             }
-        } else {
-            if sbet2.abs() == -sbet1 {
-                cbet2 = cbet1;
-            }
+        } else if sbet2.abs() == -sbet1 {
+            cbet2 = cbet1;
         }
 
         let dn1 = (1.0 + self._ep2 * geomath::sq(sbet1)).sqrt();
@@ -751,7 +755,10 @@ impl Geodesic {
                     domg12 = res.9;
                     let dv = res.10;
 
-                    if tripb || !(v.abs() >= if tripn { 8.0 } else { 1.0 } * self.tol0_) {
+                    if tripb
+                        || v.abs() < if tripn { 8.0 } else { 1.0 } * self.tol0_
+                        || v.abs().is_nan()
+                    {
                         break;
                     };
                     if v > 0.0 && (numit > self.maxit1_ || calp1 / salp1 > calp1b / salp1b) {
@@ -841,8 +848,10 @@ impl Geodesic {
                 comg12 = omg12.cos();
             }
 
+            // We're diverging from Karney's implementation here 
+            // which uses the hardcoded constant: -0.7071 for FRAC_1_SQRT_2
             let alp12: f64;
-            if !meridian && comg12 > -0.7071 && sbet2 - sbet1 < 1.75 {
+            if !meridian && comg12 > -FRAC_1_SQRT_2 && sbet2 - sbet1 < 1.75 {
                 let domg12 = 1.0 + comg12;
                 let dbet1 = 1.0 + cbet1;
                 let dbet2 = 1.0 + cbet2;
@@ -865,16 +874,12 @@ impl Geodesic {
         }
 
         if swapp < 0.0 {
-            let _s = salp2;
-            salp2 = salp1;
-            salp1 = _s;
-            let _c = calp2;
-            calp2 = calp1;
-            calp1 = _c;
+            std::mem::swap(&mut salp2, &mut salp1);
+
+            std::mem::swap(&mut calp2, &mut calp1);
+
             if outmask & caps::GEODESICSCALE != 0 {
-                let _m = M21;
-                M21 = M12;
-                M12 = _m;
+                std::mem::swap(&mut M21, &mut M12);
             }
         }
         salp1 *= swapp * lonsign;
@@ -895,7 +900,7 @@ impl Geodesic {
         mut outmask: u64,
     ) -> (f64, f64, f64, f64, f64, f64, f64, f64, f64) {
         if !arcmode {
-            outmask = outmask | caps::DISTANCE_IN;
+            outmask |= caps::DISTANCE_IN
         };
 
         let line =
@@ -1289,6 +1294,7 @@ mod tests {
     use approx::assert_relative_eq;
     use std::io::BufRead;
 
+    #[allow(clippy::type_complexity)]
     const TESTCASES: &[(f64, f64, f64, f64, f64, f64, f64, f64, f64, f64, f64, f64)] = &[
         (
             35.60777,
@@ -1680,10 +1686,10 @@ mod tests {
         assert_eq!(res.3, 0.7047823085448635);
         assert_eq!(res.4, 0.7095309793242709);
         assert_eq!(res.5, 0.7046742434480923);
-        assert_eq!(res.6.is_nan(), true);
-        assert_eq!(res.7.is_nan(), true);
-        assert_eq!(res.8.is_nan(), true);
-        assert_eq!(res.9.is_nan(), true);
+        assert!(res.6.is_nan());
+        assert!(res.7.is_nan());
+        assert!(res.8.is_nan());
+        assert!(res.9.is_nan());
     }
 
     #[test]
@@ -1699,14 +1705,14 @@ mod tests {
             0.017453292519943295,
             0.01745240643728351,
             0.9998476951563913,
-            &mut vec![0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0],
-            &mut vec![0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0],
+            &mut [0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0],
+            &mut [0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0],
         );
         assert_eq!(res.0, -1.0);
         assert_relative_eq!(res.1, 0.7095310092765433, epsilon = 1e-13);
         assert_relative_eq!(res.2, 0.7046742132893822, epsilon = 1e-13);
-        assert_eq!(res.3.is_nan(), true);
-        assert_eq!(res.4.is_nan(), true);
+        assert!(res.3.is_nan());
+        assert!(res.4.is_nan());
         assert_eq!(res.5, 1.0000002548969817);
 
         let res = geod._InverseStart(
@@ -1719,14 +1725,14 @@ mod tests {
             0.017453292519943295,
             0.01745240643728351,
             0.9998476951563913,
-            &mut vec![0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0],
-            &mut vec![0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0],
+            &mut [0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0],
+            &mut [0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0],
         );
         assert_eq!(res.0, -1.0);
         assert_relative_eq!(res.1, 0.7095310092765433, epsilon = 1e-13);
         assert_relative_eq!(res.2, 0.7046742132893822, epsilon = 1e-13);
-        assert_eq!(res.3.is_nan(), true);
-        assert_eq!(res.4.is_nan(), true);
+        assert!(res.3.is_nan());
+        assert!(res.4.is_nan());
         assert_eq!(res.5, 1.0000002548969817);
     }
 
@@ -1745,9 +1751,9 @@ mod tests {
             0.01745240643728351,
             0.9998476951563913,
             true,
-            &mut vec![0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0],
-            &mut vec![0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0],
-            &mut vec![0.0, 1.0, 2.0, 3.0, 4.0, 5.0],
+            &mut [0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0],
+            &mut [0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0],
+            &mut [0.0, 1.0, 2.0, 3.0, 4.0, 5.0],
         );
         assert_eq!(res1.0, 1.4834408705897495e-09);
         assert_eq!(res1.1, 0.7094236675312185);
@@ -1773,7 +1779,7 @@ mod tests {
             0.01745240643728351,
             0.9998476951563913,
             true,
-            &mut vec![
+            &mut [
                 0.0,
                 -0.00041775465696698233,
                 -4.362974596862037e-08,
@@ -1782,7 +1788,7 @@ mod tests {
                 -2.226614930167366e-18,
                 -1.1627237498131586e-21,
             ],
-            &mut vec![
+            &mut [
                 0.0,
                 -0.0008355098973052918,
                 -1.7444619952659748e-07,
@@ -1791,7 +1797,7 @@ mod tests {
                 -2.2251271876594078e-17,
                 1.2789961247944744e-20,
             ],
-            &mut vec![
+            &mut [
                 0.0,
                 0.00020861391868413911,
                 4.3547247296823945e-08,
@@ -1834,11 +1840,11 @@ mod tests {
             &mut c1a,
             &mut c2a,
         );
-        assert_eq!(res1.0.is_nan(), true);
+        assert!(res1.0.is_nan());
         assert_eq!(res1.1, 0.024679842274314294);
         assert_eq!(res1.2, 0.0016717180169067588);
-        assert_eq!(res1.3.is_nan(), true);
-        assert_eq!(res1.4.is_nan(), true);
+        assert!(res1.3.is_nan());
+        assert!(res1.4.is_nan());
 
         let res2 = geod._Lengths(
             0.0008355096040059597,
@@ -1852,7 +1858,7 @@ mod tests {
             0.9998487145115275,
             1.0,
             4101,
-            &mut vec![
+            &mut [
                 0.0,
                 -0.00041775465696698233,
                 -4.362974596862037e-08,
@@ -1861,7 +1867,7 @@ mod tests {
                 -2.226614930167366e-18,
                 -1.1627237498131586e-21,
             ],
-            &mut vec![
+            &mut [
                 0.0,
                 -0.0008355098973052918,
                 -1.7444619952659748e-07,
@@ -1871,11 +1877,11 @@ mod tests {
                 1.2789961247944744e-20,
             ],
         );
-        assert_eq!(res2.0.is_nan(), true);
+        assert!(res2.0.is_nan());
         assert_eq!(res2.1, 0.02467984121870759);
         assert_eq!(res2.2, 0.0016717181597332804);
-        assert_eq!(res2.3.is_nan(), true);
-        assert_eq!(res2.4.is_nan(), true);
+        assert!(res2.3.is_nan());
+        assert!(res2.4.is_nan());
 
         let res3 = geod._Lengths(
             0.0008355096040059597,
@@ -1889,7 +1895,7 @@ mod tests {
             0.9998487145115275,
             1.0,
             1920,
-            &mut vec![
+            &mut [
                 0.0,
                 -0.00041775469264372037,
                 -4.362975342068502e-08,
@@ -1898,7 +1904,7 @@ mod tests {
                 -2.2266158809456692e-18,
                 -1.1627243456014359e-21,
             ],
-            &mut vec![
+            &mut [
                 0.0,
                 -0.0008355099686589174,
                 -1.744462293162189e-07,
@@ -1909,10 +1915,10 @@ mod tests {
             ],
         );
         assert_eq!(res3.0, 0.024682347295447677);
-        assert_eq!(res3.1.is_nan(), true);
-        assert_eq!(res3.2.is_nan(), true);
-        assert_eq!(res3.3.is_nan(), true);
-        assert_eq!(res3.4.is_nan(), true);
+        assert!(res3.1.is_nan());
+        assert!(res3.2.is_nan());
+        assert!(res3.3.is_nan());
+        assert!(res3.4.is_nan());
 
         let res = geod._Lengths(
             0.0007122620325664751,
@@ -1946,10 +1952,10 @@ mod tests {
             ],
         );
         assert_eq!(res.0, 1.4056304412645388);
-        assert_eq!(res.1.is_nan(), true);
-        assert_eq!(res.2.is_nan(), true);
-        assert_eq!(res.3.is_nan(), true);
-        assert_eq!(res.4.is_nan(), true);
+        assert!(res.1.is_nan());
+        assert!(res.2.is_nan());
+        assert!(res.3.is_nan());
+        assert!(res.4.is_nan());
     }
 
     #[test]
@@ -2701,7 +2707,7 @@ mod tests {
                 // Our area calculation differs significantly (~1e7) from the value in GeodTest.dat for
                 // line 400001, BUT our value also perfectly matches the value returned by GeographicLib
                 // (C++) 1.51. Here's the problem line, for reference:
-                // 4.199535552987 0 90 -4.199535552987 179.398106343454992238 90 19970505.608097404994 180 0 
+                // 4.199535552987 0 90 -4.199535552987 179.398106343454992238 90 19970505.608097404994 180 0
                 if line_num != 400001 {
                     assert_relative_eq!(S12, S12_out, epsilon = 3e10); // Note: unreasonable tolerance
                 }

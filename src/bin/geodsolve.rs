@@ -70,7 +70,7 @@ impl Runner {
     }
 
     fn handle_line(&self, line: String) {
-        let fields: Vec<f64> = line.split(" ").map(|s| s.parse::<f64>().unwrap()).collect();
+        let fields: Vec<f64> = line.split(' ').map(|s| s.parse::<f64>().unwrap()).collect();
         let output_fields = if self.is_inverse {
             self.compute_inverse(&fields)
         } else {
@@ -98,7 +98,8 @@ impl Runner {
             _computed_S12,
             computed_a12,
         ) = self.geod.direct(lat1, lon1, azi1, s12);
-        let output_fields = if self.is_full_output {
+        
+        if self.is_full_output {
             // TODO - we're currently omitting several fields, and only outputting what's
             //        necessary to pass the validation tool
             vec![
@@ -114,8 +115,7 @@ impl Runner {
             ]
         } else {
             vec![computed_lat2, computed_lon2, computed_azi2]
-        };
-        output_fields
+        }
     }
 
     fn compute_inverse(&self, fields: &Vec<f64>) -> Vec<f64> {
@@ -130,7 +130,8 @@ impl Runner {
             .geod
             .inverse(input_lat1, input_lon1, input_lat2, input_lon2);
 
-        let output_fields = if self.is_full_output {
+        
+        if self.is_full_output {
             // TODO - we're currently omitting several fields, and only outputting what's
             //        necessary to pass the validation tool
             vec![
@@ -138,7 +139,6 @@ impl Runner {
             ]
         } else {
             vec![azi1, azi2, s12]
-        };
-        output_fields
+        }
     }
 }

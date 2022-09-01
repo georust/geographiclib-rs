@@ -5,7 +5,7 @@ use crate::geodesiccapability as caps;
 use crate::geomath;
 use std::collections::HashMap;
 
-#[derive(Debug)]
+#[derive(Copy, Clone, PartialEq, PartialOrd, Debug)]
 pub struct GeodesicLine {
     tiny_: f64, // This should be moved to consts
     _A1m1: f64,
@@ -34,15 +34,15 @@ pub struct GeodesicLine {
     _somg1: f64,
     _ssig1: f64,
     _stau1: f64,
-    a13: f64,
-    a: f64,
+    _a13: f64,
+    _a: f64,
     azi1: f64,
     calp1: f64,
     caps: u64,
     f: f64,
     lat1: f64,
     lon1: f64,
-    s13: f64,
+    _s13: f64,
     salp1: f64,
 }
 
@@ -72,7 +72,7 @@ impl GeodesicLine {
         // This was taken from geodesic, putting it here for convenience
         let tiny_ = geomath::get_min_val().sqrt();
 
-        let a = geod.a;
+        let _a = geod.a;
         let f = geod.f;
         let _b = geod._b;
         let _c2 = geod._c2;
@@ -149,12 +149,12 @@ impl GeodesicLine {
         let mut _B41 = 0.0;
         if caps & caps::CAP_C4 != 0 {
             geod._C4f(eps, &mut _C4a);
-            _A4 = geomath::sq(a) * _calp0 * _salp0 * geod._e2;
+            _A4 = geomath::sq(_a) * _calp0 * _salp0 * geod._e2;
             _B41 = geomath::sin_cos_series(false, _ssig1, _csig1, &_C4a);
         }
 
-        let s13 = std::f64::NAN;
-        let a13 = std::f64::NAN;
+        let _s13 = std::f64::NAN;
+        let _a13 = std::f64::NAN;
 
         GeodesicLine {
             tiny_,
@@ -184,15 +184,15 @@ impl GeodesicLine {
             _somg1,
             _ssig1,
             _stau1,
-            a,
-            a13,
+            _a,
+            _a13,
             azi1,
             calp1,
             caps,
             f,
             lat1,
             lon1,
-            s13,
+            _s13,
             salp1,
         }
     }
@@ -251,7 +251,7 @@ impl GeodesicLine {
                 csig2 = self._csig1 * csig12 - self._ssig1 * ssig12;
                 B12 = geomath::sin_cos_series(true, ssig2, csig2, &self._C1a);
                 let serr = (1.0 + self._A1m1) * (sig12 + (B12 - self._B11)) - s12_a12 / self._b;
-                sig12 = sig12 - serr / (1.0 + self._k2 * geomath::sq(ssig2)).sqrt();
+                sig12 -= serr / (1.0 + self._k2 * geomath::sq(ssig2)).sqrt();
                 ssig12 = sig12.sin();
                 csig12 = sig12.cos();
             }
@@ -284,7 +284,7 @@ impl GeodesicLine {
         if outmask & caps::LONGITUDE != 0 {
             let somg2 = self._salp0 * ssig2;
             let comg2 = csig2;
-            let E = (1.0 as f64).copysign(self._salp0);
+            let E = 1.0_f64.copysign(self._salp0);
             let omg12 = if outmask & caps::LONG_UNROLL != 0 {
                 E * (sig12 - (ssig2.atan2(csig2) - self._ssig1.atan2(self._csig1))
                     + ((E * somg2).atan2(comg2) - (E * self._somg1).atan2(self._comg1)))
@@ -411,17 +411,17 @@ mod tests {
         assert_eq!(res.2, 0.00023398621812867812);
         assert_eq!(res.3, 10.000000002727887);
         assert_eq!(res.4, 150.0);
-        assert_eq!(res.5.is_nan(), true);
-        assert_eq!(res.6.is_nan(), true);
-        assert_eq!(res.7.is_nan(), true);
-        assert_eq!(res.8.is_nan(), true);
+        assert!(res.5.is_nan());
+        assert!(res.6.is_nan());
+        assert!(res.7.is_nan());
+        assert!(res.8.is_nan());
     }
 
     #[test]
     fn test_init() {
         let geod = Geodesic::wgs84();
         let gl = GeodesicLine::new(&geod, 0.0, 0.0, 0.0, None, None, None);
-        assert_eq!(gl.a, 6378137.0);
+        assert_eq!(gl._a, 6378137.0);
         assert_eq!(gl.f, 0.0033528106647474805);
         assert_eq!(gl._b, 6356752.314245179);
         assert_eq!(gl._c2, 40589732499314.76);
@@ -440,7 +440,7 @@ mod tests {
         assert_eq!(gl._csig1, 1.0);
         assert_eq!(gl._comg1, 1.0);
         assert_eq!(gl._k2, geod._ep2);
-        assert_eq!(gl.s13.is_nan(), true);
-        assert_eq!(gl.a13.is_nan(), true);
+        assert!(gl._s13.is_nan());
+        assert!(gl._a13.is_nan());
     }
 }
