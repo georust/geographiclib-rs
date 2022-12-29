@@ -1,4 +1,9 @@
-## UNRELEASED
+## 0.2.2
+
+This patch release includes only small clippy/lint fixes, and should not
+appreciably affect behavior. Thanks to @Quba1 for the cleanup!
+
+- <https://github.com/georust/geographiclib-rs/pull/45>
 
 ## 0.2.1
 
