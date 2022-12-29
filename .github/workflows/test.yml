@@ -6,7 +6,7 @@ jobs:
     runs-on: ubuntu-latest
     if: "!contains(github.event.head_commit.message, '[skip ci]')"
     container:
-      image: georust/geo-ci
+      image: rust:1.66
     steps:
       - uses: actions/checkout@v3
       - run: script/download-test-data.sh
