@@ -25,7 +25,7 @@ lazy_static = "1.4.0"
 
 [dev-dependencies]
 approx = "0.5.1"
-criterion = "0.3.1"
+criterion = "0.4.0"
 geographiclib = "0.1.0"
 
 [[bench]]
