@@ -6,10 +6,9 @@ jobs:
     runs-on: ubuntu-latest
     if: "!contains(github.event.head_commit.message, '[skip ci]')"
     container:
-      image: georust/geo-ci
+      image: rust:1.66
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - run: script/download-test-data.sh
       - run: cargo test
       - run: cargo test --features test_full
