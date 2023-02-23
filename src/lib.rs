@@ -6,7 +6,8 @@ pub use geodesiccapability as capability;
 
 mod geodesicline;
 mod geomath;
-pub mod polygonarea;
+mod polygonarea;
+pub use polygonarea::PolygonArea;
 
 #[macro_use]
 extern crate lazy_static;

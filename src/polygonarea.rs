@@ -4,6 +4,7 @@ use crate::geodesic::DirectGeodesic;
 use crate::geomath::ang_normalize;
 use crate::geomath::ang_diff;
 
+/// Compute the perimeter and area of a polygon on a Geodesic.
 #[derive(Debug, Clone)]
 pub struct PolygonArea<'a> {
     geoid: &'a Geodesic,
