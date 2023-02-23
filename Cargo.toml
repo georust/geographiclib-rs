@@ -22,6 +22,7 @@ test_short = []
 
 [dependencies]
 lazy_static = "1.4.0"
+accurate = { version = "0.3", optional = true, default-features = false }
 
 [dev-dependencies]
 approx = "0.5.1"
