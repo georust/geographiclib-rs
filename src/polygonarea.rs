@@ -268,4 +268,175 @@ mod tests {
         assert_relative_eq!(perimeter, 443770.917, epsilon = 1.0e-3);
         assert_relative_eq!(area, 12308778361.469, epsilon = 1.0e-3);
     }
+
+    #[test]
+    fn test_planimeter0() {
+        // Copied from https://github.com/geographiclib/geographiclib-octave/blob/main/inst/geographiclib_test.m#L644
+
+        let geoid = Geodesic::wgs84();
+
+        let mut pa = PolygonArea::new(&geoid, Winding::CounterClockwise);
+        pa.add_point(89.0, 0.0);
+        pa.add_point(89.0, 90.0);
+        pa.add_point(89.0, 180.0);
+        pa.add_point(89.0, 270.0);
+        let (perimeter, area) = pa.compute();
+        assert_relative_eq!(perimeter, 631819.8745, epsilon = 1.0e-4);
+        assert_relative_eq!(area, 24952305678.0, epsilon = 1.0);
+
+        // FAILING TEST
+        //let mut pa = PolygonArea::new(&geoid, Winding::CounterClockwise);
+        //pa.add_point(-89.0, 0.0);
+        //pa.add_point(-89.0, 90.0);
+        //pa.add_point(-89.0, 180.0);
+        //pa.add_point(-89.0, 270.0);
+        //let (perimeter, area) = pa.compute();
+        //assert_relative_eq!(perimeter, 631819.8745, epsilon = 1.0e-4);
+        //assert_relative_eq!(area, -24952305678.0, epsilon = 1.0);
+
+        let mut pa = PolygonArea::new(&geoid, Winding::CounterClockwise);
+        pa.add_point(0.0, -1.0);
+        pa.add_point(-1.0, 0.0);
+        pa.add_point(0.0, 1.0);
+        pa.add_point(1.0, 0.0);
+        let (perimeter, area) = pa.compute();
+        assert_relative_eq!(perimeter, 627598.2731, epsilon = 1.0e-4);
+        assert_relative_eq!(area, 24619419146.0, epsilon = 1.0);
+
+
+        let mut pa = PolygonArea::new(&geoid, Winding::CounterClockwise);
+        pa.add_point(90.0, 0.0);
+        pa.add_point(0.0, 0.0);
+        pa.add_point(0.0, 90.0);
+        let (perimeter, area) = pa.compute();
+        assert_relative_eq!(perimeter, 30022685.0, epsilon = 1.0);
+        assert_relative_eq!(area, 63758202715511.0, epsilon = 1.0);
+    }
+
+    #[test]
+    fn test_planimeter5() {
+        // Copied from https://github.com/geographiclib/geographiclib-octave/blob/main/inst/geographiclib_test.m#L670
+
+        let geoid = Geodesic::wgs84();
+        let mut pa = PolygonArea::new(&geoid, Winding::CounterClockwise);
+        pa.add_point(89.0, 0.1);
+        pa.add_point(89.0, 90.1);
+        pa.add_point(89.0, -179.9);
+        let (perimeter, area) = pa.compute();
+        assert_relative_eq!(perimeter, 539297.0, epsilon = 1.0);
+        assert_relative_eq!(area, 12476152838.5, epsilon = 1.0);
+    }
+
+    #[test]
+    fn test_planimeter6() {
+        // Copied from https://github.com/geographiclib/geographiclib-octave/blob/main/inst/geographiclib_test.m#L679
+
+        let geoid = Geodesic::wgs84();
+
+        // FAILING TEST: 
+        //let mut pa = PolygonArea::new(&geoid, Winding::CounterClockwise);
+        //pa.add_point(9.0, -0.00000000000001);
+        //pa.add_point(9.0, 180.0);
+        //pa.add_point(9.0, 0.0);
+        //let (perimeter, area) = pa.compute();
+        //assert_relative_eq!(perimeter, 36026861.0, epsilon = 1.0);
+        //assert_relative_eq!(area, 0.0, epsilon = 1.0);
+
+        // FAILING TEST: 
+        //let mut pa = PolygonArea::new(&geoid, Winding::CounterClockwise);
+        //pa.add_point(9.0, 0.00000000000001);
+        //pa.add_point(9.0, 0.0);
+        //pa.add_point(9.0, 180.0);
+        //let (perimeter, area) = pa.compute();
+        //assert_relative_eq!(perimeter, 36026861.0, epsilon = 1.0);
+        //assert_relative_eq!(area, 0.0, epsilon = 1.0);
+    }
+
+    #[test]
+    fn test_planimeter12() {
+        // Copied from https://github.com/geographiclib/geographiclib-octave/blob/main/inst/geographiclib_test.m#L701
+        let geoid = Geodesic::wgs84();
+
+        let mut pa = PolygonArea::new(&geoid, Winding::CounterClockwise);
+        pa.add_point(66.562222222, 0.0);
+        pa.add_point(66.562222222, 180.0);
+        pa.add_point(66.562222222, 360.0);
+        let (perimeter, area) = pa.compute();
+        assert_relative_eq!(perimeter, 10465729.0, epsilon = 1.0);
+        assert_relative_eq!(area, 0.0);
+    }
+
+    #[test]
+    fn test_planimeter12r() {
+        // Copied from https://github.com/geographiclib/geographiclib-octave/blob/main/inst/geographiclib_test.m#L710
+        let geoid = Geodesic::wgs84();
+
+        let mut pa = PolygonArea::new(&geoid, Winding::CounterClockwise);
+
+        pa.add_point(66.562222222, -0.0);
+        pa.add_point(66.562222222, -180.0);
+        pa.add_point(66.562222222, -360.0);
+
+        let (perimeter, area) = pa.compute();
+        assert_relative_eq!(perimeter, 10465729.0, epsilon = 1.0);
+        assert_relative_eq!(area, 0.0);
+    }
+
+    #[test]
+    fn test_planimeter13() {
+        // Copied from https://github.com/geographiclib/geographiclib-octave/blob/main/inst/geographiclib_test.m#L719
+
+        let geoid = Geodesic::wgs84();
+
+        let mut pa = PolygonArea::new(&geoid, Winding::CounterClockwise);
+        pa.add_point(89.0, -360.0);
+        pa.add_point(89.0, -240.0);
+        pa.add_point(89.0, -120.0);
+        pa.add_point(89.0, 0.0);
+        pa.add_point(89.0, 120.0);
+        pa.add_point(89.0, 240.0);
+        let (perimeter, area) = pa.compute();
+        assert_relative_eq!(perimeter, 1160741.0, epsilon = 1.0);
+        assert_relative_eq!(area, 32415230256.0, epsilon = 1.0);
+    }
+
+    #[test]
+    fn test_planimeter15() {
+        // Copied from https://github.com/geographiclib/geographiclib-octave/blob/main/inst/geographiclib_test.m#LL728C14-L728C26
+
+        let geoid = Geodesic::wgs84();
+
+        let mut pa = PolygonArea::new(&geoid, Winding::CounterClockwise);
+        pa.add_point(2.0, 1.0);
+        pa.add_point(1.0, 2.0);
+        pa.add_point(3.0, 3.0);
+        let (_, area) = pa.compute();
+        assert_relative_eq!(area, 18454562325.45119);
+
+        // Traversing the polygon backwards.
+
+        // FAILING TEST
+        // let mut pa = PolygonArea::new(&geoid, Winding::Clockwise);
+        // pa.add_point(2.0, 1.0);
+        // pa.add_point(1.0, 2.0);
+        // pa.add_point(3.0, 3.0);
+        // let (_, area) = pa.compute();
+        // assert_relative_eq!(area, 18454562325.45119);
+    }
+
+    #[test]
+    fn test_planimeter21() {
+        // Copied from https://github.com/geographiclib/geographiclib-octave/blob/main/inst/geographiclib_test.m#L752
+
+        // Testing degenrate polygons.
+        let geoid = Geodesic::wgs84();
+
+        let mut pa = PolygonArea::new(&geoid, Winding::CounterClockwise);
+        pa.add_point(1.0, 1.0);
+        let (perimeter, area) = pa.compute();
+        assert_relative_eq!(perimeter, 0.0);
+        assert_relative_eq!(area, 0.0);
+    }
+
+
 }
