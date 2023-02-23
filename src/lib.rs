@@ -8,6 +8,7 @@ mod geodesicline;
 mod geomath;
 mod polygonarea;
 pub use polygonarea::PolygonArea;
+pub use polygonarea::Winding;
 
 #[macro_use]
 extern crate lazy_static;

@@ -20,6 +20,8 @@ test_full = []
 # You must run script/download-test-data.sh before using this feature
 test_short = []
 
+default = ["accurate"]
+
 [dependencies]
 lazy_static = "1.4.0"
 accurate = { version = "0.3", optional = true, default-features = false }
