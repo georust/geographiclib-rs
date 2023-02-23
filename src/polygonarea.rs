@@ -41,6 +41,8 @@ pub struct PolygonArea<'a> {
 /// assert_relative_eq!(area, 12308778361.469452);
 /// ```
 impl<'a> PolygonArea<'a> {
+
+    /// Create a new PolygonArea using a Geodesic.
     pub fn new(geoid: &'a Geodesic) -> PolygonArea {
         PolygonArea {
             geoid,
