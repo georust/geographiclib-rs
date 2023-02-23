@@ -1,3 +1,10 @@
+## unreleased
+
+### New Features
+
+* Added `PolygonArea` to allow calculating perimeter and area of a polygon on a geodesic.
+
+
 ## 0.2.2
 
 This patch release includes only small clippy/lint fixes, and should not
