@@ -473,6 +473,20 @@ mod tests {
         assert_relative_eq!(perimeter, 0.0);
         assert_relative_eq!(area, 0.0);
     }
+    
+    #[test]
+    fn test_planimeter29() {
+        // Check transitdirect vs transit zero handling consistency
+
+        let geoid = Geodesic::wgs84();
+        let mut pa = PolygonArea::new(&geoid, Winding::CounterClockwise);
+        pa.add_point(0.0, 0.0);
+        pa.add_edge(90.0, 1000.0);
+        pa.add_edge(0.0, 1000.0);
+        pa.add_edge(-90.0, 1000.0);
+        let (_, area) = pa.compute();
+        assert_relative_eq!(area, 1000000.0, epsilon = 0.01);   
+    }
 
 
 }
