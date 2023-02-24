@@ -237,10 +237,13 @@ impl<'a> PolygonArea<'a> {
             Winding::CounterClockwise => -area,
         };
 
-        // Put area in [0, area0)
-        if area >= area0 {
+        dbg!("after winding", area);
+
+        // Put area in (-area0/2, area0/2]
+        if area > area0/2.0 {
             area -= area0;
-        } else if area < 0.0 {
+        }
+        else if area <= -area0/2.0 {
             area += area0;
         }
 
@@ -255,7 +258,7 @@ mod tests {
     use approx::assert_relative_eq;
 
     #[test]
-    fn test_polygonarea() {
+    fn test_simple_polygonarea() {
         let geoid = Geodesic::wgs84();
         let mut pa = PolygonArea::new(&geoid, Winding::CounterClockwise);
 
@@ -268,6 +271,19 @@ mod tests {
 
         assert_relative_eq!(perimeter, 443770.917, epsilon = 1.0e-3);
         assert_relative_eq!(area, 12308778361.469, epsilon = 1.0e-3);
+
+
+        let mut pa = PolygonArea::new(&geoid, Winding::Clockwise);
+
+        pa.add_point(0.0, 0.0);
+        pa.add_point(0.0, 1.0);
+        pa.add_point(1.0, 1.0);
+        pa.add_point(1.0, 0.0);
+
+        let (perimeter, area) = pa.compute();
+
+        assert_relative_eq!(perimeter, 443770.917, epsilon = 1.0e-3);
+        assert_relative_eq!(area, -12308778361.469, epsilon = 1.0e-3);
     }
 
     #[test]
@@ -285,15 +301,14 @@ mod tests {
         assert_relative_eq!(perimeter, 631819.8745, epsilon = 1.0e-4);
         assert_relative_eq!(area, 24952305678.0, epsilon = 1.0);
 
-        // FAILING TEST
-        //let mut pa = PolygonArea::new(&geoid, Winding::CounterClockwise);
-        //pa.add_point(-89.0, 0.0);
-        //pa.add_point(-89.0, 90.0);
-        //pa.add_point(-89.0, 180.0);
-        //pa.add_point(-89.0, 270.0);
-        //let (perimeter, area) = pa.compute();
-        //assert_relative_eq!(perimeter, 631819.8745, epsilon = 1.0e-4);
-        //assert_relative_eq!(area, -24952305678.0, epsilon = 1.0);
+        let mut pa = PolygonArea::new(&geoid, Winding::CounterClockwise);
+        pa.add_point(-89.0, 0.0);
+        pa.add_point(-89.0, 90.0);
+        pa.add_point(-89.0, 180.0);
+        pa.add_point(-89.0, 270.0);
+        let (perimeter, area) = pa.compute();
+        assert_relative_eq!(perimeter, 631819.8745, epsilon = 1.0e-4);
+        assert_relative_eq!(area, -24952305678.0, epsilon = 1.0);
 
         let mut pa = PolygonArea::new(&geoid, Winding::CounterClockwise);
         pa.add_point(0.0, -1.0);
@@ -334,23 +349,21 @@ mod tests {
 
         let geoid = Geodesic::wgs84();
 
-        // FAILING TEST: 
-        //let mut pa = PolygonArea::new(&geoid, Winding::CounterClockwise);
-        //pa.add_point(9.0, -0.00000000000001);
-        //pa.add_point(9.0, 180.0);
-        //pa.add_point(9.0, 0.0);
-        //let (perimeter, area) = pa.compute();
-        //assert_relative_eq!(perimeter, 36026861.0, epsilon = 1.0);
-        //assert_relative_eq!(area, 0.0, epsilon = 1.0);
+        let mut pa = PolygonArea::new(&geoid, Winding::CounterClockwise);
+        pa.add_point(9.0, -0.00000000000001);
+        pa.add_point(9.0, 180.0);
+        pa.add_point(9.0, 0.0);
+        let (perimeter, area) = pa.compute();
+        assert_relative_eq!(perimeter, 36026861.0, epsilon = 1.0);
+        assert_relative_eq!(area, 0.0, epsilon = 1.0);
 
-        // FAILING TEST: 
-        //let mut pa = PolygonArea::new(&geoid, Winding::CounterClockwise);
-        //pa.add_point(9.0, 0.00000000000001);
-        //pa.add_point(9.0, 0.0);
-        //pa.add_point(9.0, 180.0);
-        //let (perimeter, area) = pa.compute();
-        //assert_relative_eq!(perimeter, 36026861.0, epsilon = 1.0);
-        //assert_relative_eq!(area, 0.0, epsilon = 1.0);
+        let mut pa = PolygonArea::new(&geoid, Winding::CounterClockwise);
+        pa.add_point(9.0, 0.00000000000001);
+        pa.add_point(9.0, 0.0);
+        pa.add_point(9.0, 180.0);
+        let (perimeter, area) = pa.compute();
+        assert_relative_eq!(perimeter, 36026861.0, epsilon = 1.0);
+        assert_relative_eq!(area, 0.0, epsilon = 1.0);
     }
 
     #[test]
@@ -414,15 +427,21 @@ mod tests {
         let (_, area) = pa.compute();
         assert_relative_eq!(area, 18454562325.45119);
 
-        // Traversing the polygon backwards.
+        // Switching the winding
+        let mut pa = PolygonArea::new(&geoid, Winding::Clockwise);
+        pa.add_point(2.0, 1.0);
+        pa.add_point(1.0, 2.0);
+        pa.add_point(3.0, 3.0);
+        let (_, area) = pa.compute();
+        assert_relative_eq!(area, -18454562325.45119);
 
-        // FAILING TEST
-        // let mut pa = PolygonArea::new(&geoid, Winding::Clockwise);
-        // pa.add_point(2.0, 1.0);
-        // pa.add_point(1.0, 2.0);
-        // pa.add_point(3.0, 3.0);
-        // let (_, area) = pa.compute();
-        // assert_relative_eq!(area, 18454562325.45119);
+        // Swaping lat and lon
+        let mut pa = PolygonArea::new(&geoid, Winding::CounterClockwise);
+        pa.add_point(1.0, 2.0);
+        pa.add_point(2.0, 1.0);
+        pa.add_point(3.0, 3.0);
+        let (_, area) = pa.compute();
+        assert_relative_eq!(area, -18454562325.45119);
     }
 
     #[test]
