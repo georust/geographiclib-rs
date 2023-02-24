@@ -1,7 +1,5 @@
 //! A subset of [geographiclib](https://geographiclib.sourceforge.io/) implemented in Rust.
 //!
-//! This library is a subset of the [geographiclib](https://geographiclib.sourceforge.io/) library
-//!
 //! # Examples
 //!
 //! ```rust
