@@ -40,7 +40,6 @@ pub struct PolygonArea<'a> {
     latest_lon: f64,
 }
 
-// Documentation for PolygonArea
 /// PolygonArea can be used to compute the perimeter and area of a polygon on a Geodesic.
 ///
 /// # Example
@@ -130,7 +129,7 @@ impl<'a> PolygonArea<'a> {
         self.num += 1;
     }
 
-    /// Return perimeter and area of polygon in meters / meters², consuming PolygonArea.
+    /// Return perimeter (meters) and area (meters²) of the polygon, consuming PolygonArea.
     /// 
     /// # Interpreting negative values
     /// 
