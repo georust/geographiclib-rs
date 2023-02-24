@@ -907,6 +907,11 @@ impl Geodesic {
             geodesicline::GeodesicLine::new(self, lat1, lon1, azi1, Some(outmask), None, None);
         line._gen_position(arcmode, s12_a12, outmask)
     }
+
+    /// Get the area of the geodesic in square meters
+    pub fn area(&self) -> f64 {
+        self._c2 * 4.0 * std::f64::consts::PI
+    }
 }
 
 /// Place a second point, given the first point, an azimuth, and a distance.

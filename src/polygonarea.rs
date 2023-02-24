@@ -131,6 +131,33 @@ impl<'a> PolygonArea<'a> {
     }
 
     /// Return perimeter and area of polygon in meters / meters², consuming PolygonArea.
+    /// 
+    /// # Interpreting negative values
+    /// 
+    /// A negative value can mean one of two things:
+    /// 1. The winding of the polygon is opposite the winding specified during creation of the PolygonArea.
+    /// 2. The polygon is larger than half the planet. In this case, to get the final area of the polygon, add the area of the planet to the result.
+    ///
+    /// # Negative value example
+    /// ```rust
+    /// use geographiclib_rs::{Geodesic, PolygonArea, Winding};
+    /// let g = Geodesic::wgs84();
+    /// let mut pa = PolygonArea::new(&g, Winding::CounterClockwise);
+    /// 
+    /// // Describe a polygon that covers all of the earth EXCEPT this small square
+    /// pa.add_point(0.0, 0.0);
+    /// pa.add_point(1.0, 0.0);
+    /// pa.add_point(1.0, 1.0);
+    /// pa.add_point(0.0, 1.0);
+    /// 
+    /// let (perimeter, mut area) = pa.compute();
+    /// 
+    /// if (area < 0.0) {
+    ///     let planetary_area = g.area();
+    ///     area += planetary_area;
+    /// }
+    /// assert_eq!(area, 510053312945726.94);
+    /// ```
     pub fn compute(mut self) -> (f64, f64) {
         #[allow(non_snake_case)]
         let (s12, _azi1, _azi2, _m12, _M12, _M21, S12, _a12) = self.geoid.inverse(
@@ -218,7 +245,7 @@ impl<'a> PolygonArea<'a> {
     }
 
     fn reduce_area(&self, area: f64) -> f64 {
-        let area0 = self.geoid._c2 * 4.0 * std::f64::consts::PI; // Area of astronomical body
+        let area0 = self.geoid.area(); // Area of the planet
         let mut area = area % area0;
 
         // Translation of the following cpp code:
