@@ -364,6 +364,22 @@ mod tests {
         let (perimeter, area) = pa.compute();
         assert_relative_eq!(perimeter, 36026861.0, epsilon = 1.0);
         assert_relative_eq!(area, 0.0, epsilon = 1.0);
+
+        let mut pa = PolygonArea::new(&geoid, Winding::CounterClockwise);
+        pa.add_point(9.0, 0.00000000000001);
+        pa.add_point(9.0, 180.0);
+        pa.add_point(9.0, 0.0);
+        let (perimeter, area) = pa.compute();
+        assert_relative_eq!(perimeter, 36026861.0, epsilon = 1.0);
+        assert_relative_eq!(area, 0.0, epsilon = 1.0);
+
+        let mut pa = PolygonArea::new(&geoid, Winding::CounterClockwise);
+        pa.add_point(9.0, -0.00000000000001);
+        pa.add_point(9.0, 0.0);
+        pa.add_point(9.0, 180.0);
+        let (perimeter, area) = pa.compute();
+        assert_relative_eq!(perimeter, 36026861.0, epsilon = 1.0);
+        assert_relative_eq!(area, 0.0, epsilon = 1.0);
     }
 
     #[test]
