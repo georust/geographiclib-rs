@@ -218,7 +218,7 @@ impl<'a> PolygonArea<'a> {
     }
 
     fn reduce_area(&self, area: f64) -> f64 {
-        let area0 = self.geoid._c2 * 4.0 * std::f64::consts::PI; // Area of earth
+        let area0 = self.geoid._c2 * 4.0 * std::f64::consts::PI; // Area of astronomical body
         let mut area = area % area0;
 
         // Translation of the following cpp code:
@@ -236,8 +236,6 @@ impl<'a> PolygonArea<'a> {
             Winding::Clockwise => area,
             Winding::CounterClockwise => -area,
         };
-
-        dbg!("after winding", area);
 
         // Put area in (-area0/2, area0/2]
         if area > area0/2.0 {
