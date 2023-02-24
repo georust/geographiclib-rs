@@ -3,7 +3,7 @@
 ### New Features
 
 * Added `PolygonArea` to allow calculating perimeter and area of a polygon on a geodesic.
-
+* Added `accurate` feature (enabled by default) for highly accurate `PolygonArea` calculations.
 
 ## 0.2.2
 
