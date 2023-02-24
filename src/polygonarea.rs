@@ -124,7 +124,7 @@ impl<'a> PolygonArea<'a> {
                 .direct(self.latest_lat, self.latest_lon, azimuth, distance);
         self.perimetersum += distance;
         self.areasum += S12;
-        self.crossings += PolygonArea::transit_direct(self.latest_lon, lon);
+        self.crossings += PolygonArea::transit(self.latest_lon, lon);
         self.latest_lat = lat;
         self.latest_lon = lon;
         self.num += 1;
@@ -144,7 +144,8 @@ impl<'a> PolygonArea<'a> {
     /// let g = Geodesic::wgs84();
     /// let mut pa = PolygonArea::new(&g, Winding::CounterClockwise);
     /// 
-    /// // Describe a polygon that covers all of the earth EXCEPT this small square
+    /// // Describe a polygon that covers all of the earth EXCEPT this small square.
+    /// // The outside of the polygon is in this square, the inside of the polygon is the rest of the earth.
     /// pa.add_point(0.0, 0.0);
     /// pa.add_point(1.0, 0.0);
     /// pa.add_point(1.0, 1.0);
@@ -213,37 +214,7 @@ impl<'a> PolygonArea<'a> {
             return 0;
         }
     }
-
-    fn transit_direct(lon1: f64, lon2: f64) -> i64 {
-        // Translation of the following cpp code:
-
-        // lon1 = remainder(lon1, real(2 * Math::td));
-        // lon2 = remainder(lon2, real(2 * Math::td));
-        // return ( (lon2 >= 0 && lon2 < Math::td ? 0 : 1) -
-        //         (lon1 >= 0 && lon1 < Math::td ? 0 : 1) );
-
-        let lon1 = lon1 % 720.0;
-        let lon2 = lon2 % 720.0;
-
-        let a = {
-            if lon2 >= 0.0 && lon2 < 360.0 {
-                0
-            } else {
-                1
-            }
-        };
-
-        let b = {
-            if lon1 >= 0.0 && lon1 < 360.0 {
-                0
-            } else {
-                1
-            }
-        };
-
-        return a - b;
-    }
-
+    
     fn reduce_area(&self, area: f64) -> f64 {
         let area0 = self.geoid.area(); // Area of the planet
         let mut area = area % area0;
@@ -297,7 +268,6 @@ mod tests {
         assert_relative_eq!(perimeter, 443770.917, epsilon = 1.0e-3);
         assert_relative_eq!(area, 12308778361.469, epsilon = 1.0e-3);
 
-
         let mut pa = PolygonArea::new(&geoid, Winding::Clockwise);
 
         pa.add_point(0.0, 0.0);
@@ -309,6 +279,28 @@ mod tests {
 
         assert_relative_eq!(perimeter, 443770.917, epsilon = 1.0e-3);
         assert_relative_eq!(area, -12308778361.469, epsilon = 1.0e-3);
+    }
+
+    #[test]
+    fn test_add_edge() {
+        let geoid = Geodesic::wgs84();
+        let mut pa = PolygonArea::new(&geoid, Winding::CounterClockwise);
+
+        pa.add_point(0.0, 0.0);
+
+        let (s12, azi1, _, _) = geoid.inverse(0.0, 0.0, 0.0, 1.0);
+        pa.add_edge(azi1, s12);
+
+        let (s12, azi1, _, _) = geoid.inverse(0.0, 1.0, 1.0, 1.0);
+        pa.add_edge(azi1, s12);
+
+        let (s12, azi1, _, _) = geoid.inverse(1.0, 1.0, 1.0, 0.0);
+        pa.add_edge(azi1, s12);
+
+        let (perimeter, area) = pa.compute();
+
+        assert_relative_eq!(perimeter, 443770.917, epsilon = 1.0e-3);
+        assert_relative_eq!(area, 12308778361.469, epsilon = 1.0e-3);
     }
 
     #[test]
@@ -344,11 +336,64 @@ mod tests {
         assert_relative_eq!(perimeter, 627598.2731, epsilon = 1.0e-4);
         assert_relative_eq!(area, 24619419146.0, epsilon = 1.0);
 
-
         let mut pa = PolygonArea::new(&geoid, Winding::CounterClockwise);
         pa.add_point(90.0, 0.0);
         pa.add_point(0.0, 0.0);
         pa.add_point(0.0, 90.0);
+        let (perimeter, area) = pa.compute();
+        assert_relative_eq!(perimeter, 30022685.0, epsilon = 1.0);
+        assert_relative_eq!(area, 63758202715511.0, epsilon = 1.0);
+    }
+
+
+    #[test]
+    fn test_planimeter0_add_edge() {
+        // Same test as above, but using add_edge
+
+        let geoid = Geodesic::wgs84();
+
+        let mut pa = PolygonArea::new(&geoid, Winding::CounterClockwise);
+        pa.add_point(89.0, 0.0);
+        let (s12, azi1, _, _) = geoid.inverse(89.0, 0.0, 89.0, 90.0);
+        pa.add_edge(azi1, s12);
+        let (s12, azi1, _, _) = geoid.inverse(89.0, 90.0, 89.0, 180.0);
+        pa.add_edge(azi1, s12);
+        let (s12, azi1, _, _) = geoid.inverse(89.0, 180.0, 89.0, 270.0);
+        pa.add_edge(azi1, s12);
+        let (perimeter, area) = pa.compute();
+        assert_relative_eq!(perimeter, 631819.8745, epsilon = 1.0e-4);
+        assert_relative_eq!(area, 24952305678.0, epsilon = 1.0);
+
+        let mut pa = PolygonArea::new(&geoid, Winding::CounterClockwise);
+        pa.add_point(-89.0, 0.0);
+        let (s12, azi1, _, _) = geoid.inverse(-89.0, 0.0, -89.0, 90.0);
+        pa.add_edge(azi1, s12);
+        let (s12, azi1, _, _) = geoid.inverse(-89.0, 90.0, -89.0, 180.0);
+        pa.add_edge(azi1, s12);
+        let (s12, azi1, _, _) = geoid.inverse(-89.0, 180.0, -89.0, 270.0);
+        pa.add_edge(azi1, s12);
+        let (perimeter, area) = pa.compute();
+        assert_relative_eq!(perimeter, 631819.8745, epsilon = 1.0e-4);
+        assert_relative_eq!(area, -24952305678.0, epsilon = 1.0);
+
+        let mut pa = PolygonArea::new(&geoid, Winding::CounterClockwise);
+        pa.add_point(0.0, -1.0);
+        let (s12, azi1, _, _) = geoid.inverse(0.0, -1.0, -1.0, 0.0);
+        pa.add_edge(azi1, s12);
+        let (s12, azi1, _, _) = geoid.inverse(-1.0, 0.0, 0.0, 1.0);
+        pa.add_edge(azi1, s12);
+        let (s12, azi1, _, _) = geoid.inverse(0.0, 1.0, 1.0, 0.0);
+        pa.add_edge(azi1, s12);
+        let (perimeter, area) = pa.compute();
+        assert_relative_eq!(perimeter, 627598.2731, epsilon = 1.0e-4);
+        assert_relative_eq!(area, 24619419146.0, epsilon = 1.0);
+
+        let mut pa = PolygonArea::new(&geoid, Winding::CounterClockwise);
+        pa.add_point(90.0, 0.0);
+        let (s12, azi1, _, _) = geoid.inverse(90.0, 0.0, 0.0, 0.0);
+        pa.add_edge(azi1, s12);
+        let (s12, azi1, _, _) = geoid.inverse(0.0, 0.0, 0.0, 90.0);
+        pa.add_edge(azi1, s12);
         let (perimeter, area) = pa.compute();
         assert_relative_eq!(perimeter, 30022685.0, epsilon = 1.0);
         assert_relative_eq!(area, 63758202715511.0, epsilon = 1.0);

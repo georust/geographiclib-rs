@@ -2720,4 +2720,28 @@ mod tests {
             },
         );
     }
+
+    #[test]
+    fn test_turnaround() {
+        let g = Geodesic::wgs84();
+
+        let start = (0.0, 0.0);
+        let destination = (0.0, 1.0);
+
+        let (distance, azi1, _, _) = g.inverse(start.0, start.1, destination.0, destination.1);
+
+        // Confirm that we've gone due-east
+        assert_eq!(azi1, 90.0);
+
+        // Turn around by adding 180 degrees to the azimuth
+        let turn_around = azi1 + 180.0;
+
+        // Confirm that turn around is due west
+        assert_eq!(turn_around, 270.0);
+
+        // Test that we can turn around and get back to the starting point.
+        let (lat, lon) = g.direct(destination.0, destination.1, turn_around, distance);
+        assert_relative_eq!(lat, start.0, epsilon = 1.0e-3);
+        assert_relative_eq!(lon, start.1, epsilon = 1.0e-3);
+    }
 }
