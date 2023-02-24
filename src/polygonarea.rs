@@ -109,7 +109,7 @@ impl<'a> PolygonArea<'a> {
         self.num += 1;
     }
 
-    /// Add an adge to the polygon using an azimuth (in degrees) and a distance (in meters). This can only be called after at least one point has been added.
+    /// Add an edge to the polygon using an azimuth (in degrees) and a distance (in meters). This can only be called after at least one point has been added.
     ///
     /// # Panics
     /// Panics if no points have been added yet.
