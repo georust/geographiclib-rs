@@ -7,7 +7,7 @@ use crate::Geodesic;
 #[cfg(feature = "accurate")]
 use accurate::traits::*;
 
-/// Clockwise or Counterclockise winding
+/// Clockwise or CounterClockise winding
 #[derive(Debug, Clone)]
 pub enum Winding {
     Clockwise,
