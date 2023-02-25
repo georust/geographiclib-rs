@@ -205,7 +205,7 @@ impl<'a> PolygonArea<'a> {
         let lon2 = ang_normalize(lon2);
 
         // Translation from the following cpp code:
-        //  https://github.com/geographiclib/geographiclib/blob/main/src/PolygonArea.cpp#L22
+        //  https://github.com/geographiclib/geographiclib/blob/8bc13eb53acdd8bc4fbe4de212d42dbb29779476/src/PolygonArea.cpp#L22
         //
         //  lon12 > 0 && ((lon1 < 0 && lon2 >= 0) ||
         //  (lon1 > 0 && lon2 == 0)) ? 1 :
@@ -219,6 +219,8 @@ impl<'a> PolygonArea<'a> {
             return 0;
         }
     }
+
+    
 
     fn reduce_area(&self, area: f64, signed: bool) -> f64 {
         let geoid_area = self.geoid.area(); // Area of the planet
@@ -317,7 +319,7 @@ mod tests {
 
     #[test]
     fn test_planimeter0() {
-        // Copied from https://github.com/geographiclib/geographiclib-octave/blob/main/inst/geographiclib_test.m#L644
+        // Copied from https://github.com/geographiclib/geographiclib-octave/blob/0662e05a432a040a60ab27c779fa09b554177ba9/inst/geographiclib_test.m#L644
 
         let geoid = Geodesic::wgs84();
 
@@ -412,7 +414,7 @@ mod tests {
 
     #[test]
     fn test_planimeter5() {
-        // Copied from https://github.com/geographiclib/geographiclib-octave/blob/main/inst/geographiclib_test.m#L670
+        // Copied from https://github.com/geographiclib/geographiclib-octave/blob/0662e05a432a040a60ab27c779fa09b554177ba9/inst/geographiclib_test.m#L670
 
         let geoid = Geodesic::wgs84();
         let mut pa = PolygonArea::new(&geoid, Winding::CounterClockwise);
@@ -426,7 +428,7 @@ mod tests {
 
     #[test]
     fn test_planimeter6() {
-        // Copied from https://github.com/geographiclib/geographiclib-octave/blob/main/inst/geographiclib_test.m#L679
+        // Copied from https://github.com/geographiclib/geographiclib-octave/blob/0662e05a432a040a60ab27c779fa09b554177ba9/inst/geographiclib_test.m#L679
 
         let geoid = Geodesic::wgs84();
 
@@ -465,7 +467,7 @@ mod tests {
 
     #[test]
     fn test_planimeter12() {
-        // Copied from https://github.com/geographiclib/geographiclib-octave/blob/main/inst/geographiclib_test.m#L701
+        // Copied from https://github.com/geographiclib/geographiclib-octave/blob/0662e05a432a040a60ab27c779fa09b554177ba9/inst/geographiclib_test.m#L701
         let geoid = Geodesic::wgs84();
 
         let mut pa = PolygonArea::new(&geoid, Winding::CounterClockwise);
@@ -479,7 +481,7 @@ mod tests {
 
     #[test]
     fn test_planimeter12r() {
-        // Copied from https://github.com/geographiclib/geographiclib-octave/blob/main/inst/geographiclib_test.m#L710
+        // Copied from https://github.com/geographiclib/geographiclib-octave/blob/0662e05a432a040a60ab27c779fa09b554177ba9/inst/geographiclib_test.m#L710
         let geoid = Geodesic::wgs84();
 
         let mut pa = PolygonArea::new(&geoid, Winding::CounterClockwise);
@@ -495,7 +497,7 @@ mod tests {
 
     #[test]
     fn test_planimeter13() {
-        // Copied from https://github.com/geographiclib/geographiclib-octave/blob/main/inst/geographiclib_test.m#L719
+        // Copied from https://github.com/geographiclib/geographiclib-octave/blob/0662e05a432a040a60ab27c779fa09b554177ba9/inst/geographiclib_test.m#L719
 
         let geoid = Geodesic::wgs84();
 
@@ -513,7 +515,7 @@ mod tests {
 
     #[test]
     fn test_planimeter15() {
-        // Copied from https://github.com/geographiclib/geographiclib-octave/blob/main/inst/geographiclib_test.m#LL728C14-L728C26
+        // Copied from https://github.com/geographiclib/geographiclib-octave/blob/0662e05a432a040a60ab27c779fa09b554177ba9/inst/geographiclib_test.m#LL728C14-L728C26
 
         let geoid = Geodesic::wgs84();
 
@@ -543,7 +545,7 @@ mod tests {
 
     #[test]
     fn test_planimeter21() {
-        // Copied from https://github.com/geographiclib/geographiclib-octave/blob/main/inst/geographiclib_test.m#L752
+        // Copied from https://github.com/geographiclib/geographiclib-octave/blob/0662e05a432a040a60ab27c779fa09b554177ba9/inst/geographiclib_test.m#L752
 
         // Testing degenrate polygons.
         let geoid = Geodesic::wgs84();
