@@ -51,11 +51,12 @@ pa.add_point(0.0, 1.0);
 pa.add_point(1.0, 1.0);
 pa.add_point(1.0, 0.0);
 
-let (perimeter_m, area_m_squared) = pa.compute();
+let (perimeter_m, area_m_squared, num_points) = pa.compute(false);
 
 use approx::assert_relative_eq;
 assert_relative_eq!(perimeter_m, 443770.91724830196);
 assert_relative_eq!(area_m_squared, 12308778361.469452);
+assert_eq!(num_points, 4);
 ``` 
 
 ```rust

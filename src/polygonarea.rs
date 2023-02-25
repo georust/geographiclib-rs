@@ -54,7 +54,7 @@ pub struct PolygonArea<'a> {
 /// pa.add_point(1.0, 1.0);
 /// pa.add_point(1.0, 0.0);
 ////
-/// let (perimeter, area) = pa.compute();
+/// let (perimeter, area, _num) = pa.compute(false);
 ///
 /// use approx::assert_relative_eq;
 /// assert_relative_eq!(perimeter, 443770.917248302);
@@ -133,35 +133,38 @@ impl<'a> PolygonArea<'a> {
     ///  - 0: Perimeter in (meters) of the polygon.
     ///  - 1: Area (meters²) of the polygon.
     ///  - 2: Number of points added to the polygon.
+    ///
+    /// # Parameters
+    ///
+    /// - `sign`: Whether to allow negative values for the area.
+    ///   - `true`: Interpret an inversely wound polygon to be a "negative" area. This will produce incorrect results if the polygon covers over half the geodesic. See "Interpreting negative area values" below.
+    ///   - `false`: Always return a positive area. Inversely wound polygons are treated as if they are always wound the same way as the winding specified during creation of the PolygonArea. This is useful if you are dealing with very large polygons that might cover over half the geodesic, or if you are certain of your winding.
     /// 
-    /// # Interpreting negative values
-    /// 
+    /// # Interpreting negative area values
+    ///
     /// A negative value can mean one of two things:
     /// 1. The winding of the polygon is opposite the winding specified during creation of the PolygonArea.
-    /// 2. The polygon is larger than half the planet. In this case, to get the final area of the polygon, add the area of the planet to the result.
+    /// 2. The polygon is larger than half the planet. In this case, to get the final area of the polygon, add the area of the planet to the result. If you expect to be dealing with polygons of this size pass `signed = false` to `compute()` to get the correct result.
     ///
-    /// # Negative value example
+    /// # Large polygon example
     /// ```rust
     /// use geographiclib_rs::{Geodesic, PolygonArea, Winding};
     /// let g = Geodesic::wgs84();
-    /// let mut pa = PolygonArea::new(&g, Winding::CounterClockwise);
     /// 
     /// // Describe a polygon that covers all of the earth EXCEPT this small square.
     /// // The outside of the polygon is in this square, the inside of the polygon is the rest of the earth.
+    /// let mut pa = PolygonArea::new(&g, Winding::CounterClockwise);
     /// pa.add_point(0.0, 0.0);
     /// pa.add_point(1.0, 0.0);
     /// pa.add_point(1.0, 1.0);
     /// pa.add_point(0.0, 1.0);
-    /// 
-    /// let (perimeter, mut area, count) = pa.compute();
-    /// 
-    /// if (area < 0.0) {
-    ///     let planetary_area = g.area();
-    ///     area += planetary_area;
-    /// }
-    /// assert_eq!(area, 510053312945726.94);
+    ///
+    /// let (_perimeter, mut area, _count) = pa.compute(false);
+    ///
+    /// // Over 5 trillion square meters!
+    /// assert_eq!(area, 510053312945726.94); 
     /// ```
-    pub fn compute(mut self) -> (f64, f64, usize) {
+    pub fn compute(mut self, sign: bool) -> (f64, f64, usize) {
         #[allow(non_snake_case)]
         let (s12, _azi1, _azi2, _m12, _M12, _M21, S12, _a12) = self.geoid.inverse(
             self.latest_lat,
@@ -189,7 +192,7 @@ impl<'a> PolygonArea<'a> {
         self.crossings += PolygonArea::transit(self.latest_lon, self.initial_lon);
 
         // Properly take into account crossings when calculating area.
-        let areasum = self.reduce_area(areasum);
+        let areasum = self.reduce_area(areasum, sign);
 
         return (perimetersum, areasum, self.num);
     }
@@ -216,18 +219,18 @@ impl<'a> PolygonArea<'a> {
             return 0;
         }
     }
-    
-    fn reduce_area(&self, area: f64) -> f64 {
-        let area0 = self.geoid.area(); // Area of the planet
-        let mut area = area % area0;
+
+    fn reduce_area(&self, area: f64, signed: bool) -> f64 {
+        let geoid_area = self.geoid.area(); // Area of the planet
+        let mut area = area % geoid_area;
 
         // Translation of the following cpp code:
         // if (crossings & 1) area += (area < 0 ? 1 : -1) * _area0/2;
         if self.crossings % 2 != 0 {
             if area < 0.0 {
-                area += area0 / 2.0;
+                area += geoid_area / 2.0;
             } else {
-                area -= area0 / 2.0;
+                area -= geoid_area / 2.0;
             }
         }
 
@@ -237,12 +240,19 @@ impl<'a> PolygonArea<'a> {
             Winding::CounterClockwise => -area,
         };
 
-        // Put area in (-area0/2, area0/2]
-        if area > area0/2.0 {
-            area -= area0;
+        if signed {
+            // Put area in (-geoid_area/2, geoid_area/2]
+            if area > geoid_area / 2.0 {
+                area -= geoid_area;
+            } else if area <= -geoid_area / 2.0 {
+                area += geoid_area;
+            }
         }
-        else if area <= -area0/2.0 {
-            area += area0;
+        else {
+            // Negative values mean the polygon is larger than half the planet. Correct for this.
+            if area < 0.0 {
+                area += geoid_area;
+            }
         }
 
         area
@@ -265,7 +275,7 @@ mod tests {
         pa.add_point(1.0, 1.0);
         pa.add_point(1.0, 0.0);
 
-        let (perimeter, area, _count) = pa.compute();
+        let (perimeter, area, _count) = pa.compute(true);
 
         assert_relative_eq!(perimeter, 443770.917, epsilon = 1.0e-3);
         assert_relative_eq!(area, 12308778361.469, epsilon = 1.0e-3);
@@ -277,7 +287,7 @@ mod tests {
         pa.add_point(1.0, 1.0);
         pa.add_point(1.0, 0.0);
 
-        let (perimeter, area, _count) = pa.compute();
+        let (perimeter, area, _count) = pa.compute(true);
 
         assert_relative_eq!(perimeter, 443770.917, epsilon = 1.0e-3);
         assert_relative_eq!(area, -12308778361.469, epsilon = 1.0e-3);
@@ -299,7 +309,7 @@ mod tests {
         let (s12, azi1, _, _) = geoid.inverse(1.0, 1.0, 1.0, 0.0);
         pa.add_edge(azi1, s12);
 
-        let (perimeter, area, _count) = pa.compute();
+        let (perimeter, area, _count) = pa.compute(true);
 
         assert_relative_eq!(perimeter, 443770.917, epsilon = 1.0e-3);
         assert_relative_eq!(area, 12308778361.469, epsilon = 1.0e-3);
@@ -316,7 +326,7 @@ mod tests {
         pa.add_point(89.0, 90.0);
         pa.add_point(89.0, 180.0);
         pa.add_point(89.0, 270.0);
-        let (perimeter, area, _count) = pa.compute();
+        let (perimeter, area, _count) = pa.compute(true);
         assert_relative_eq!(perimeter, 631819.8745, epsilon = 1.0e-4);
         assert_relative_eq!(area, 24952305678.0, epsilon = 1.0);
 
@@ -325,7 +335,7 @@ mod tests {
         pa.add_point(-89.0, 90.0);
         pa.add_point(-89.0, 180.0);
         pa.add_point(-89.0, 270.0);
-        let (perimeter, area, _count) = pa.compute();
+        let (perimeter, area, _count) = pa.compute(true);
         assert_relative_eq!(perimeter, 631819.8745, epsilon = 1.0e-4);
         assert_relative_eq!(area, -24952305678.0, epsilon = 1.0);
 
@@ -334,7 +344,7 @@ mod tests {
         pa.add_point(-1.0, 0.0);
         pa.add_point(0.0, 1.0);
         pa.add_point(1.0, 0.0);
-        let (perimeter, area, _count) = pa.compute();
+        let (perimeter, area, _count) = pa.compute(true);
         assert_relative_eq!(perimeter, 627598.2731, epsilon = 1.0e-4);
         assert_relative_eq!(area, 24619419146.0, epsilon = 1.0);
 
@@ -342,11 +352,10 @@ mod tests {
         pa.add_point(90.0, 0.0);
         pa.add_point(0.0, 0.0);
         pa.add_point(0.0, 90.0);
-        let (perimeter, area, _count) = pa.compute();
+        let (perimeter, area, _count) = pa.compute(true);
         assert_relative_eq!(perimeter, 30022685.0, epsilon = 1.0);
         assert_relative_eq!(area, 63758202715511.0, epsilon = 1.0);
     }
-
 
     #[test]
     fn test_planimeter0_add_edge() {
@@ -362,7 +371,7 @@ mod tests {
         pa.add_edge(azi1, s12);
         let (s12, azi1, _, _) = geoid.inverse(89.0, 180.0, 89.0, 270.0);
         pa.add_edge(azi1, s12);
-        let (perimeter, area, _) = pa.compute();
+        let (perimeter, area, _) = pa.compute(true);
         assert_relative_eq!(perimeter, 631819.8745, epsilon = 1.0e-4);
         assert_relative_eq!(area, 24952305678.0, epsilon = 1.0);
 
@@ -374,7 +383,7 @@ mod tests {
         pa.add_edge(azi1, s12);
         let (s12, azi1, _, _) = geoid.inverse(-89.0, 180.0, -89.0, 270.0);
         pa.add_edge(azi1, s12);
-        let (perimeter, area, _) = pa.compute();
+        let (perimeter, area, _) = pa.compute(true);
         assert_relative_eq!(perimeter, 631819.8745, epsilon = 1.0e-4);
         assert_relative_eq!(area, -24952305678.0, epsilon = 1.0);
 
@@ -386,7 +395,7 @@ mod tests {
         pa.add_edge(azi1, s12);
         let (s12, azi1, _, _) = geoid.inverse(0.0, 1.0, 1.0, 0.0);
         pa.add_edge(azi1, s12);
-        let (perimeter, area, _) = pa.compute();
+        let (perimeter, area, _) = pa.compute(true);
         assert_relative_eq!(perimeter, 627598.2731, epsilon = 1.0e-4);
         assert_relative_eq!(area, 24619419146.0, epsilon = 1.0);
 
@@ -396,7 +405,7 @@ mod tests {
         pa.add_edge(azi1, s12);
         let (s12, azi1, _, _) = geoid.inverse(0.0, 0.0, 0.0, 90.0);
         pa.add_edge(azi1, s12);
-        let (perimeter, area, _) = pa.compute();
+        let (perimeter, area, _) = pa.compute(true);
         assert_relative_eq!(perimeter, 30022685.0, epsilon = 1.0);
         assert_relative_eq!(area, 63758202715511.0, epsilon = 1.0);
     }
@@ -410,7 +419,7 @@ mod tests {
         pa.add_point(89.0, 0.1);
         pa.add_point(89.0, 90.1);
         pa.add_point(89.0, -179.9);
-        let (perimeter, area, _) = pa.compute();
+        let (perimeter, area, _) = pa.compute(true);
         assert_relative_eq!(perimeter, 539297.0, epsilon = 1.0);
         assert_relative_eq!(area, 12476152838.5, epsilon = 1.0);
     }
@@ -425,7 +434,7 @@ mod tests {
         pa.add_point(9.0, -0.00000000000001);
         pa.add_point(9.0, 180.0);
         pa.add_point(9.0, 0.0);
-        let (perimeter, area, _) = pa.compute();
+        let (perimeter, area, _) = pa.compute(true);
         assert_relative_eq!(perimeter, 36026861.0, epsilon = 1.0);
         assert_relative_eq!(area, 0.0, epsilon = 1.0);
 
@@ -433,7 +442,7 @@ mod tests {
         pa.add_point(9.0, 0.00000000000001);
         pa.add_point(9.0, 0.0);
         pa.add_point(9.0, 180.0);
-        let (perimeter, area, _) = pa.compute();
+        let (perimeter, area, _) = pa.compute(true);
         assert_relative_eq!(perimeter, 36026861.0, epsilon = 1.0);
         assert_relative_eq!(area, 0.0, epsilon = 1.0);
 
@@ -441,7 +450,7 @@ mod tests {
         pa.add_point(9.0, 0.00000000000001);
         pa.add_point(9.0, 180.0);
         pa.add_point(9.0, 0.0);
-        let (perimeter, area, _) = pa.compute();
+        let (perimeter, area, _) = pa.compute(true);
         assert_relative_eq!(perimeter, 36026861.0, epsilon = 1.0);
         assert_relative_eq!(area, 0.0, epsilon = 1.0);
 
@@ -449,7 +458,7 @@ mod tests {
         pa.add_point(9.0, -0.00000000000001);
         pa.add_point(9.0, 0.0);
         pa.add_point(9.0, 180.0);
-        let (perimeter, area, _) = pa.compute();
+        let (perimeter, area, _) = pa.compute(true);
         assert_relative_eq!(perimeter, 36026861.0, epsilon = 1.0);
         assert_relative_eq!(area, 0.0, epsilon = 1.0);
     }
@@ -463,7 +472,7 @@ mod tests {
         pa.add_point(66.562222222, 0.0);
         pa.add_point(66.562222222, 180.0);
         pa.add_point(66.562222222, 360.0);
-        let (perimeter, area, _) = pa.compute();
+        let (perimeter, area, _) = pa.compute(true);
         assert_relative_eq!(perimeter, 10465729.0, epsilon = 1.0);
         assert_relative_eq!(area, 0.0);
     }
@@ -479,7 +488,7 @@ mod tests {
         pa.add_point(66.562222222, -180.0);
         pa.add_point(66.562222222, -360.0);
 
-        let (perimeter, area, _) = pa.compute();
+        let (perimeter, area, _) = pa.compute(true);
         assert_relative_eq!(perimeter, 10465729.0, epsilon = 1.0);
         assert_relative_eq!(area, 0.0);
     }
@@ -497,7 +506,7 @@ mod tests {
         pa.add_point(89.0, 0.0);
         pa.add_point(89.0, 120.0);
         pa.add_point(89.0, 240.0);
-        let (perimeter, area, _) = pa.compute();
+        let (perimeter, area, _) = pa.compute(true);
         assert_relative_eq!(perimeter, 1160741.0, epsilon = 1.0);
         assert_relative_eq!(area, 32415230256.0, epsilon = 1.0);
     }
@@ -512,7 +521,7 @@ mod tests {
         pa.add_point(2.0, 1.0);
         pa.add_point(1.0, 2.0);
         pa.add_point(3.0, 3.0);
-        let (_, area, _) = pa.compute();
+        let (_, area, _) = pa.compute(true);
         assert_relative_eq!(area, 18454562325.45119);
 
         // Switching the winding
@@ -520,7 +529,7 @@ mod tests {
         pa.add_point(2.0, 1.0);
         pa.add_point(1.0, 2.0);
         pa.add_point(3.0, 3.0);
-        let (_, area, _) = pa.compute();
+        let (_, area, _) = pa.compute(true);
         assert_relative_eq!(area, -18454562325.45119);
 
         // Swaping lat and lon
@@ -528,7 +537,7 @@ mod tests {
         pa.add_point(1.0, 2.0);
         pa.add_point(2.0, 1.0);
         pa.add_point(3.0, 3.0);
-        let (_, area, _) = pa.compute();
+        let (_, area, _) = pa.compute(true);
         assert_relative_eq!(area, -18454562325.45119);
     }
 
@@ -541,11 +550,11 @@ mod tests {
 
         let mut pa = PolygonArea::new(&geoid, Winding::CounterClockwise);
         pa.add_point(1.0, 1.0);
-        let (perimeter, area, _) = pa.compute();
+        let (perimeter, area, _) = pa.compute(true);
         assert_relative_eq!(perimeter, 0.0);
         assert_relative_eq!(area, 0.0);
     }
-    
+
     #[test]
     fn test_planimeter29() {
         // Check transitdirect vs transit zero handling consistency
@@ -556,9 +565,7 @@ mod tests {
         pa.add_edge(90.0, 1000.0);
         pa.add_edge(0.0, 1000.0);
         pa.add_edge(-90.0, 1000.0);
-        let (_, area, _) = pa.compute();
-        assert_relative_eq!(area, 1000000.0, epsilon = 0.01);   
+        let (_, area, _) = pa.compute(true);
+        assert_relative_eq!(area, 1000000.0, epsilon = 0.01);
     }
-
-
 }
