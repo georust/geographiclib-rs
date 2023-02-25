@@ -139,7 +139,7 @@ impl<'a> PolygonArea<'a> {
     /// - `sign`: Whether to allow negative values for the area.
     ///   - `true`: Interpret an inversely wound polygon to be a "negative" area. This will produce incorrect results if the polygon covers over half the geodesic. See "Interpreting negative area values" below.
     ///   - `false`: Always return a positive area. Inversely wound polygons are treated as if they are always wound the same way as the winding specified during creation of the PolygonArea. This is useful if you are dealing with very large polygons that might cover over half the geodesic, or if you are certain of your winding.
-    /// 
+    ///
     /// # Interpreting negative area values
     ///
     /// A negative value can mean one of two things:
@@ -150,7 +150,7 @@ impl<'a> PolygonArea<'a> {
     /// ```rust
     /// use geographiclib_rs::{Geodesic, PolygonArea, Winding};
     /// let g = Geodesic::wgs84();
-    /// 
+    ///
     /// // Describe a polygon that covers all of the earth EXCEPT this small square.
     /// // The outside of the polygon is in this square, the inside of the polygon is the rest of the earth.
     /// let mut pa = PolygonArea::new(&g, Winding::CounterClockwise);
@@ -162,7 +162,7 @@ impl<'a> PolygonArea<'a> {
     /// let (_perimeter, area, _count) = pa.compute(false);
     ///
     /// // Over 5 trillion square meters!
-    /// assert_eq!(area, 510053312945726.94); 
+    /// assert_eq!(area, 510053312945726.94);
     /// ```
     pub fn compute(mut self, sign: bool) -> (f64, f64, usize) {
         #[allow(non_snake_case)]
@@ -220,8 +220,6 @@ impl<'a> PolygonArea<'a> {
         }
     }
 
-    
-
     fn reduce_area(&self, area: f64, signed: bool) -> f64 {
         let geoid_area = self.geoid.area(); // Area of the planet
         let mut area = area % geoid_area;
@@ -249,8 +247,7 @@ impl<'a> PolygonArea<'a> {
             } else if area <= -geoid_area / 2.0 {
                 area += geoid_area;
             }
-        }
-        else {
+        } else {
             // Negative values mean the polygon is larger than half the planet. Correct for this.
             if area < 0.0 {
                 area += geoid_area;
@@ -544,8 +541,11 @@ mod tests {
     }
 
     #[test]
-    fn test_planimeter21() {
+    fn test_planimeter19() {
+        // Test degenerate polygons
+
         // Copied from https://github.com/geographiclib/geographiclib-octave/blob/0662e05a432a040a60ab27c779fa09b554177ba9/inst/geographiclib_test.m#L752
+        // Also copied from: https://github.com/geographiclib/geographiclib-js/blob/57137fdcf4ba56718c64b909b00331754b6efceb/geodesic/test/geodesictest.js#LL836C13-L836C13
 
         // Testing degenrate polygons.
         let geoid = Geodesic::wgs84();
@@ -555,6 +555,79 @@ mod tests {
         let (perimeter, area, _) = pa.compute(true);
         assert_relative_eq!(perimeter, 0.0);
         assert_relative_eq!(area, 0.0);
+
+        let mut pa = PolygonArea::new(&geoid, Winding::CounterClockwise);
+        let (perimeter, area, _) = pa.clone().compute(false);
+        assert_relative_eq!(perimeter, 0.0);
+        assert_relative_eq!(area, 0.0);
+
+        pa.add_point(1.0, 1.0);
+        let (perimeter, area, _) = pa.clone().compute(false);
+        assert_relative_eq!(perimeter, 0.0);
+        assert_relative_eq!(area, 0.0);
+
+        pa.add_edge(90.0, 1000.0);
+        let (_, area, _) = pa.clone().compute(false);
+
+        assert_relative_eq!(area, 0.0, epsilon = 0.01);
+
+        // TODO: Add more degeneracy tests when we have support for test_point() and test_edge()
+    }
+
+    #[test]
+    fn test_planimeter21() {
+        // Copied From: https://github.com/geographiclib/geographiclib-js/blob/57137fdcf4ba56718c64b909b00331754b6efceb/geodesic/test/geodesictest.js#LL836C13-L836C13
+
+        let g = Geodesic::wgs84();
+
+        let lat = 45.0;
+        let _azi = 39.2144607176828184218;
+        let _s = 8420705.40957178156285;
+        let r = 39433884866571.4277;   // Area for one circuit
+        let a0 = g.area(); // Ellipsoid area
+
+        let mut pa_clockwise =  PolygonArea::new(&g, Winding::Clockwise);
+        let mut pa_counter = PolygonArea::new(&g, Winding::CounterClockwise);
+
+        pa_clockwise.add_point(lat, 60.0);
+        pa_clockwise.add_point(lat, 180.0);
+        pa_clockwise.add_point(lat, -60.0);
+        pa_clockwise.add_point(lat, 60.0);
+        pa_clockwise.add_point(lat, 180.0);
+        pa_clockwise.add_point(lat, -60.0);
+
+        pa_counter.add_point(lat, 60.0);
+        pa_counter.add_point(lat, 180.0);
+        pa_counter.add_point(lat, -60.0);
+        pa_counter.add_point(lat, 60.0);
+        pa_counter.add_point(lat, 180.0);
+        pa_counter.add_point(lat, -60.0);
+
+        for i in 3..=4 {
+            pa_clockwise.add_point(lat,  60.0);
+            pa_clockwise.add_point(lat, 180.0);
+            
+            pa_counter.add_point(lat,  60.0);
+            pa_counter.add_point(lat, 180.0);
+
+            // TODO: Add the missing test-asserts when we add support for test_point() and test_edge()
+            // See https://github.com/geographiclib/geographiclib-js/blob/57137fdcf4ba56718c64b909b00331754b6efceb/geodesic/test/geodesictest.js#L855-L870
+
+            pa_clockwise.add_point(lat, -60.0);
+            pa_counter.add_point(lat, -60.0);
+
+            let (_, area, _) = pa_counter.clone().compute(true);
+            assert_relative_eq!(area, r * i as f64, epsilon = 0.5);
+
+            let (_, area, _) = pa_counter.clone().compute(false);
+            assert_relative_eq!(area, r * i as f64, epsilon = 0.5);
+
+            let (_, area, _) = pa_clockwise.clone().compute(true);
+            assert_relative_eq!(area, -(r * i as f64), epsilon = 0.5);
+
+            let (_, area, _) = pa_clockwise.clone().compute(false);
+            assert_relative_eq!(area, -(r * i as f64) + a0, epsilon = 0.5);
+        }
     }
 
     #[test]
