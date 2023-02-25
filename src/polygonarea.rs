@@ -633,6 +633,7 @@ mod tests {
     #[test]
     fn test_planimeter29() {
         // Check transitdirect vs transit zero handling consistency
+        // Copied from: https://github.com/geographiclib/geographiclib-js/blob/57137fdcf4ba56718c64b909b00331754b6efceb/geodesic/test/geodesictest.js#L883
 
         let geoid = Geodesic::wgs84();
         let mut pa = PolygonArea::new(&geoid, Winding::CounterClockwise);
