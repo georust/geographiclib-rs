@@ -159,7 +159,7 @@ impl<'a> PolygonArea<'a> {
     /// pa.add_point(1.0, 1.0);
     /// pa.add_point(0.0, 1.0);
     ///
-    /// let (_perimeter, mut area, _count) = pa.compute(false);
+    /// let (_perimeter, area, _count) = pa.compute(false);
     ///
     /// // Over 5 trillion square meters!
     /// assert_eq!(area, 510053312945726.94); 
