@@ -9,7 +9,7 @@ const POLYGONAREA_MASK: u64 = caps::LATITUDE | caps::LONGITUDE | caps::DISTANCE 
 #[cfg(feature = "accurate")]
 use accurate::traits::*;
 
-/// Clockwise or CounterClockise winding
+/// Clockwise or Counterclockwise winding
 #[derive(Debug, Clone)]
 pub enum Winding {
     Clockwise,
