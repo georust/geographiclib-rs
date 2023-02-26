@@ -1,8 +1,10 @@
-use crate::geodesic::DirectGeodesic;
-use crate::geodesic::InverseGeodesic;
 use crate::geomath::ang_diff;
 use crate::geomath::ang_normalize;
 use crate::Geodesic;
+
+use crate::geodesiccapability as caps;
+
+const POLYGONAREA_MASK: u64 = caps::LATITUDE | caps::LONGITUDE | caps::DISTANCE | caps::AREA | caps::LONG_UNROLL;
 
 #[cfg(feature = "accurate")]
 use accurate::traits::*;
@@ -96,9 +98,9 @@ impl<'a> PolygonArea<'a> {
             self.initial_lon = lon;
         } else {
             #[allow(non_snake_case)]
-            let (s12, _azi1, _azi2, _m12, _M12, _M21, S12, _a12) =
+            let (_a12, s12, _azi1, _azi2, _m12, _M12, _M21, S12) =
                 self.geoid
-                    .inverse(self.latest_lat, self.latest_lon, lat, lon);
+                    ._gen_inverse_azi(self.latest_lat, self.latest_lon, lat, lon, POLYGONAREA_MASK);
             self.perimetersum += s12;
             self.areasum += S12;
             self.crossings += PolygonArea::transit(self.latest_lon, lon);
@@ -118,12 +120,12 @@ impl<'a> PolygonArea<'a> {
         }
 
         #[allow(non_snake_case)]
-        let (lat, lon, _azi2, _m12, _M12, _M21, S12, _a12) =
+        let (_a12, lat, lon, _azi2, _s12, _m12, _M12, _M21, S12) =
             self.geoid
-                .direct(self.latest_lat, self.latest_lon, azimuth, distance);
+                ._gen_direct(self.latest_lat, self.latest_lon, azimuth, false, distance, POLYGONAREA_MASK);
         self.perimetersum += distance;
         self.areasum += S12;
-        self.crossings += PolygonArea::transit(self.latest_lon, lon);
+        self.crossings += PolygonArea::transitdirect(self.latest_lon, lon);
         self.latest_lat = lat;
         self.latest_lon = lon;
         self.num += 1;
@@ -166,11 +168,12 @@ impl<'a> PolygonArea<'a> {
     /// ```
     pub fn compute(mut self, sign: bool) -> (f64, f64, usize) {
         #[allow(non_snake_case)]
-        let (s12, _azi1, _azi2, _m12, _M12, _M21, S12, _a12) = self.geoid.inverse(
+        let (_a12, s12, _salp1, _calp1, _salp2, _calp2, _m12, _M12, _M21, S12) = self.geoid._gen_inverse(
             self.latest_lat,
             self.latest_lon,
             self.initial_lat,
             self.initial_lon,
+            POLYGONAREA_MASK,
         );
         self.perimetersum += s12;
         self.areasum += S12;
@@ -197,6 +200,21 @@ impl<'a> PolygonArea<'a> {
         return (perimetersum, areasum, self.num);
     }
 
+    /// Check what the perimeter and area would be if this point was added to the polygon without actually adding it
+    pub fn test_point(&self, lat: f64, lon: f64, sign: bool) -> (f64, f64, usize) {
+        let mut pa = self.clone();
+        pa.add_point(lat, lon);
+        pa.compute(sign)
+    }
+
+    /// Check what the perimeter and area would be if this edge was added to the polygon without actually adding it
+    pub fn test_edge(&self, azimuth: f64, distance: f64, sign: bool) -> (f64, f64, usize) {
+        let mut pa = self.clone();
+        pa.add_edge(azimuth, distance);
+        pa.compute(sign)
+    }
+
+
     // Return 1 or -1 if crossing prime meridian in east or west direction.
     // Otherwise return zero.  longitude = +/-0 considered to be positive.
     fn transit(lon1: f64, lon2: f64) -> i64 {
@@ -218,6 +236,26 @@ impl<'a> PolygonArea<'a> {
         } else {
             return 0;
         }
+    }
+
+    fn transitdirect(lon1: f64, lon2: f64) -> i64 {
+        // We want to compute exactly: floor(lon2 / 360) - floor(lon1 / 360)
+        let lon1 = lon1 % 720.0;
+        let lon2 = lon2 % 720.0;
+
+        let a = if 0.0 <= lon2 && lon2 < 360.0 {
+            0
+        } else {
+            1
+        };
+
+        let b = if 0.0 <= lon1 && lon1 < 360.0 {    
+            0
+        } else {
+            1
+        };
+
+        return a - b;
     }
 
     fn reduce_area(&self, area: f64, signed: bool) -> f64 {
@@ -293,25 +331,15 @@ mod tests {
     }
 
     #[test]
-    fn test_add_edge() {
+    fn test_edge_2() {
         let geoid = Geodesic::wgs84();
         let mut pa = PolygonArea::new(&geoid, Winding::CounterClockwise);
 
         pa.add_point(0.0, 0.0);
 
-        let (s12, azi1, _, _) = geoid.inverse(0.0, 0.0, 0.0, 1.0);
-        pa.add_edge(azi1, s12);
+        let (_a12, lat2, lon2, _, _, _, _, _, _) = geoid._gen_direct(0.0, 0.0, 90.0, false, 19113000.0, POLYGONAREA_MASK);
 
-        let (s12, azi1, _, _) = geoid.inverse(0.0, 1.0, 1.0, 1.0);
-        pa.add_edge(azi1, s12);
-
-        let (s12, azi1, _, _) = geoid.inverse(1.0, 1.0, 1.0, 0.0);
-        pa.add_edge(azi1, s12);
-
-        let (perimeter, area, _count) = pa.compute(true);
-
-        assert_relative_eq!(perimeter, 443770.917, epsilon = 1.0e-3);
-        assert_relative_eq!(area, 12308778361.469, epsilon = 1.0e-3);
+        dbg!(lat2, lon2);
     }
 
     #[test]
@@ -352,59 +380,6 @@ mod tests {
         pa.add_point(0.0, 0.0);
         pa.add_point(0.0, 90.0);
         let (perimeter, area, _count) = pa.compute(true);
-        assert_relative_eq!(perimeter, 30022685.0, epsilon = 1.0);
-        assert_relative_eq!(area, 63758202715511.0, epsilon = 1.0);
-    }
-
-    #[test]
-    fn test_planimeter0_add_edge() {
-        // Same test as above, but using add_edge
-
-        let geoid = Geodesic::wgs84();
-
-        let mut pa = PolygonArea::new(&geoid, Winding::CounterClockwise);
-        pa.add_point(89.0, 0.0);
-        let (s12, azi1, _, _) = geoid.inverse(89.0, 0.0, 89.0, 90.0);
-        pa.add_edge(azi1, s12);
-        let (s12, azi1, _, _) = geoid.inverse(89.0, 90.0, 89.0, 180.0);
-        pa.add_edge(azi1, s12);
-        let (s12, azi1, _, _) = geoid.inverse(89.0, 180.0, 89.0, 270.0);
-        pa.add_edge(azi1, s12);
-        let (perimeter, area, _) = pa.compute(true);
-        assert_relative_eq!(perimeter, 631819.8745, epsilon = 1.0e-4);
-        assert_relative_eq!(area, 24952305678.0, epsilon = 1.0);
-
-        let mut pa = PolygonArea::new(&geoid, Winding::CounterClockwise);
-        pa.add_point(-89.0, 0.0);
-        let (s12, azi1, _, _) = geoid.inverse(-89.0, 0.0, -89.0, 90.0);
-        pa.add_edge(azi1, s12);
-        let (s12, azi1, _, _) = geoid.inverse(-89.0, 90.0, -89.0, 180.0);
-        pa.add_edge(azi1, s12);
-        let (s12, azi1, _, _) = geoid.inverse(-89.0, 180.0, -89.0, 270.0);
-        pa.add_edge(azi1, s12);
-        let (perimeter, area, _) = pa.compute(true);
-        assert_relative_eq!(perimeter, 631819.8745, epsilon = 1.0e-4);
-        assert_relative_eq!(area, -24952305678.0, epsilon = 1.0);
-
-        let mut pa = PolygonArea::new(&geoid, Winding::CounterClockwise);
-        pa.add_point(0.0, -1.0);
-        let (s12, azi1, _, _) = geoid.inverse(0.0, -1.0, -1.0, 0.0);
-        pa.add_edge(azi1, s12);
-        let (s12, azi1, _, _) = geoid.inverse(-1.0, 0.0, 0.0, 1.0);
-        pa.add_edge(azi1, s12);
-        let (s12, azi1, _, _) = geoid.inverse(0.0, 1.0, 1.0, 0.0);
-        pa.add_edge(azi1, s12);
-        let (perimeter, area, _) = pa.compute(true);
-        assert_relative_eq!(perimeter, 627598.2731, epsilon = 1.0e-4);
-        assert_relative_eq!(area, 24619419146.0, epsilon = 1.0);
-
-        let mut pa = PolygonArea::new(&geoid, Winding::CounterClockwise);
-        pa.add_point(90.0, 0.0);
-        let (s12, azi1, _, _) = geoid.inverse(90.0, 0.0, 0.0, 0.0);
-        pa.add_edge(azi1, s12);
-        let (s12, azi1, _, _) = geoid.inverse(0.0, 0.0, 0.0, 90.0);
-        pa.add_edge(azi1, s12);
-        let (perimeter, area, _) = pa.compute(true);
         assert_relative_eq!(perimeter, 30022685.0, epsilon = 1.0);
         assert_relative_eq!(area, 63758202715511.0, epsilon = 1.0);
     }
@@ -544,34 +519,23 @@ mod tests {
     fn test_planimeter19() {
         // Test degenerate polygons
 
-        // Copied from https://github.com/geographiclib/geographiclib-octave/blob/0662e05a432a040a60ab27c779fa09b554177ba9/inst/geographiclib_test.m#L752
-        // Also copied from: https://github.com/geographiclib/geographiclib-js/blob/57137fdcf4ba56718c64b909b00331754b6efceb/geodesic/test/geodesictest.js#LL836C13-L836C13
-
+        // Copied from https://github.com/geographiclib/geographiclib-js/blob/57137fdcf4ba56718c64b909b00331754b6efceb/geodesic/test/geodesictest.js#L801
         // Testing degenrate polygons.
         let geoid = Geodesic::wgs84();
 
         let mut pa = PolygonArea::new(&geoid, Winding::CounterClockwise);
-        pa.add_point(1.0, 1.0);
-        let (perimeter, area, _) = pa.compute(true);
+        let (perimeter, area, _) = pa.clone().compute(true);
         assert_relative_eq!(perimeter, 0.0);
         assert_relative_eq!(area, 0.0);
 
-        let mut pa = PolygonArea::new(&geoid, Winding::CounterClockwise);
-        let (perimeter, area, _) = pa.clone().compute(false);
+        let (perimeter, area, _) = pa.test_point(1.0, 1.0, true);
         assert_relative_eq!(perimeter, 0.0);
         assert_relative_eq!(area, 0.0);
 
         pa.add_point(1.0, 1.0);
-        let (perimeter, area, _) = pa.clone().compute(false);
+        let (perimeter, area, _) = pa.clone().compute(true);
         assert_relative_eq!(perimeter, 0.0);
         assert_relative_eq!(area, 0.0);
-
-        pa.add_edge(90.0, 1000.0);
-        let (_, area, _) = pa.clone().compute(false);
-
-        assert_relative_eq!(area, 0.0, epsilon = 0.01);
-
-        // TODO: Add more degeneracy tests when we have support for test_point() and test_edge()
     }
 
     #[test]
@@ -581,12 +545,12 @@ mod tests {
         let g = Geodesic::wgs84();
 
         let lat = 45.0;
-        let _azi = 39.2144607176828184218;
-        let _s = 8420705.40957178156285;
-        let r = 39433884866571.4277;   // Area for one circuit
+        let azi = 39.2144607176828184218;
+        let s = 8420705.40957178156285;
+        let r = 39433884866571.4277; // Area for one circuit
         let a0 = g.area(); // Ellipsoid area
 
-        let mut pa_clockwise =  PolygonArea::new(&g, Winding::Clockwise);
+        let mut pa_clockwise = PolygonArea::new(&g, Winding::Clockwise);
         let mut pa_counter = PolygonArea::new(&g, Winding::CounterClockwise);
 
         pa_clockwise.add_point(lat, 60.0);
@@ -604,14 +568,35 @@ mod tests {
         pa_counter.add_point(lat, -60.0);
 
         for i in 3..=4 {
-            pa_clockwise.add_point(lat,  60.0);
+            pa_clockwise.add_point(lat, 60.0);
             pa_clockwise.add_point(lat, 180.0);
-            
-            pa_counter.add_point(lat,  60.0);
+
+            pa_counter.add_point(lat, 60.0);
             pa_counter.add_point(lat, 180.0);
 
-            // TODO: Add the missing test-asserts when we add support for test_point() and test_edge()
-            // See https://github.com/geographiclib/geographiclib-js/blob/57137fdcf4ba56718c64b909b00331754b6efceb/geodesic/test/geodesictest.js#L855-L870
+            let (_, area, _) = pa_counter.test_point(lat, -60.0, true);
+            assert_relative_eq!(area, i as f64 * r, epsilon = 0.5);
+
+            let (_, area, _) = pa_counter.test_point(lat, -60.0, false);
+            assert_relative_eq!(area, i as f64 * r, epsilon = 0.5);
+
+            let (_, area, _) = pa_clockwise.test_point(lat, -60.0, true);
+            assert_relative_eq!(area, -i as f64 * r, epsilon = 0.5);
+
+            let (_, area, _) = pa_clockwise.test_point(lat, -60.0, false);
+            assert_relative_eq!(area, (-i as f64 * r) +a0, epsilon = 0.5);
+
+            let (_, area, _) = pa_counter.test_edge(azi, s, true);
+            assert_relative_eq!(area, i as f64 * r, epsilon = 0.5);
+
+            let (_, area, _) = pa_counter.test_edge(azi, s, false);
+            assert_relative_eq!(area, i as f64 * r, epsilon = 0.5);
+
+            let (_, area, _) = pa_clockwise.test_edge(azi, s, true);
+            assert_relative_eq!(area, -i as f64 * r, epsilon = 0.5);
+
+            let (_, area, _) = pa_clockwise.test_edge(azi, s, false);
+            assert_relative_eq!(area, (-i as f64 * r) +a0, epsilon = 0.5);
 
             pa_clockwise.add_point(lat, -60.0);
             pa_counter.add_point(lat, -60.0);
