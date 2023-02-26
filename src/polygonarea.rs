@@ -10,10 +10,19 @@ const POLYGONAREA_MASK: u64 = caps::LATITUDE | caps::LONGITUDE | caps::DISTANCE 
 use accurate::traits::*;
 
 /// Clockwise or Counterclockwise winding
+/// 
+/// The standard winding of a Simple Feature polygon is counter-clockwise. However, if the polygon is a hole, then the winding is clockwise.
+/// ESRI Shapefile polygons are opposite, with the outer-ring being clockwise and holes being counter-clockwise.
 #[derive(Debug, Clone)]
 pub enum Winding {
     Clockwise,
     CounterClockwise,
+}
+
+impl Default for Winding {
+    fn default() -> Self {
+        Winding::CounterClockwise
+    }
 }
 
 /// Compute the perimeter and area of a polygon on a Geodesic.
