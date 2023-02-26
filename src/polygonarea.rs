@@ -532,6 +532,11 @@ mod tests {
         assert_relative_eq!(perimeter, 0.0);
         assert_relative_eq!(area, 0.0);
 
+        let result = std::panic::catch_unwind(|| {
+            let (_, _, _) = pa.test_edge(90.0, 1000.0, true);
+        });
+        assert!(result.is_err());
+
         pa.add_point(1.0, 1.0);
         let (perimeter, area, _) = pa.clone().compute(true);
         assert_relative_eq!(perimeter, 0.0);
