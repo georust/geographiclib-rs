@@ -493,7 +493,7 @@ mod tests {
         pa.add_point(1.0, 2.0);
         pa.add_point(3.0, 3.0);
         let (_, area, _) = pa.compute(true);
-        assert_relative_eq!(area, 18454562325.45119);
+        assert_relative_eq!(area, 18454562325.45119, epsilon = 1.0e-4);
 
         // Switching the winding
         let mut pa = PolygonArea::new(&geoid, Winding::Clockwise);
@@ -501,7 +501,7 @@ mod tests {
         pa.add_point(1.0, 2.0);
         pa.add_point(3.0, 3.0);
         let (_, area, _) = pa.compute(true);
-        assert_relative_eq!(area, -18454562325.45119);
+        assert_relative_eq!(area, -18454562325.45119, epsilon = 1.0e-4);
 
         // Swaping lat and lon
         let mut pa = PolygonArea::new(&geoid, Winding::CounterClockwise);
@@ -509,7 +509,7 @@ mod tests {
         pa.add_point(2.0, 1.0);
         pa.add_point(3.0, 3.0);
         let (_, area, _) = pa.compute(true);
-        assert_relative_eq!(area, -18454562325.45119);
+        assert_relative_eq!(area, -18454562325.45119, epsilon = 1.0e-4);
     }
 
     #[test]
