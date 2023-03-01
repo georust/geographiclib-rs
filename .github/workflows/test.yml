@@ -10,6 +10,7 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - run: script/download-test-data.sh
+      - run: cargo clippy -- --deny warnings
       - run: cargo test
       - run: cargo test --features test_full
       - run: cargo bench --features test_full
