@@ -1,7 +1,7 @@
 #![allow(non_snake_case)]
 
 use crate::geodesic::{self, GEODESIC_ORDER};
-use crate::geodesiccapability as caps;
+use crate::geodesic_capability as caps;
 use crate::geomath;
 use std::collections::HashMap;
 

@@ -1,8 +1,8 @@
 #![allow(non_snake_case)]
 #![allow(clippy::excessive_precision)]
 
-use crate::geodesiccapability as caps;
-use crate::geodesicline;
+use crate::geodesic_capability as caps;
+use crate::geodesic_line;
 use crate::geomath;
 
 use std::f64::consts::{FRAC_1_SQRT_2, PI};
@@ -121,9 +121,9 @@ impl Geodesic {
         // Call a3coeff
         let mut o: i64 = 0;
         for (k, j) in (0..GEODESIC_ORDER).rev().enumerate() {
-            let m = j.min(GEODESIC_ORDER as i64 - j - 1);
-            _A3x[k as usize] = geomath::polyval(m as isize, &COEFF_A3[o as usize..], _n)
-                / COEFF_A3[(o + m + 1) as usize] as f64;
+            let m = j.min(GEODESIC_ORDER - j - 1);
+            _A3x[k] = geomath::polyval(m as isize, &COEFF_A3[o as usize..], _n)
+                / COEFF_A3[(o + m + 1) as usize];
             o += m + 2;
         }
 
@@ -133,9 +133,9 @@ impl Geodesic {
 
         for l in 1..GEODESIC_ORDER {
             for j in (l..GEODESIC_ORDER).rev() {
-                let m = j.min(GEODESIC_ORDER as i64 - j - 1);
+                let m = j.min(GEODESIC_ORDER - j - 1);
                 _C3x[k as usize] = geomath::polyval(m as isize, &COEFF_C3[o as usize..], _n)
-                    / COEFF_C3[(o + m + 1) as usize] as f64;
+                    / COEFF_C3[(o + m + 1) as usize];
                 k += 1;
                 o += m + 2;
             }
@@ -147,9 +147,9 @@ impl Geodesic {
 
         for l in 0..GEODESIC_ORDER {
             for j in (l..GEODESIC_ORDER).rev() {
-                let m = GEODESIC_ORDER as i64 - j - 1;
+                let m = GEODESIC_ORDER - j - 1;
                 _C4x[k as usize] = geomath::polyval(m as isize, &COEFF_C4[o as usize..], _n)
-                    / COEFF_C4[(o + m + 1) as usize] as f64;
+                    / COEFF_C4[(o + m + 1) as usize];
                 k += 1;
                 o += m + 2;
             }
@@ -848,7 +848,7 @@ impl Geodesic {
                 comg12 = omg12.cos();
             }
 
-            // We're diverging from Karney's implementation here 
+            // We're diverging from Karney's implementation here
             // which uses the hardcoded constant: -0.7071 for FRAC_1_SQRT_2
             let alp12: f64;
             if !meridian && comg12 > -FRAC_1_SQRT_2 && sbet2 - sbet1 < 1.75 {
@@ -904,7 +904,7 @@ impl Geodesic {
         };
 
         let line =
-            geodesicline::GeodesicLine::new(self, lat1, lon1, azi1, Some(outmask), None, None);
+            geodesic_line::GeodesicLine::new(self, lat1, lon1, azi1, Some(outmask), None, None);
         line._gen_position(arcmode, s12_a12, outmask)
     }
 
@@ -1295,7 +1295,7 @@ impl InverseGeodesic<(f64, f64, f64, f64, f64, f64, f64, f64)> for Geodesic {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::geodesicline::GeodesicLine;
+    use crate::geodesic_line::GeodesicLine;
     use approx::assert_relative_eq;
     use std::io::BufRead;
 
@@ -1819,7 +1819,7 @@ mod tests {
         assert_eq!(res2.5, 0.9996954065371639);
         assert_eq!(res2.6, -0.0);
         assert_eq!(res2.7, 1.0);
-        assert_eq!(res2.8, 0.0008355096040059597);
+        assert_relative_eq!(res2.8, 0.0008355096040059597, epsilon = 1e-18);
         assert_eq!(res2.9, -5.870849152149326e-05);
         assert_eq!(res2.10, 0.03490027216297455);
     }

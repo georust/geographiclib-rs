@@ -98,7 +98,7 @@ impl Runner {
             _computed_S12,
             computed_a12,
         ) = self.geod.direct(lat1, lon1, azi1, s12);
-        
+
         if self.is_full_output {
             // TODO - we're currently omitting several fields, and only outputting what's
             //        necessary to pass the validation tool
@@ -130,7 +130,6 @@ impl Runner {
             .geod
             .inverse(input_lat1, input_lon1, input_lat2, input_lon2);
 
-        
         if self.is_full_output {
             // TODO - we're currently omitting several fields, and only outputting what's
             //        necessary to pass the validation tool
