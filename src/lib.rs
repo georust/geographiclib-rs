@@ -67,6 +67,11 @@
 //!
 //! 1. `accurate`: Enabled by default. Use the [`accurate`](https://docs.rs/accurate/latest/accurate/) crate to provide high accuracy polygon areas and perimeters in `PolygonArea`. Can be disabled for better performance or when `PolygonArea` is not being used.
 
+// Since this library is a port of an existing (cpp) codebase, there are times we opt
+// to follow the upstream implementation rather than follow rust idioms.
+#![allow(clippy::bool_to_int_with_if)]
+#![allow(clippy::manual_range_contains)]
+
 mod geodesic;
 pub use geodesic::{DirectGeodesic, Geodesic, InverseGeodesic};
 
