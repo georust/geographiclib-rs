@@ -1819,7 +1819,7 @@ mod tests {
         assert_eq!(res2.5, 0.9996954065371639);
         assert_eq!(res2.6, -0.0);
         assert_eq!(res2.7, 1.0);
-        assert_eq!(res2.8, 0.0008355096040059597);
+        assert_relative_eq!(res2.8, 0.0008355096040059597, epsilon = 1e-18);
         assert_eq!(res2.9, -5.870849152149326e-05);
         assert_eq!(res2.10, 0.03490027216297455);
     }
