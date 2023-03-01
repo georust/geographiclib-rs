@@ -4,13 +4,14 @@ use crate::Geodesic;
 
 use crate::geodesic_capability as caps;
 
-const POLYGONAREA_MASK: u64 = caps::LATITUDE | caps::LONGITUDE | caps::DISTANCE | caps::AREA | caps::LONG_UNROLL;
+const POLYGONAREA_MASK: u64 =
+    caps::LATITUDE | caps::LONGITUDE | caps::DISTANCE | caps::AREA | caps::LONG_UNROLL;
 
 #[cfg(feature = "accurate")]
 use accurate::traits::*;
 
 /// Clockwise or CounterClockwise winding
-/// 
+///
 /// The standard winding of a Simple Feature polygon is counter-clockwise. However, if the polygon is a hole, then the winding is clockwise.
 /// ESRI Shapefile polygons are opposite, with the outer-ring being clockwise and holes being counter-clockwise.
 #[derive(Debug, Copy, Clone)]
@@ -107,9 +108,9 @@ impl<'a> PolygonArea<'a> {
             self.initial_lon = lon;
         } else {
             #[allow(non_snake_case)]
-            let (_a12, s12, _salp1, _calp1, _salp2, _calp2, _m12, _M12, _M21, S12) =
-                self.geoid
-                    ._gen_inverse(self.latest_lat, self.latest_lon, lat, lon, POLYGONAREA_MASK);
+            let (_a12, s12, _salp1, _calp1, _salp2, _calp2, _m12, _M12, _M21, S12) = self
+                .geoid
+                ._gen_inverse(self.latest_lat, self.latest_lon, lat, lon, POLYGONAREA_MASK);
             self.perimetersum += s12;
             self.areasum += S12;
             self.crossings += PolygonArea::transit(self.latest_lon, lon);
@@ -129,9 +130,14 @@ impl<'a> PolygonArea<'a> {
         }
 
         #[allow(non_snake_case)]
-        let (_a12, lat, lon, _azi2, _s12, _m12, _M12, _M21, S12) =
-            self.geoid
-                ._gen_direct(self.latest_lat, self.latest_lon, azimuth, false, distance, POLYGONAREA_MASK);
+        let (_a12, lat, lon, _azi2, _s12, _m12, _M12, _M21, S12) = self.geoid._gen_direct(
+            self.latest_lat,
+            self.latest_lon,
+            azimuth,
+            false,
+            distance,
+            POLYGONAREA_MASK,
+        );
         self.perimetersum += distance;
         self.areasum += S12;
         self.crossings += PolygonArea::transitdirect(self.latest_lon, lon);
@@ -177,13 +183,14 @@ impl<'a> PolygonArea<'a> {
     /// ```
     pub fn compute(mut self, sign: bool) -> (f64, f64, usize) {
         #[allow(non_snake_case)]
-        let (_a12, s12, _salp1, _calp1, _salp2, _calp2, _m12, _M12, _M21, S12) = self.geoid._gen_inverse(
-            self.latest_lat,
-            self.latest_lon,
-            self.initial_lat,
-            self.initial_lon,
-            POLYGONAREA_MASK,
-        );
+        let (_a12, s12, _salp1, _calp1, _salp2, _calp2, _m12, _M12, _M21, S12) =
+            self.geoid._gen_inverse(
+                self.latest_lat,
+                self.latest_lon,
+                self.initial_lat,
+                self.initial_lon,
+                POLYGONAREA_MASK,
+            );
         self.perimetersum += s12;
         self.areasum += S12;
 
@@ -223,7 +230,6 @@ impl<'a> PolygonArea<'a> {
         pa.compute(sign)
     }
 
-
     // Return 1 or -1 if crossing prime meridian in east or west direction.
     // Otherwise return zero.  longitude = +/-0 considered to be positive.
     fn transit(lon1: f64, lon2: f64) -> i64 {
@@ -252,17 +258,9 @@ impl<'a> PolygonArea<'a> {
         let lon1 = lon1 % 720.0;
         let lon2 = lon2 % 720.0;
 
-        let a = if 0.0 <= lon2 && lon2 < 360.0 {
-            0
-        } else {
-            1
-        };
+        let a = if 0.0 <= lon2 && lon2 < 360.0 { 0 } else { 1 };
 
-        let b = if 0.0 <= lon1 && lon1 < 360.0 {    
-            0
-        } else {
-            1
-        };
+        let b = if 0.0 <= lon1 && lon1 < 360.0 { 0 } else { 1 };
 
         a - b
     }
@@ -586,7 +584,7 @@ mod tests {
             assert_relative_eq!(area, -i as f64 * r, epsilon = 0.5);
 
             let (_, area, _) = pa_clockwise.test_point(lat, -60.0, false);
-            assert_relative_eq!(area, (-i as f64 * r) +a0, epsilon = 0.5);
+            assert_relative_eq!(area, (-i as f64 * r) + a0, epsilon = 0.5);
 
             let (_, area, _) = pa_counter.test_edge(azi, s, true);
             assert_relative_eq!(area, i as f64 * r, epsilon = 0.5);
@@ -598,7 +596,7 @@ mod tests {
             assert_relative_eq!(area, -i as f64 * r, epsilon = 0.5);
 
             let (_, area, _) = pa_clockwise.test_edge(azi, s, false);
-            assert_relative_eq!(area, (-i as f64 * r) +a0, epsilon = 0.5);
+            assert_relative_eq!(area, (-i as f64 * r) + a0, epsilon = 0.5);
 
             pa_clockwise.add_point(lat, -60.0);
             pa_counter.add_point(lat, -60.0);
