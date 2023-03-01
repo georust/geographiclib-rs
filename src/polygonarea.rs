@@ -9,7 +9,7 @@ const POLYGONAREA_MASK: u64 = caps::LATITUDE | caps::LONGITUDE | caps::DISTANCE 
 #[cfg(feature = "accurate")]
 use accurate::traits::*;
 
-/// Clockwise or Counterclockwise winding
+/// Clockwise or CounterClockwise winding
 /// 
 /// The standard winding of a Simple Feature polygon is counter-clockwise. However, if the polygon is a hole, then the winding is clockwise.
 /// ESRI Shapefile polygons are opposite, with the outer-ring being clockwise and holes being counter-clockwise.
