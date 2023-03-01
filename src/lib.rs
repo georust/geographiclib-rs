@@ -70,14 +70,14 @@
 mod geodesic;
 pub use geodesic::{DirectGeodesic, Geodesic, InverseGeodesic};
 
-pub mod geodesiccapability;
-pub use geodesiccapability as capability;
+pub mod geodesic_capability;
+pub use geodesic_capability as capability;
 
-mod geodesicline;
+mod geodesic_line;
 mod geomath;
-mod polygonarea;
-pub use polygonarea::PolygonArea;
-pub use polygonarea::Winding;
+mod polygon_area;
+pub use polygon_area::PolygonArea;
+pub use polygon_area::Winding;
 
 #[macro_use]
 extern crate lazy_static;

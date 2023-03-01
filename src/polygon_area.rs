@@ -2,7 +2,7 @@ use crate::geomath::ang_diff;
 use crate::geomath::ang_normalize;
 use crate::Geodesic;
 
-use crate::geodesiccapability as caps;
+use crate::geodesic_capability as caps;
 
 const POLYGONAREA_MASK: u64 = caps::LATITUDE | caps::LONGITUDE | caps::DISTANCE | caps::AREA | caps::LONG_UNROLL;
 

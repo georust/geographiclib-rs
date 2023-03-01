@@ -1,8 +1,8 @@
 #![allow(non_snake_case)]
 #![allow(clippy::excessive_precision)]
 
-use crate::geodesiccapability as caps;
-use crate::geodesicline;
+use crate::geodesic_capability as caps;
+use crate::geodesic_line;
 use crate::geomath;
 
 use std::f64::consts::{FRAC_1_SQRT_2, PI};
@@ -904,7 +904,7 @@ impl Geodesic {
         };
 
         let line =
-            geodesicline::GeodesicLine::new(self, lat1, lon1, azi1, Some(outmask), None, None);
+            geodesic_line::GeodesicLine::new(self, lat1, lon1, azi1, Some(outmask), None, None);
         line._gen_position(arcmode, s12_a12, outmask)
     }
 
@@ -1295,7 +1295,7 @@ impl InverseGeodesic<(f64, f64, f64, f64, f64, f64, f64, f64)> for Geodesic {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::geodesicline::GeodesicLine;
+    use crate::geodesic_line::GeodesicLine;
     use approx::assert_relative_eq;
     use std::io::BufRead;
 
