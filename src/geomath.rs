@@ -307,7 +307,7 @@ pub fn _C1f(eps: f64, c: &mut [f64], geodesic_order: i64) {
     let mut d = eps;
     let mut o = 0;
     for l in 1..=geodesic_order {
-        let m = ((geodesic_order - l) / 2);
+        let m = (geodesic_order - l) / 2;
         c[l as usize] = d * polyval(m as isize, &COEFF[o as usize..], eps2)
             / COEFF[(o + m + 1) as usize];
         o += m + 2;

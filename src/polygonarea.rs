@@ -206,7 +206,7 @@ impl<'a> PolygonArea<'a> {
         // Properly take into account crossings when calculating area.
         let areasum = self.reduce_area(areasum, sign);
 
-        return (perimetersum, areasum, self.num);
+        (perimetersum, areasum, self.num)
     }
 
     /// Check what the perimeter and area would be if this point was added to the polygon without actually adding it
@@ -239,11 +239,11 @@ impl<'a> PolygonArea<'a> {
         //  (lon12 < 0 && lon1 >= 0 && lon2 < 0 ? -1 : 0);
 
         if lon12 > 0.0 && ((lon1 < 0.0 && lon2 >= 0.0) || (lon1 > 0.0 && lon2 == 0.0)) {
-            return 1;
+            1
         } else if lon12 < 0.0 && lon1 >= 0.0 && lon2 < 0.0 {
-            return -1;
+            -1
         } else {
-            return 0;
+            0
         }
     }
 
@@ -264,7 +264,7 @@ impl<'a> PolygonArea<'a> {
             1
         };
 
-        return a - b;
+        a - b
     }
 
     fn reduce_area(&self, area: f64, signed: bool) -> f64 {
