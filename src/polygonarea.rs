@@ -107,9 +107,9 @@ impl<'a> PolygonArea<'a> {
             self.initial_lon = lon;
         } else {
             #[allow(non_snake_case)]
-            let (_a12, s12, _azi1, _azi2, _m12, _M12, _M21, S12) =
+            let (_a12, s12, _salp1, _calp1, _salp2, _calp2, _m12, _M12, _M21, S12) =
                 self.geoid
-                    ._gen_inverse_azi(self.latest_lat, self.latest_lon, lat, lon, POLYGONAREA_MASK);
+                    ._gen_inverse(self.latest_lat, self.latest_lon, lat, lon, POLYGONAREA_MASK);
             self.perimetersum += s12;
             self.areasum += S12;
             self.crossings += PolygonArea::transit(self.latest_lon, lon);
@@ -337,18 +337,6 @@ mod tests {
 
         assert_relative_eq!(perimeter, 443770.917, epsilon = 1.0e-3);
         assert_relative_eq!(area, -12308778361.469, epsilon = 1.0e-3);
-    }
-
-    #[test]
-    fn test_edge_2() {
-        let geoid = Geodesic::wgs84();
-        let mut pa = PolygonArea::new(&geoid, Winding::CounterClockwise);
-
-        pa.add_point(0.0, 0.0);
-
-        let (_a12, lat2, lon2, _, _, _, _, _, _) = geoid._gen_direct(0.0, 0.0, 90.0, false, 19113000.0, POLYGONAREA_MASK);
-
-        dbg!(lat2, lon2);
     }
 
     #[test]
