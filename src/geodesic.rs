@@ -121,9 +121,9 @@ impl Geodesic {
         // Call a3coeff
         let mut o: i64 = 0;
         for (k, j) in (0..GEODESIC_ORDER).rev().enumerate() {
-            let m = j.min(GEODESIC_ORDER as i64 - j - 1);
-            _A3x[k as usize] = geomath::polyval(m as isize, &COEFF_A3[o as usize..], _n)
-                / COEFF_A3[(o + m + 1) as usize] as f64;
+            let m = j.min(GEODESIC_ORDER - j - 1);
+            _A3x[k] = geomath::polyval(m as isize, &COEFF_A3[o as usize..], _n)
+                / COEFF_A3[(o + m + 1) as usize];
             o += m + 2;
         }
 
@@ -133,9 +133,9 @@ impl Geodesic {
 
         for l in 1..GEODESIC_ORDER {
             for j in (l..GEODESIC_ORDER).rev() {
-                let m = j.min(GEODESIC_ORDER as i64 - j - 1);
+                let m = j.min(GEODESIC_ORDER - j - 1);
                 _C3x[k as usize] = geomath::polyval(m as isize, &COEFF_C3[o as usize..], _n)
-                    / COEFF_C3[(o + m + 1) as usize] as f64;
+                    / COEFF_C3[(o + m + 1) as usize];
                 k += 1;
                 o += m + 2;
             }
@@ -147,9 +147,9 @@ impl Geodesic {
 
         for l in 0..GEODESIC_ORDER {
             for j in (l..GEODESIC_ORDER).rev() {
-                let m = GEODESIC_ORDER as i64 - j - 1;
+                let m = GEODESIC_ORDER - j - 1;
                 _C4x[k as usize] = geomath::polyval(m as isize, &COEFF_C4[o as usize..], _n)
-                    / COEFF_C4[(o + m + 1) as usize] as f64;
+                    / COEFF_C4[(o + m + 1) as usize];
                 k += 1;
                 o += m + 2;
             }
