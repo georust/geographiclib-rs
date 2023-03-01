@@ -1,6 +1,6 @@
 [package]
 name = "geographiclib-rs"
-version = "0.2.2"
+version = "0.2.3"
 license = "MIT"
 edition = "2018"
 
@@ -12,11 +12,11 @@ documentation = "https://docs.rs/geographiclib-rs"
 readme = "README.md"
 
 [features]
-# Run tests against Karney's GeodTest.dat test cases. 
+# Run tests against Karney's GeodTest.dat test cases.
 # You must run script/download-test-data.sh before using this feature
 test_full = []
 
-# Run tests against Karney's abridged GeodTest-short.dat test cases. 
+# Run tests against Karney's abridged GeodTest-short.dat test cases.
 # You must run script/download-test-data.sh before using this feature
 test_short = []
 
