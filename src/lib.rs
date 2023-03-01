@@ -71,6 +71,7 @@
 // to follow the upstream implementation rather than follow rust idioms.
 #![allow(clippy::bool_to_int_with_if)]
 #![allow(clippy::manual_range_contains)]
+#![allow(clippy::excessive_precision)]
 
 mod geodesic;
 pub use geodesic::{DirectGeodesic, Geodesic, InverseGeodesic};
