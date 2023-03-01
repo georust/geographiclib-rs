@@ -907,6 +907,11 @@ impl Geodesic {
             geodesicline::GeodesicLine::new(self, lat1, lon1, azi1, Some(outmask), None, None);
         line._gen_position(arcmode, s12_a12, outmask)
     }
+
+    /// Get the area of the geodesic in square meters
+    pub fn area(&self) -> f64 {
+        self._c2 * 4.0 * std::f64::consts::PI
+    }
 }
 
 /// Place a second point, given the first point, an azimuth, and a distance.
@@ -2714,5 +2719,29 @@ mod tests {
                 assert_relative_eq!(a12, a12_out, epsilon = 2e-10);
             },
         );
+    }
+
+    #[test]
+    fn test_turnaround() {
+        let g = Geodesic::wgs84();
+
+        let start = (0.0, 0.0);
+        let destination = (0.0, 1.0);
+
+        let (distance, azi1, _, _) = g.inverse(start.0, start.1, destination.0, destination.1);
+
+        // Confirm that we've gone due-east
+        assert_eq!(azi1, 90.0);
+
+        // Turn around by adding 180 degrees to the azimuth
+        let turn_around = azi1 + 180.0;
+
+        // Confirm that turn around is due west
+        assert_eq!(turn_around, 270.0);
+
+        // Test that we can turn around and get back to the starting point.
+        let (lat, lon) = g.direct(destination.0, destination.1, turn_around, distance);
+        assert_relative_eq!(lat, start.0, epsilon = 1.0e-3);
+        assert_relative_eq!(lon, start.1, epsilon = 1.0e-3);
     }
 }
