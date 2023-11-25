@@ -4,6 +4,7 @@
 use crate::geodesic_capability as caps;
 use crate::geodesic_line;
 use crate::geomath;
+use std::sync;
 
 use std::f64::consts::{FRAC_1_SQRT_2, PI};
 
@@ -42,13 +43,11 @@ pub struct Geodesic {
     xthresh_: f64,
 }
 
-lazy_static! {
-    static ref WGS84_GEOD: Geodesic = Geodesic::new(WGS84_A, WGS84_F);
-}
+static WGS84_GEOD: sync::OnceLock<Geodesic> = sync::OnceLock::new();
 
 impl Geodesic {
     pub fn wgs84() -> Self {
-        *WGS84_GEOD
+        *WGS84_GEOD.get_or_init(|| Geodesic::new(WGS84_A, WGS84_F))
     }
 
     pub fn equatorial_radius(&self) -> f64 {

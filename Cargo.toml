@@ -3,6 +3,7 @@ name = "geographiclib-rs"
 version = "0.2.3"
 license = "MIT"
 edition = "2018"
+rust-version = "1.70.0"
 
 description = "A port of geographiclib in Rust."
 authors = ["Federico Dolce <psykopear@gmail.com>", "Michael Kirk <michael.code@endoftheworl.de>"]
@@ -23,7 +24,6 @@ test_short = []
 default = ["accurate"]
 
 [dependencies]
-lazy_static = "1.4.0"
 accurate = { version = "0.3", optional = true, default-features = false }
 
 [dev-dependencies]
