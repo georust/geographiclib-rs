@@ -84,6 +84,3 @@ mod geomath;
 mod polygon_area;
 pub use polygon_area::PolygonArea;
 pub use polygon_area::Winding;
-
-#[macro_use]
-extern crate lazy_static;
