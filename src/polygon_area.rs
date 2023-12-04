@@ -14,16 +14,11 @@ use accurate::traits::*;
 ///
 /// The standard winding of a Simple Feature polygon is counter-clockwise. However, if the polygon is a hole, then the winding is clockwise.
 /// ESRI Shapefile polygons are opposite, with the outer-ring being clockwise and holes being counter-clockwise.
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Default, Copy, Clone)]
 pub enum Winding {
     Clockwise,
+    #[default]
     CounterClockwise,
-}
-
-impl Default for Winding {
-    fn default() -> Self {
-        Winding::CounterClockwise
-    }
 }
 
 /// Compute the perimeter and area of a polygon on a Geodesic.
@@ -65,7 +60,7 @@ pub struct PolygonArea<'a> {
 /// pa.add_point(0.0, 1.0);
 /// pa.add_point(1.0, 1.0);
 /// pa.add_point(1.0, 0.0);
-////
+///
 /// let (perimeter, area, _num) = pa.compute(false);
 ///
 /// use approx::assert_relative_eq;
