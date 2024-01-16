@@ -1648,9 +1648,7 @@ mod tests {
     fn test_arcdirect() {
         // Corresponds with ArcDirectCheck from Java, or test_arcdirect from Python
         let geod = Geodesic::wgs84();
-        for (_line_num, (lat1, lon1, azi1, lat2, lon2, azi2, s12, a12, m12, M12, M21, S12)) in
-            TESTCASES.iter().enumerate()
-        {
+        for (lat1, lon1, azi1, lat2, lon2, azi2, s12, a12, m12, M12, M21, S12) in TESTCASES.iter() {
             let (
                 _computed_a12,
                 computed_lat2,
