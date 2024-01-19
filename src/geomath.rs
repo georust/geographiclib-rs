@@ -1,12 +1,7 @@
 #![allow(non_snake_case)]
 #![allow(clippy::excessive_precision)]
 
-pub const DIGITS: u64 = 53;
 pub const TWO: f64 = 2.0;
-
-pub fn get_epsilon() -> f64 {
-    TWO.powi(1 - DIGITS as i32)
-}
 
 pub fn get_min_val() -> f64 {
     TWO.powi(-1022)
@@ -15,22 +10,6 @@ pub fn get_min_val() -> f64 {
 // Square
 pub fn sq(x: f64) -> f64 {
     x.powi(2)
-}
-
-// We use the built-in impl (f64::cbrt) rather than this.
-// Real cube root
-pub fn cbrt(x: f64) -> f64 {
-    // y = math.pow(abs(x), 1/3.0)
-    let y = x.abs().powf(1.0 / 3.0);
-
-    // return y if x > 0 else (-y if x < 0 else x)
-    if x > 0.0 {
-        y
-    } else if x < 0.0 {
-        -y
-    } else {
-        x
-    }
 }
 
 // Normalize a two-vector
@@ -52,17 +31,22 @@ pub fn sum(u: f64, v: f64) -> (f64, f64) {
 }
 
 // Evaluate a polynomial
-pub fn polyval(n: isize, p: &[f64], x: f64) -> f64 {
-    if n < 0 {
-        0.0
+pub fn polyval(n: usize, p: &[f64], x: f64) -> f64 {
+    if p.is_empty() || n >= p.len() {
+        panic!("illegal arguments would cause out-of-bounds indexing");
     } else {
+        // for loop needs to be nested in the if/else
+        // or rustc/llvm is a little uncertain and
+        // will insert bounds checks even though
+        // those should be possible at this stage.
         let mut y = p[0];
-        for val in &p[1..=n as usize] {
+        for val in &p[1..=n] {
             y = y * x + val;
         }
         y
     }
 }
+
 
 // Round an angle so taht small values underflow to 0
 pub fn ang_round(x: f64) -> f64 {
@@ -140,15 +124,12 @@ pub fn ang_diff(x: f64, y: f64) -> (f64, f64) {
     }
 }
 
-pub fn fmod(x: f64, y: f64) -> f64 {
-    x % y
-}
-
 /// Compute sine and cosine of x in degrees
 pub fn sincosd(x: f64) -> (f64, f64) {
+
     // r = math.fmod(x, 360) if Math.isfinite(x) else Math.nan
     let mut r = if x.is_finite() {
-        fmod(x, 360.0)
+        x % 360.0
     } else {
         std::f64::NAN
     };
@@ -198,33 +179,12 @@ pub fn sincosd(x: f64) -> (f64, f64) {
     //     s, c = (x, c) if x == 0 else (0.0+s, 0.0+c)
     // return s, c
     let (s, c) = if x == 0.0 { (x, c) } else { (0.0 + s, 0.0 + c) };
-
     (s, c)
 }
 
 // Compute atan2(y, x) with result in degrees
 pub fn atan2d(y: f64, x: f64) -> f64 {
-    let mut x = x;
-    let mut y = y;
-    let mut q = if y.abs() > x.abs() {
-        std::mem::swap(&mut x, &mut y);
-        2.0
-    } else {
-        0.0
-    };
-    if x < 0.0 {
-        q += 1.0;
-        x = -x;
-    }
-    let mut ang = y.atan2(x).to_degrees();
-    if q == 1.0 {
-        ang = if y >= 0.0 { 180.0 - ang } else { -180.0 - ang };
-    } else if q == 2.0 {
-        ang = 90.0 - ang;
-    } else if q == 3.0 {
-        ang += -90.0;
-    }
-    ang
+    y.atan2(x).to_degrees()
 }
 
 pub fn eatanhe(x: f64, es: f64) -> f64 {
@@ -269,19 +229,21 @@ pub fn astroid(x: f64, y: f64) -> f64 {
     let r = (p + q - 1.0) / 6.0;
     if !(q == 0.0 && r <= 0.0) {
         let s = p * q / 4.0;
-        let r2 = sq(r);
-        let r3 = r * r2;
+        let r2 = r.powi(2);
+        let r3 = r.powi(3);
         let disc = s * (s + 2.0 * r3);
-        let mut u = r;
-        if disc >= 0.0 {
-            let mut t3 = s + r3;
-            t3 += if t3 < 0.0 { -disc.sqrt() } else { disc.sqrt() };
-            let t = cbrt(t3); // we could use built-in T.cbrt
-            u += t + if t != 0.0 { r2 / t } else { 0.0 };
+        let u = r;
+        let additional = if disc >= 0.0 {
+            let t3 = s + r3;
+            let t3 = t3 + disc.sqrt().copysign(t3);
+            //t3 += if t3 < 0.0 { -disc.sqrt() } else { disc.sqrt() };
+            let t = t3.cbrt(); // we could use built-in T.cbrt
+            t + if t != 0.0 { r2 / t } else { 0.0 }
         } else {
-            let ang = (-disc).sqrt().atan2(-(s + r3));
-            u += 2.0 * r * (ang / 3.0).cos();
-        }
+            let ang = disc.abs().sqrt().atan2(-(s + r3));
+            2.0 * r * (ang / 3.0).cos()
+        };
+        let u = u + additional;
         let v = (sq(u) + q).sqrt();
         let uv = if u < 0.0 { q / (v - u) } else { u + v };
         let w = (uv - q) / (2.0 * v);
@@ -291,14 +253,14 @@ pub fn astroid(x: f64, y: f64) -> f64 {
     }
 }
 
-pub fn _A1m1f(eps: f64, geodesic_order: i64) -> f64 {
+pub fn _A1m1f<const GEODESIC_ORDER: usize>(eps: f64) -> f64 {
     const COEFF: [f64; 5] = [1.0, 4.0, 64.0, 0.0, 256.0];
-    let m: i64 = geodesic_order / 2;
-    let t = polyval(m as isize, &COEFF, sq(eps)) / COEFF[(m + 1) as usize];
+    let m = GEODESIC_ORDER / 2;
+    let t = polyval(m, &COEFF, sq(eps)) / COEFF[m + 1];
     (t + eps) / (1.0 - eps)
 }
 
-pub fn _C1f(eps: f64, c: &mut [f64], geodesic_order: i64) {
+pub fn _C1f<const GEODESIC_ORDER: usize>(eps: f64, c: &mut [f64]) {
     const COEFF: [f64; 18] = [
         -1.0, 6.0, -16.0, 32.0, -9.0, 64.0, -128.0, 2048.0, 9.0, -16.0, 768.0, 3.0, -5.0, 512.0,
         -7.0, 1280.0, -7.0, 2048.0,
@@ -306,16 +268,15 @@ pub fn _C1f(eps: f64, c: &mut [f64], geodesic_order: i64) {
     let eps2 = sq(eps);
     let mut d = eps;
     let mut o = 0;
-    for l in 1..=geodesic_order {
-        let m = (geodesic_order - l) / 2;
-        c[l as usize] =
-            d * polyval(m as isize, &COEFF[o as usize..], eps2) / COEFF[(o + m + 1) as usize];
+    for l in 1..=GEODESIC_ORDER {
+        let m = (GEODESIC_ORDER - l) / 2;
+        c[l] = d * polyval(m, &COEFF[o..], eps2) / COEFF[o + m + 1];
         o += m + 2;
         d *= eps;
     }
 }
 
-pub fn _C1pf(eps: f64, c: &mut [f64], geodesic_order: i64) {
+pub fn _C1pf<const GEODESIC_ORDER: usize>(eps: f64, c: &mut [f64]) {
     const COEFF: [f64; 18] = [
         205.0, -432.0, 768.0, 1536.0, 4005.0, -4736.0, 3840.0, 12288.0, -225.0, 116.0, 384.0,
         -7173.0, 2695.0, 7680.0, 3467.0, 7680.0, 38081.0, 61440.0,
@@ -323,23 +284,22 @@ pub fn _C1pf(eps: f64, c: &mut [f64], geodesic_order: i64) {
     let eps2 = sq(eps);
     let mut d = eps;
     let mut o = 0;
-    for l in 1..=geodesic_order {
-        let m = (geodesic_order - l) / 2;
-        c[l as usize] =
-            d * polyval(m as isize, &COEFF[o as usize..], eps2) / COEFF[(o + m + 1) as usize];
+    for l in 1..= GEODESIC_ORDER {
+        let m = (GEODESIC_ORDER - l) / 2;
+        c[l] = d * polyval(m, &COEFF[o..], eps2) / COEFF[o + m + 1];
         o += m + 2;
         d *= eps;
     }
 }
 
-pub fn _A2m1f(eps: f64, geodesic_order: i64) -> f64 {
+pub fn _A2m1f<const GEODESIC_ORDER: usize>(eps: f64) -> f64 {
     const COEFF: [f64; 5] = [-11.0, -28.0, -192.0, 0.0, 256.0];
-    let m: i64 = geodesic_order / 2;
-    let t = polyval(m as isize, &COEFF, sq(eps)) / COEFF[(m + 1) as usize];
+    let m = GEODESIC_ORDER / 2;
+    let t = polyval(m, &COEFF, sq(eps)) / COEFF[m + 1];
     (t - eps) / (1.0 + eps)
 }
 
-pub fn _C2f(eps: f64, c: &mut [f64], geodesic_order: i64) {
+pub fn _C2f<const GEODESIC_ORDER: usize>(eps: f64, c: &mut [f64]) {
     const COEFF: [f64; 18] = [
         1.0, 2.0, 16.0, 32.0, 35.0, 64.0, 384.0, 2048.0, 15.0, 80.0, 768.0, 7.0, 35.0, 512.0, 63.0,
         1280.0, 77.0, 2048.0,
@@ -347,10 +307,9 @@ pub fn _C2f(eps: f64, c: &mut [f64], geodesic_order: i64) {
     let eps2 = sq(eps);
     let mut d = eps;
     let mut o = 0;
-    for l in 1..=geodesic_order {
-        let m = (geodesic_order - l) / 2;
-        c[l as usize] =
-            d * polyval(m as isize, &COEFF[o as usize..], eps2) / COEFF[(o + m + 1) as usize];
+    for l in 1..= GEODESIC_ORDER {
+        let m = ( GEODESIC_ORDER - l) / 2;
+        c[l] = d * polyval(m, &COEFF[o..], eps2) / COEFF[o + m + 1];
         o += m + 2;
         d *= eps;
     }
@@ -360,6 +319,8 @@ pub fn _C2f(eps: f64, c: &mut [f64], geodesic_order: i64) {
 mod tests {
     use super::*;
     use approx::assert_relative_eq;
+    use crate::geodesic::{GEODESIC_ORDER};
+
     // Results for the assertions are taken by running the python implementation
 
     #[test]
@@ -379,7 +340,7 @@ mod tests {
     #[test]
     fn test__C2f() {
         let mut c = vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0];
-        _C2f(0.12, &mut c, 6);
+        _C2f::<GEODESIC_ORDER>(0.12, &mut c);
         assert_eq!(
             c,
             vec![
@@ -396,13 +357,13 @@ mod tests {
 
     #[test]
     fn test__A2m1f() {
-        assert_eq!(_A2m1f(0.12, 6), -0.11680607884285714);
+        assert_eq!(_A2m1f::<GEODESIC_ORDER>(0.12), -0.11680607884285714);
     }
 
     #[test]
     fn test__C1pf() {
         let mut c = vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0];
-        _C1pf(0.12, &mut c, 6);
+        _C1pf::<GEODESIC_ORDER>(0.12, &mut c);
         assert_eq!(
             c,
             vec![
@@ -420,7 +381,7 @@ mod tests {
     #[test]
     fn test__C1f() {
         let mut c = vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0];
-        _C1f(0.12, &mut c, 6);
+        _C1f::<GEODESIC_ORDER>(0.12, &mut c);
         assert_eq!(
             c,
             vec![
@@ -437,7 +398,7 @@ mod tests {
 
     #[test]
     fn test__A1m1f() {
-        assert_eq!(_A1m1f(0.12, 6), 0.1404582405272727);
+        assert_eq!(_A1m1f::<GEODESIC_ORDER>(0.12), 0.1404582405272727);
     }
 
     #[test]
