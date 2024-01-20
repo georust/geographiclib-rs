@@ -741,14 +741,14 @@ impl Geodesic {
                     {
                         break;
                     };
-                    if v > 0.0 && (numit > MAX_ITERATIONS || calp1 / salp1 > calp1b / salp1b) {
+                    if v > 0.0 && (numit > ITERATIONS || calp1 / salp1 > calp1b / salp1b) {
                         salp1b = salp1;
                         calp1b = calp1;
-                    } else if v < 0.0 && (numit > MAX_ITERATIONS || calp1 / salp1 < calp1a / salp1a) {
+                    } else if v < 0.0 && (numit > ITERATIONS || calp1 / salp1 < calp1a / salp1a) {
                         salp1a = salp1;
                         calp1a = calp1;
                     }
-                    if numit < MAX_ITERATIONS && dv > 0.0 {
+                    if numit < ITERATIONS && dv > 0.0 {
                         let dalp1 = -v / dv;
                         let sdalp1 = dalp1.sin();
                         let cdalp1 = dalp1.cos();
