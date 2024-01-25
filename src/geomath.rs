@@ -136,68 +136,6 @@ pub fn ang_diff(x: f64, y: f64) -> (f64, f64) {
     }
 }
 
-pub fn fmod(x: f64, y: f64) -> f64 {
-    x % y
-}
-
-/// Compute sine and cosine of x in degrees
-pub fn sincosd(x: f64) -> (f64, f64) {
-    // r = math.fmod(x, 360) if Math.isfinite(x) else Math.nan
-    let mut r = if x.is_finite() {
-        fmod(x, 360.0)
-    } else {
-        std::f64::NAN
-    };
-
-    // q = 0 if Math.isnan(r) else int(round(r / 90))
-    let mut q = if r.is_nan() {
-        0
-    } else {
-        (r / 90.0).round() as i32
-    };
-
-    // r -= 90 * q; r = math.radians(r)
-    r -= 90.0 * q as f64;
-    r = r.to_radians();
-
-    // s = math.sin(r); c = math.cos(r)
-    let s = r.sin();
-    let c = r.cos();
-
-    // q = q % 4
-    q %= 4;
-
-    // if q == 1:
-    //     s, c =  c, -s
-    // elif q == 2:
-    //     s, c = -s, -c
-    // elif q == 3:
-    //     s, c = -c,  s
-
-    let q = if q < 0 { q + 4 } else { q };
-
-    let (s, c) = if q == 1 {
-        (c, -s)
-    } else if q == 2 {
-        (-s, -c)
-    } else if q == 3 {
-        (-c, s)
-    } else {
-        debug_assert_eq!(q, 0);
-        (s, c)
-    };
-
-    // # Remove the minus sign on -0.0 except for sin(-0.0).
-    // # On Windows 32-bit with python 2.7, math.fmod(-0.0, 360) = +0.0
-    // # (x, c) here fixes this bug.  See also Math::sincosd in the C++ library.
-    // # AngNormalize has a similar fix.
-    //     s, c = (x, c) if x == 0 else (0.0+s, 0.0+c)
-    // return s, c
-    let (s, c) = if x == 0.0 { (x, c) } else { (0.0 + s, 0.0 + c) };
-
-    (s, c)
-}
-
 // Compute atan2(y, x) with result in degrees
 pub fn atan2d(y: f64, x: f64) -> f64 {
     let mut x = x;
@@ -361,22 +299,7 @@ pub fn _C2f(eps: f64, c: &mut [f64], geodesic_order: usize) {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use approx::assert_relative_eq;
     // Results for the assertions are taken by running the python implementation
-
-    #[test]
-    fn test_sincosd() {
-        let res = sincosd(-77.03196);
-        assert_relative_eq!(res.0, -0.9744953925159129);
-        assert_relative_eq!(res.1, 0.22440750870961693);
-
-        let res = sincosd(69.48894);
-        assert_relative_eq!(res.0, 0.9366045700708676);
-        assert_relative_eq!(res.1, 0.3503881837653281);
-        let res = sincosd(-1.0);
-        assert_relative_eq!(res.0, -0.01745240643728351);
-        assert_relative_eq!(res.1, 0.9998476951563913);
-    }
 
     #[test]
     fn test__C2f() {

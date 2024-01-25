@@ -80,14 +80,14 @@ impl GeodesicLine {
         let caps = caps | caps::LATITUDE | caps::AZIMUTH | caps::LONG_UNROLL;
         let (azi1, salp1, calp1) = if salp1.is_nan() || calp1.is_nan() {
             let azi1 = geomath::ang_normalize(azi1);
-            let (salp1, calp1) = geomath::sincosd(geomath::ang_round(azi1));
+            let (salp1, calp1) = azi1.to_radians().sin_cos();
             (azi1, salp1, calp1)
         } else {
             (azi1, salp1, calp1)
         };
         let lat1 = geomath::lat_fix(lat1);
 
-        let (mut sbet1, mut cbet1) = geomath::sincosd(geomath::ang_round(lat1));
+        let (mut sbet1, mut cbet1) = geomath::ang_round(lat1).to_radians().sin_cos();
         sbet1 *= _f1;
         geomath::norm(&mut sbet1, &mut cbet1);
         cbet1 = tiny_.max(cbet1);
@@ -227,11 +227,8 @@ impl GeodesicLine {
         let mut csig2: f64;
         if arcmode {
             sig12 = s12_a12.to_radians();
-            let res = geomath::sincosd(s12_a12);
-            ssig12 = res.0;
-            csig12 = res.1;
+            (ssig12, csig12) = sig12.sin_cos();
         } else {
-            // tau12 = s12_a12 / (self._b * (1 + self._A1m1))
             let tau12 = s12_a12 / (self._b * (1.0 + self._A1m1));
 
             let s = tau12.sin();
