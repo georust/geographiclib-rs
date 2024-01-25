@@ -1,5 +1,8 @@
-on: push
 name: Run tests
+on:
+  - push
+  - pull_request
+  - merge_group
 jobs:
   linting:
     name: formatting and clippy
