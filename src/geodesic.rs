@@ -121,8 +121,7 @@ impl Geodesic {
         let mut o: usize = 0;
         for (k, j) in (0..GEODESIC_ORDER).rev().enumerate() {
             let m = j.min(GEODESIC_ORDER - j - 1);
-            _A3x[k] = geomath::polyval(m, &COEFF_A3[o..], _n)
-                / COEFF_A3[o + m + 1];
+            _A3x[k] = geomath::polyval(m, &COEFF_A3[o..], _n) / COEFF_A3[o + m + 1];
             o += m + 2;
         }
 
@@ -132,8 +131,7 @@ impl Geodesic {
         for l in 1..GEODESIC_ORDER {
             for j in (l..GEODESIC_ORDER).rev() {
                 let m = j.min(GEODESIC_ORDER - j - 1);
-                _C3x[k] = geomath::polyval(m, &COEFF_C3[o..], _n)
-                    / COEFF_C3[o + m + 1];
+                _C3x[k] = geomath::polyval(m, &COEFF_C3[o..], _n) / COEFF_C3[o + m + 1];
                 k += 1;
                 o += m + 2;
             }
@@ -145,8 +143,7 @@ impl Geodesic {
         for l in 0..GEODESIC_ORDER {
             for j in (l..GEODESIC_ORDER).rev() {
                 let m = GEODESIC_ORDER - j - 1;
-                _C4x[k] = geomath::polyval(m, &COEFF_C4[o..], _n)
-                    / COEFF_C4[o + m + 1];
+                _C4x[k] = geomath::polyval(m, &COEFF_C4[o..], _n) / COEFF_C4[o + m + 1];
                 k += 1;
                 o += m + 2;
             }
@@ -188,12 +185,7 @@ impl Geodesic {
     pub fn _C3f(&self, eps: f64, c: &mut [f64]) {
         let mut mult = 1.0;
         let mut o = 0;
-        for (l, c_item) in c
-            .iter_mut()
-            .enumerate()
-            .take(self.GEODESIC_ORDER)
-            .skip(1)
-        {
+        for (l, c_item) in c.iter_mut().enumerate().take(self.GEODESIC_ORDER).skip(1) {
             let m = self.GEODESIC_ORDER - l - 1;
             mult *= eps;
             *c_item = mult * geomath::polyval(m, &self._C3x[o..], eps);
