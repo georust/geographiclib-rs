@@ -302,6 +302,9 @@ pub fn _C1f(eps: f64, c: &mut [f64], geodesic_order: usize) {
     let eps2 = sq(eps);
     let mut d = eps;
     let mut o = 0;
+    // Clippy wants us to turn this into `c.iter_mut().enumerate().take(geodesic_order + 1).skip(1)`
+    // but benching (rust-1.75) shows that it would be slower.
+    #[allow(clippy::needless_range_loop)]
     for l in 1..=geodesic_order {
         let m = (geodesic_order - l) / 2;
         c[l] = d * polyval(m, &COEFF[o..], eps2) / COEFF[o + m + 1];
@@ -318,6 +321,9 @@ pub fn _C1pf(eps: f64, c: &mut [f64], geodesic_order: usize) {
     let eps2 = sq(eps);
     let mut d = eps;
     let mut o = 0;
+    // Clippy wants us to turn this into `c.iter_mut().enumerate().take(geodesic_order + 1).skip(1)`
+    // but benching (rust-1.75) shows that it would be slower.
+    #[allow(clippy::needless_range_loop)]
     for l in 1..=geodesic_order {
         let m = (geodesic_order - l) / 2;
         c[l] = d * polyval(m, &COEFF[o..], eps2) / COEFF[o + m + 1];
@@ -341,6 +347,9 @@ pub fn _C2f(eps: f64, c: &mut [f64], geodesic_order: usize) {
     let eps2 = sq(eps);
     let mut d = eps;
     let mut o = 0;
+    // Clippy wants us to turn this into `c.iter_mut().enumerate().take(geodesic_order + 1).skip(1)`
+    // but benching (rust-1.75) shows that it would be slower.
+    #[allow(clippy::needless_range_loop)]
     for l in 1..=geodesic_order {
         let m = (geodesic_order - l) / 2;
         c[l] = d * polyval(m, &COEFF[o..], eps2) / COEFF[o + m + 1];
