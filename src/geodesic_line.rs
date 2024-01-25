@@ -16,11 +16,11 @@ pub struct GeodesicLine {
     _B21: f64,
     _B31: f64,
     _B41: f64,
-    _C1a: [f64; GEODESIC_ORDER as usize + 1],
-    _C1pa: [f64; GEODESIC_ORDER as usize + 1],
-    _C2a: [f64; GEODESIC_ORDER as usize + 1],
-    _C3a: [f64; GEODESIC_ORDER as usize],
-    _C4a: [f64; GEODESIC_ORDER as usize],
+    _C1a: [f64; GEODESIC_ORDER + 1],
+    _C1pa: [f64; GEODESIC_ORDER + 1],
+    _C2a: [f64; GEODESIC_ORDER + 1],
+    _C3a: [f64; GEODESIC_ORDER],
+    _C4a: [f64; GEODESIC_ORDER],
     _b: f64,
     _c2: f64,
     _calp0: f64,
@@ -107,7 +107,7 @@ impl GeodesicLine {
         let eps = _k2 / (2.0 * (1.0 + (1.0 + _k2).sqrt()) + _k2);
 
         let mut _A1m1 = 0.0;
-        let mut _C1a: [f64; GEODESIC_ORDER as usize + 1] = [0.0; GEODESIC_ORDER as usize + 1];
+        let mut _C1a: [f64; GEODESIC_ORDER + 1] = [0.0; GEODESIC_ORDER + 1];
         let mut _B11 = 0.0;
         let mut _stau1 = 0.0;
         let mut _ctau1 = 0.0;
@@ -121,13 +121,13 @@ impl GeodesicLine {
             _ctau1 = _csig1 * c - _ssig1 * s;
         }
 
-        let mut _C1pa: [f64; GEODESIC_ORDER as usize + 1] = [0.0; GEODESIC_ORDER as usize + 1];
+        let mut _C1pa: [f64; GEODESIC_ORDER + 1] = [0.0; GEODESIC_ORDER + 1];
         if caps & caps::CAP_C1p != 0 {
             geomath::_C1pf(eps, &mut _C1pa, geod.GEODESIC_ORDER);
         }
 
         let mut _A2m1 = 0.0;
-        let mut _C2a: [f64; GEODESIC_ORDER as usize + 1] = [0.0; GEODESIC_ORDER as usize + 1];
+        let mut _C2a: [f64; GEODESIC_ORDER + 1] = [0.0; GEODESIC_ORDER + 1];
         let mut _B21 = 0.0;
         if caps & caps::CAP_C2 != 0 {
             _A2m1 = geomath::_A2m1f(eps, geod.GEODESIC_ORDER);
@@ -135,7 +135,7 @@ impl GeodesicLine {
             _B21 = geomath::sin_cos_series(true, _ssig1, _csig1, &_C2a);
         }
 
-        let mut _C3a: [f64; GEODESIC_ORDER as usize] = [0.0; GEODESIC_ORDER as usize];
+        let mut _C3a: [f64; GEODESIC_ORDER] = [0.0; GEODESIC_ORDER];
         let mut _A3c = 0.0;
         let mut _B31 = 0.0;
         if caps & caps::CAP_C3 != 0 {
@@ -144,7 +144,7 @@ impl GeodesicLine {
             _B31 = geomath::sin_cos_series(true, _ssig1, _csig1, &_C3a);
         }
 
-        let mut _C4a: [f64; GEODESIC_ORDER as usize] = [0.0; GEODESIC_ORDER as usize];
+        let mut _C4a: [f64; GEODESIC_ORDER] = [0.0; GEODESIC_ORDER];
         let mut _A4 = 0.0;
         let mut _B41 = 0.0;
         if caps & caps::CAP_C4 != 0 {
