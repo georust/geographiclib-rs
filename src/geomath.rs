@@ -290,7 +290,7 @@ pub fn astroid(x: f64, y: f64) -> f64 {
 pub fn _A1m1f(eps: f64, geodesic_order: usize) -> f64 {
     const COEFF: [f64; 5] = [1.0, 4.0, 64.0, 0.0, 256.0];
     let m = geodesic_order / 2;
-    let t = polyval(m , &COEFF, sq(eps)) / COEFF[m + 1];
+    let t = polyval(m, &COEFF, sq(eps)) / COEFF[m + 1];
     (t + eps) / (1.0 - eps)
 }
 
@@ -302,10 +302,9 @@ pub fn _C1f(eps: f64, c: &mut [f64], geodesic_order: usize) {
     let eps2 = sq(eps);
     let mut d = eps;
     let mut o = 0;
-    for l in 1..=geodesic_order {
+    for (l, v) in c.iter_mut().enumerate().take(geodesic_order + 1).skip(1) {
         let m = (geodesic_order - l) / 2;
-        c[l] =
-            d * polyval(m , &COEFF[o..], eps2) / COEFF[o + m + 1];
+        *v = d * polyval(m, &COEFF[o..], eps2) / COEFF[o + m + 1];
         o += m + 2;
         d *= eps;
     }
@@ -319,10 +318,9 @@ pub fn _C1pf(eps: f64, c: &mut [f64], geodesic_order: usize) {
     let eps2 = sq(eps);
     let mut d = eps;
     let mut o = 0;
-    for l in 1..=geodesic_order {
+    for (l, v) in c.iter_mut().enumerate().take(geodesic_order + 1).skip(1) {
         let m = (geodesic_order - l) / 2;
-        c[l] =
-            d * polyval(m , &COEFF[o..], eps2) / COEFF[o + m + 1];
+        *v = d * polyval(m, &COEFF[o..], eps2) / COEFF[o + m + 1];
         o += m + 2;
         d *= eps;
     }
@@ -331,7 +329,7 @@ pub fn _C1pf(eps: f64, c: &mut [f64], geodesic_order: usize) {
 pub fn _A2m1f(eps: f64, geodesic_order: usize) -> f64 {
     const COEFF: [f64; 5] = [-11.0, -28.0, -192.0, 0.0, 256.0];
     let m = geodesic_order / 2;
-    let t = polyval(m , &COEFF, sq(eps)) / COEFF[m + 1];
+    let t = polyval(m, &COEFF, sq(eps)) / COEFF[m + 1];
     (t - eps) / (1.0 + eps)
 }
 
@@ -343,10 +341,9 @@ pub fn _C2f(eps: f64, c: &mut [f64], geodesic_order: usize) {
     let eps2 = sq(eps);
     let mut d = eps;
     let mut o = 0;
-    for l in 1..=geodesic_order {
+    for (l, v) in c.iter_mut().enumerate().take(geodesic_order + 1).skip(1) {
         let m = (geodesic_order - l) / 2;
-        c[l] =
-            d * polyval(m , &COEFF[o..], eps2) / COEFF[o + m + 1];
+        *v = d * polyval(m, &COEFF[o..], eps2) / COEFF[o + m + 1];
         o += m + 2;
         d *= eps;
     }
