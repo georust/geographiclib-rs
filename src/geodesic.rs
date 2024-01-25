@@ -185,10 +185,13 @@ impl Geodesic {
     pub fn _C3f(&self, eps: f64, c: &mut [f64]) {
         let mut mult = 1.0;
         let mut o = 0;
-        for (l, c_item) in c.iter_mut().enumerate().take(self.GEODESIC_ORDER).skip(1) {
-            let m = self.GEODESIC_ORDER - l - 1;
+        // Clippy wants us to turn this into `c.iter_mut().enumerate().take(geodesic_order + 1).skip(1)`
+        // but benching (rust-1.75) shows that it would be slower.
+        #[allow(clippy::needless_range_loop)]
+        for l in 1..GEODESIC_ORDER {
+            let m = GEODESIC_ORDER - l - 1;
             mult *= eps;
-            *c_item = mult * geomath::polyval(m, &self._C3x[o..], eps);
+            c[l] = mult * geomath::polyval(m, &self._C3x[o..], eps);
             o += m + 1;
         }
     }
@@ -196,9 +199,12 @@ impl Geodesic {
     pub fn _C4f(&self, eps: f64, c: &mut [f64]) {
         let mut mult = 1.0;
         let mut o = 0;
-        for (l, c_item) in c.iter_mut().enumerate().take(self.GEODESIC_ORDER) {
-            let m = self.GEODESIC_ORDER - l - 1;
-            *c_item = mult * geomath::polyval(m, &self._C4x[o..], eps);
+        // Clippy wants us to turn this into `c.iter_mut().enumerate().take(geodesic_order + 1).skip(1)`
+        // but benching (rust-1.75) shows that it would be slower.
+        #[allow(clippy::needless_range_loop)]
+        for l in 0..GEODESIC_ORDER {
+            let m = GEODESIC_ORDER - l - 1;
+            c[l] = mult * geomath::polyval(m, &self._C4x[o..], eps);
             o += m + 1;
             mult *= eps;
         }

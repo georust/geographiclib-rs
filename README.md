@@ -86,35 +86,17 @@ cargo bench
 Which produces output like:
 
 ```text
-     Running target/release/deps/geodesic_benchmark-af6ba4f7be913514
-direct (c wrapper)      time:   [34.852 us 34.937 us 35.023 us]                                
-                        change: [+1.1137% +1.7246% +2.2864%] (p = 0.00 < 0.05)
-                        Performance has regressed.
-Found 9 outliers among 100 measurements (9.00%)
-  3 (3.00%) low mild
-  6 (6.00%) high mild
+direct (c wrapper)/default
+                        time:   [24.055 µs 24.085 µs 24.117 µs]
 
-direct (rust impl)      time:   [48.862 us 48.959 us 49.059 us]                                
-                        change: [+0.0149% +0.8003% +1.5464%] (p = 0.04 < 0.05)
-                        Change within noise threshold.
-Found 9 outliers among 100 measurements (9.00%)
-  1 (1.00%) low mild
-  4 (4.00%) high mild
-  4 (4.00%) high severe
+direct (rust impl)/default
+                        time:   [27.760 µs 27.810 µs 27.867 µs]
 
-inverse (c wrapper)     time:   [70.875 us 71.138 us 71.464 us]                                
-                        change: [+0.6259% +1.1321% +1.6653%] (p = 0.00 < 0.05)
-                        Change within noise threshold.
-Found 8 outliers among 100 measurements (8.00%)
-  1 (1.00%) high mild
-  7 (7.00%) high severe
+inverse (c wrapper)/default
+                        time:   [46.461 µs 47.435 µs 48.557 µs]
 
-inverse (rust impl)     time:   [103.66 us 104.07 us 104.58 us]                                
-                        change: [-1.0415% -0.0086% +1.0291%] (p = 0.99 > 0.05)
-                        No change in performance detected.
-Found 7 outliers among 100 measurements (7.00%)
-  1 (1.00%) low mild
-  6 (6.00%) high severe
+inverse (rust impl)/default
+                        time:   [70.488 µs 70.841 µs 71.356 µs]
 ```
 
-Showing that, at least in this benchmark, the Rust implementation is 40-50% slower than the c bindings.
+Showing that, at least in this benchmark, the Rust implementation is 16-52% slower than the c bindings.
