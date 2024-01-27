@@ -136,66 +136,26 @@ pub fn ang_diff(x: f64, y: f64) -> (f64, f64) {
     }
 }
 
-pub fn fmod(x: f64, y: f64) -> f64 {
-    x % y
-}
-
 /// Compute sine and cosine of x in degrees
 pub fn sincosd(x: f64) -> (f64, f64) {
-    // r = math.fmod(x, 360) if Math.isfinite(x) else Math.nan
-    let mut r = if x.is_finite() {
-        fmod(x, 360.0)
-    } else {
-        std::f64::NAN
-    };
+    let (mut r, q) = libm::remquo(x, 90.0);
 
-    // q = 0 if Math.isnan(r) else int(round(r / 90))
-    let mut q = if r.is_nan() {
-        0
-    } else {
-        (r / 90.0).round() as i32
-    };
-
-    // r -= 90 * q; r = math.radians(r)
-    r -= 90.0 * q as f64;
     r = r.to_radians();
 
-    // s = math.sin(r); c = math.cos(r)
-    let s = r.sin();
-    let c = r.cos();
+    let (mut sinx, mut cosx) = r.sin_cos();
 
-    // q = q % 4
-    q %= 4;
-
-    // if q == 1:
-    //     s, c =  c, -s
-    // elif q == 2:
-    //     s, c = -s, -c
-    // elif q == 3:
-    //     s, c = -c,  s
-
-    let q = if q < 0 { q + 4 } else { q };
-
-    let (s, c) = if q == 1 {
-        (c, -s)
-    } else if q == 2 {
-        (-s, -c)
-    } else if q == 3 {
-        (-c, s)
-    } else {
-        debug_assert_eq!(q, 0);
-        (s, c)
+    (sinx, cosx) = match q as u32 & 3 {
+        0 => (sinx, cosx),
+        1 => (cosx, -sinx),
+        2 => (-sinx, -cosx),
+        3 => (-cosx, sinx),
+        _ => unreachable!(),
     };
 
-    // # Remove the minus sign on -0.0 except for sin(-0.0).
-    // # On Windows 32-bit with python 2.7, math.fmod(-0.0, 360) = +0.0
-    // # (x, c) here fixes this bug.  See also Math::sincosd in the C++ library.
-    // # AngNormalize has a similar fix.
-    //     s, c = (x, c) if x == 0 else (0.0+s, 0.0+c)
-    // return s, c
-    let (s, c) = if x == 0.0 { (x, c) } else { (0.0 + s, 0.0 + c) };
-
-    (s, c)
+    if sinx == 0.0 {
+        sinx = libm::copysign(sinx, x); // special values from F.10.1.13
+    }
+    (sinx, cosx)
 }
 
 // Compute atan2(y, x) with result in degrees
