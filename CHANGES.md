@@ -1,3 +1,9 @@
+## 0.2.4
+
+* Performance improvements for direct and indirect geodesic calculations
+* Remove lazy_static dependency
+* Thanks to contributor @valarauca for their work on performance and code cleanup.
+
 ## 0.2.3
 
 ### New Features
