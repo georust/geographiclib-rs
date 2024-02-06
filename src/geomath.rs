@@ -153,7 +153,7 @@ pub fn sincosd(x: f64) -> (f64, f64) {
     };
 
     if sinx == 0.0 {
-        sinx = libm::copysign(sinx, x); // special values from F.10.1.13
+        sinx = sinx.copysign(x); // special values from F.10.1.13
     }
     (sinx, cosx)
 }
