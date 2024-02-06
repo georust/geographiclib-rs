@@ -87,16 +87,16 @@ Which produces output like:
 
 ```text
 direct (c wrapper)/default
-                        time:   [24.055 µs 24.085 µs 24.117 µs]
+                        time:   [24.046 µs 24.071 µs 24.099 µs]
 
 direct (rust impl)/default
-                        time:   [27.760 µs 27.810 µs 27.867 µs]
+                        time:   [26.129 µs 26.168 µs 26.211 µs]
 
 inverse (c wrapper)/default
-                        time:   [46.461 µs 47.435 µs 48.557 µs]
+                        time:   [45.061 µs 45.141 µs 45.227 µs]
 
 inverse (rust impl)/default
-                        time:   [70.488 µs 70.841 µs 71.356 µs]
+                        time:   [67.739 µs 67.796 µs 67.865 µs]
 ```
 
-Showing that, at least in this benchmark, the Rust implementation is 16-52% slower than the c bindings.
+Showing that, at least in this benchmark, the Rust implementation is 10-50% slower than the c bindings.
