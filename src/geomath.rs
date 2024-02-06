@@ -152,8 +152,12 @@ pub fn sincosd(x: f64) -> (f64, f64) {
         _ => unreachable!(),
     };
 
+    // special values from F.10.1.12
+    cosx += 0.0;
+
+    // special values from F.10.1.13
     if sinx == 0.0 {
-        sinx = sinx.copysign(x); // special values from F.10.1.13
+        sinx = sinx.copysign(x);
     }
     (sinx, cosx)
 }
@@ -491,5 +495,60 @@ mod tests {
             ),
             4.124513511893872e-05
         );
+    }
+
+    // corresponding to tests/signtest.cpp
+    mod sign_test {
+        use super::*;
+        fn is_equiv(x: f64, y: f64) -> bool {
+            (x.is_nan() && y.is_nan()) || (x == y && x.is_sign_positive() == y.is_sign_positive())
+        }
+
+        macro_rules! check_sincosd {
+            ($x: expr, $expected_sin: expr, $expected_cos: expr) => {
+                let (sinx, cosx) = sincosd($x);
+                assert!(
+                    is_equiv(sinx, $expected_sin),
+                    "sinx({}) = {}, but got {}",
+                    $x,
+                    $expected_sin,
+                    sinx
+                );
+                assert!(
+                    is_equiv(cosx, $expected_cos),
+                    "cosx({}) = {}, but got {}",
+                    $x,
+                    $expected_cos,
+                    cosx
+                );
+            };
+        }
+
+        #[test]
+        fn sin_cosd() {
+            check_sincosd!(f64::NEG_INFINITY, f64::NAN, f64::NAN);
+            check_sincosd!(-810.0, -1.0, 0.0);
+            check_sincosd!(-720.0, -0.0, 1.0);
+            check_sincosd!(-630.0, 1.0, 0.0);
+            check_sincosd!(-540.0, -0.0, -1.0);
+            check_sincosd!(-450.0, -1.0, 0.0);
+            check_sincosd!(-360.0, -0.0, 1.0);
+            check_sincosd!(-270.0, 1.0, 0.0);
+            check_sincosd!(-180.0, -0.0, -1.0);
+            check_sincosd!(-90.0, -1.0, 0.0);
+            check_sincosd!(-0.0, -0.0, 1.0);
+            check_sincosd!(0.0, 0.0, 1.0);
+            check_sincosd!(90.0, 1.0, 0.0);
+            check_sincosd!(180.0, 0.0, -1.0);
+            check_sincosd!(270.0, -1.0, 0.0);
+            check_sincosd!(360.0, 0.0, 1.0);
+            check_sincosd!(450.0, 1.0, 0.0);
+            check_sincosd!(540.0, 0.0, -1.0);
+            check_sincosd!(630.0, -1.0, 0.0);
+            check_sincosd!(720.0, 0.0, 1.0);
+            check_sincosd!(810.0, 1.0, 0.0);
+            check_sincosd!(f64::INFINITY, f64::NAN, f64::NAN);
+            check_sincosd!(f64::NAN, f64::NAN, f64::NAN);
+        }
     }
 }
