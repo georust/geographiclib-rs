@@ -228,11 +228,11 @@ impl Geodesic {
         C2a: &mut [f64],
     ) -> (f64, f64, f64, f64, f64) {
         let outmask = outmask & caps::OUT_MASK;
-        let mut s12b = std::f64::NAN;
-        let mut m12b = std::f64::NAN;
-        let mut m0 = std::f64::NAN;
-        let mut M12 = std::f64::NAN;
-        let mut M21 = std::f64::NAN;
+        let mut s12b = f64::NAN;
+        let mut m12b = f64::NAN;
+        let mut m0 = f64::NAN;
+        let mut M12 = f64::NAN;
+        let mut M21 = f64::NAN;
 
         let mut A1 = 0.0;
         let mut A2 = 0.0;
@@ -297,9 +297,9 @@ impl Geodesic {
         C2a: &mut [f64],
     ) -> (f64, f64, f64, f64, f64, f64) {
         let mut sig12 = -1.0;
-        let mut salp2 = std::f64::NAN;
-        let mut calp2 = std::f64::NAN;
-        let mut dnm = std::f64::NAN;
+        let mut salp2 = f64::NAN;
+        let mut calp2 = f64::NAN;
+        let mut dnm = f64::NAN;
 
         let mut somg12: f64;
         let mut comg12: f64;
@@ -508,7 +508,7 @@ impl Geodesic {
                 dlam12 *= self._f1 / (calp2 * cbet2);
             }
         } else {
-            dlam12 = std::f64::NAN;
+            dlam12 = f64::NAN;
         }
         (
             lam12, salp2, calp2, sig12, ssig1, csig1, ssig2, csig2, eps, domg12, dlam12,
@@ -524,8 +524,8 @@ impl Geodesic {
         lon2: f64,
         outmask: u64,
     ) -> (f64, f64, f64, f64, f64, f64, f64, f64) {
-        let mut azi1 = std::f64::NAN;
-        let mut azi2 = std::f64::NAN;
+        let mut azi1 = f64::NAN;
+        let mut azi2 = f64::NAN;
         let outmask = outmask & caps::OUT_MASK;
 
         let (a12, s12, salp1, calp1, salp2, calp2, m12, M12, M21, S12) =
@@ -548,12 +548,12 @@ impl Geodesic {
     ) -> (f64, f64, f64, f64, f64, f64, f64, f64, f64, f64) {
         let mut lat1 = lat1;
         let mut lat2 = lat2;
-        let mut a12 = std::f64::NAN;
-        let mut s12 = std::f64::NAN;
-        let mut m12 = std::f64::NAN;
-        let mut M12 = std::f64::NAN;
-        let mut M21 = std::f64::NAN;
-        let mut S12 = std::f64::NAN;
+        let mut a12 = f64::NAN;
+        let mut s12 = f64::NAN;
+        let mut m12 = f64::NAN;
+        let mut M12 = f64::NAN;
+        let mut M21 = f64::NAN;
+        let mut S12 = f64::NAN;
         let outmask = outmask & caps::OUT_MASK;
 
         let (mut lon12, mut lon12s) = geomath::ang_diff(lon1, lon2);

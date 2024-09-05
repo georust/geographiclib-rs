@@ -85,7 +85,7 @@ pub fn ang_round(x: f64) -> f64 {
 /// remainder of x/y in the range [-y/2, y/2]
 fn remainder(x: f64, y: f64) -> f64 {
     // z = math.fmod(x, y) if Math.isfinite(x) else Math.nan
-    let z = if x.is_finite() { x % y } else { std::f64::NAN };
+    let z = if x.is_finite() { x % y } else { f64::NAN };
 
     // # On Windows 32-bit with python 2.7, math.fmod(-0.0, 360) = +0.0
     // # This fixes this bug.  See also Math::AngNormalize in the C++ library.
@@ -119,7 +119,7 @@ pub fn ang_normalize(x: f64) -> f64 {
 // Replace angles outside [-90,90] with NaN
 pub fn lat_fix(x: f64) -> f64 {
     if x.abs() > 90.0 {
-        std::f64::NAN
+        f64::NAN
     } else {
         x
     }
