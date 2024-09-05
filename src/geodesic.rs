@@ -930,7 +930,7 @@ impl Geodesic {
 ///  - M12 geodesic scale of point 2 relative to point 1 (dimensionless).
 ///  - M21 geodesic scale of point 1 relative to point 2 (dimensionless).
 ///  - S12 area under the geodesic (meters<sup>2</sup>).
-///  - a12 arc length of between point 1 and point 2 (degrees).
+///  - a12 arc length between point 1 and point 2 (degrees).
 ///
 ///  If either point is at a pole, the azimuth is defined by keeping the
 ///  longitude fixed, writing lat = ±(90° − ε), and taking the limit ε → 0+.
@@ -1054,7 +1054,7 @@ impl DirectGeodesic<(f64, f64, f64, f64, f64, f64, f64, f64)> for Geodesic {
     ///  - M12 geodesic scale of point 2 relative to point 1 (dimensionless).
     ///  - M21 geodesic scale of point 1 relative to point 2 (dimensionless).
     ///  - S12 area under the geodesic (meters<sup>2</sup>).
-    ///  - a12 arc length of between point 1 and point 2 (degrees).
+    ///  - a12 arc length between point 1 and point 2 (degrees).
     fn direct(
         &self,
         lat1: f64,
@@ -1096,7 +1096,7 @@ impl DirectGeodesic<(f64, f64, f64, f64, f64, f64, f64, f64)> for Geodesic {
 /// - M12 geodesic scale of point 2 relative to point 1 (dimensionless).
 /// - M21 geodesic scale of point 1 relative to point 2 (dimensionless).
 /// - S12 area under the geodesic (meters<sup>2</sup>).
-/// - a12 arc length of between point 1 and point 2 (degrees).
+/// - a12 arc length between point 1 and point 2 (degrees).
 ///
 ///  `lat1` and `lat2` should be in the range [&minus;90&deg;, 90&deg;].
 ///  The values of `azi1` and `azi2` returned are in the range
@@ -1146,7 +1146,7 @@ impl InverseGeodesic<(f64, f64)> for Geodesic {
     ///
     /// # Returns
     /// - s12 distance between point 1 and point 2 (meters).
-    /// - a12 arc length of between point 1 and point 2 (degrees).
+    /// - a12 arc length between point 1 and point 2 (degrees).
     fn inverse(&self, lat1: f64, lon1: f64, lat2: f64, lon2: f64) -> (f64, f64) {
         let capabilities = caps::DISTANCE;
         let (a12, s12, _azi1, _azi2, _m12, _M12, _M21, _S12) =
@@ -1162,7 +1162,7 @@ impl InverseGeodesic<(f64, f64, f64)> for Geodesic {
     /// # Returns
     /// - azi1 azimuth at point 1 (degrees).
     /// - azi2 (forward) azimuth at point 2 (degrees).
-    /// - a12 arc length of between point 1 and point 2 (degrees).
+    /// - a12 arc length between point 1 and point 2 (degrees).
     fn inverse(&self, lat1: f64, lon1: f64, lat2: f64, lon2: f64) -> (f64, f64, f64) {
         let capabilities = caps::AZIMUTH;
         let (a12, _s12, azi1, azi2, _m12, _M12, _M21, _S12) =
@@ -1179,7 +1179,7 @@ impl InverseGeodesic<(f64, f64, f64, f64)> for Geodesic {
     /// - s12 distance between point 1 and point 2 (meters).
     /// - azi1 azimuth at point 1 (degrees).
     /// - azi2 (forward) azimuth at point 2 (degrees).
-    /// - a12 arc length of between point 1 and point 2 (degrees).
+    /// - a12 arc length between point 1 and point 2 (degrees).
     fn inverse(&self, lat1: f64, lon1: f64, lat2: f64, lon2: f64) -> (f64, f64, f64, f64) {
         let capabilities = caps::DISTANCE | caps::AZIMUTH;
         let (a12, s12, azi1, azi2, _m12, _M12, _M21, _S12) =
@@ -1197,7 +1197,7 @@ impl InverseGeodesic<(f64, f64, f64, f64, f64)> for Geodesic {
     /// - azi1 azimuth at point 1 (degrees).
     /// - azi2 (forward) azimuth at point 2 (degrees).
     /// - m12 reduced length of geodesic (meters).
-    /// - a12 arc length of between point 1 and point 2 (degrees).
+    /// - a12 arc length between point 1 and point 2 (degrees).
     fn inverse(&self, lat1: f64, lon1: f64, lat2: f64, lon2: f64) -> (f64, f64, f64, f64, f64) {
         let capabilities = caps::DISTANCE | caps::AZIMUTH | caps::REDUCEDLENGTH;
         let (a12, s12, azi1, azi2, m12, _M12, _M21, _S12) =
@@ -1216,7 +1216,7 @@ impl InverseGeodesic<(f64, f64, f64, f64, f64, f64)> for Geodesic {
     /// - azi2 (forward) azimuth at point 2 (degrees).
     /// - M12 geodesic scale of point 2 relative to point 1 (dimensionless).
     /// - M21 geodesic scale of point 1 relative to point 2 (dimensionless).
-    /// - a12 arc length of between point 1 and point 2 (degrees).
+    /// - a12 arc length between point 1 and point 2 (degrees).
     fn inverse(
         &self,
         lat1: f64,
@@ -1242,7 +1242,7 @@ impl InverseGeodesic<(f64, f64, f64, f64, f64, f64, f64)> for Geodesic {
     /// - m12 reduced length of geodesic (meters).
     /// - M12 geodesic scale of point 2 relative to point 1 (dimensionless).
     /// - M21 geodesic scale of point 1 relative to point 2 (dimensionless).
-    /// - a12 arc length of between point 1 and point 2 (degrees).
+    /// - a12 arc length between point 1 and point 2 (degrees).
     fn inverse(
         &self,
         lat1: f64,
@@ -1270,7 +1270,7 @@ impl InverseGeodesic<(f64, f64, f64, f64, f64, f64, f64, f64)> for Geodesic {
     /// - M12 geodesic scale of point 2 relative to point 1 (dimensionless).
     /// - M21 geodesic scale of point 1 relative to point 2 (dimensionless).
     /// - S12 area under the geodesic (meters<sup>2</sup>).
-    /// - a12 arc length of between point 1 and point 2 (degrees).
+    /// - a12 arc length between point 1 and point 2 (degrees).
     fn inverse(
         &self,
         lat1: f64,
