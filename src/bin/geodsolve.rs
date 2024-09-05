@@ -81,7 +81,7 @@ impl Runner {
         println!("{}", output_line);
     }
 
-    fn compute_direct(&self, fields: &Vec<f64>) -> Vec<f64> {
+    fn compute_direct(&self, fields: &[f64]) -> Vec<f64> {
         assert_eq!(4, fields.len());
         let lat1 = fields[0];
         let lon1 = fields[1];
@@ -118,7 +118,7 @@ impl Runner {
         }
     }
 
-    fn compute_inverse(&self, fields: &Vec<f64>) -> Vec<f64> {
+    fn compute_inverse(&self, fields: &[f64]) -> Vec<f64> {
         assert_eq!(4, fields.len());
         let input_lat1 = fields[0];
         let input_lon1 = fields[1];

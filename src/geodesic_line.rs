@@ -61,11 +61,11 @@ impl GeodesicLine {
             Some(caps) => caps,
         };
         let salp1 = match salp1 {
-            None => std::f64::NAN,
+            None => f64::NAN,
             Some(salp1) => salp1,
         };
         let calp1 = match calp1 {
-            None => std::f64::NAN,
+            None => f64::NAN,
             Some(calp1) => calp1,
         };
 
@@ -153,8 +153,8 @@ impl GeodesicLine {
             _B41 = geomath::sin_cos_series(false, _ssig1, _csig1, &_C4a);
         }
 
-        let _s13 = std::f64::NAN;
-        let _a13 = std::f64::NAN;
+        let _s13 = f64::NAN;
+        let _a13 = f64::NAN;
 
         GeodesicLine {
             tiny_,
@@ -204,15 +204,15 @@ impl GeodesicLine {
         s12_a12: f64,
         outmask: u64,
     ) -> (f64, f64, f64, f64, f64, f64, f64, f64, f64) {
-        let mut a12 = std::f64::NAN;
-        let mut lat2 = std::f64::NAN;
-        let mut lon2 = std::f64::NAN;
-        let mut azi2 = std::f64::NAN;
-        let mut s12 = std::f64::NAN;
-        let mut m12 = std::f64::NAN;
-        let mut M12 = std::f64::NAN;
-        let mut M21 = std::f64::NAN;
-        let mut S12 = std::f64::NAN;
+        let mut a12 = f64::NAN;
+        let mut lat2 = f64::NAN;
+        let mut lon2 = f64::NAN;
+        let mut azi2 = f64::NAN;
+        let mut s12 = f64::NAN;
+        let mut m12 = f64::NAN;
+        let mut M12 = f64::NAN;
+        let mut M21 = f64::NAN;
+        let mut S12 = f64::NAN;
         let outmask = outmask & (self.caps & caps::OUT_MASK);
         if !(arcmode || (self.caps & (caps::OUT_MASK & caps::DISTANCE_IN) != 0)) {
             return (a12, lat2, lon2, azi2, s12, m12, M12, M21, S12);
