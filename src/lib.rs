@@ -80,6 +80,7 @@ pub mod geodesic_capability;
 pub use geodesic_capability as capability;
 
 mod geodesic_line;
+pub use geodesic_line::GeodesicLine;
 mod geomath;
 mod polygon_area;
 pub use polygon_area::PolygonArea;
