@@ -5,6 +5,9 @@ use crate::geodesic_capability as caps;
 use crate::geomath;
 use std::collections::HashMap;
 
+/// A geodesic line.
+///
+/// Facilitates the determination of a series of points on a single geodesic.
 #[derive(Copy, Clone, PartialEq, PartialOrd, Debug)]
 pub struct GeodesicLine {
     tiny_: f64, // This should be moved to consts
@@ -47,6 +50,26 @@ pub struct GeodesicLine {
 }
 
 impl GeodesicLine {
+    /// Create a new geodesic line from an initial point and azimuth.
+    ///
+    /// # Arguments
+    ///   - geod - geodesic parameters
+    ///   - lat1 - initial latitude (degrees)
+    ///   - lon1 - initial longitude (degrees)
+    ///   - azi1 - initial azimuth (degrees)
+    ///   - caps - bitor'ed combination of [capabilities](caps); defaults to `STANDARD | DISTANCE_IN`
+    ///     - `caps |= LATITUDE` for the latitude lat2; this is added automatically
+    ///     - `caps |= LONGITUDE` for the longitude lon2
+    ///     - `caps |= AZIMUTH` for the azimuth azi2; this is added automatically
+    ///     - `caps |= DISTANCE` for the distance s12
+    ///     - `caps |= REDUCEDLENGTH` for the reduced length m12
+    ///     - `caps |= GEODESICSCALE` for the geodesic scales M12 and M21
+    ///     - `caps |= AREA` for the area S12
+    ///     - `caps |= DISTANCE_IN` permits the length of the geodesic to be given in terms of s12;
+    ///       without this capability the length can only be specified in terms of arc length
+    ///     - `caps |= ALL` for all of the above
+    ///   - salp1 - sine of initial azimuth
+    ///   - calp1 - cosine of initial azimuth
     pub fn new(
         geod: &geodesic::Geodesic,
         lat1: f64,
@@ -197,7 +220,46 @@ impl GeodesicLine {
         }
     }
 
-    /// returns (a12, lat2, lon2, azi2, s12, m12, M12, M21, S12)
+    /// Place a point at a given distance along this line.
+    ///
+    /// # Arguments
+    ///   - arcmode - Indicates if s12_a12 is an arc length (true) or distance (false)
+    ///   - s12_a12 - Distance to point (meters) or arc length (degrees); can be negative
+    ///   - outmask - bitor'ed combination of [capabilities](caps) defining which values to return
+    ///     - `outmask |= LATITUDE` for the latitude lat2
+    ///     - `outmask |= LONGITUDE` for the longitude lon2
+    ///     - `outmask |= AZIMUTH` for the azimuth azi2
+    ///     - `outmask |= DISTANCE` for the distance s12
+    ///     - `outmask |= REDUCEDLENGTH` for the reduced length m12
+    ///     - `outmask |= GEODESICSCALE` for the geodesic scales M12 and M21
+    ///     - `outmask |= ALL` for all of the above
+    ///     - `outmask |= LONG_UNROLL` to unroll lon2 (instead of reducing it to the range [−180°, 180°])
+    ///
+    /// # Returns
+    /// Values are [f64::NAN] if not supported by the specified capabilities.
+    ///  - a12 arc length between point 1 and point 2 (degrees)
+    ///  - lat2 latitude of point 2 (degrees)
+    ///  - lon2 longitude of point 2 (degrees)
+    ///  - azi2 (forward) azimuth at point 2 (degrees)
+    ///  - s12 distance between point 1 and point 2 (meters)
+    ///  - m12 reduced length of geodesic (meters)
+    ///  - M12 geodesic scale of point 2 relative to point 1 (dimensionless)
+    ///  - M21 geodesic scale of point 1 relative to point 2 (dimensionless)
+    ///  - S12 area under the geodesic (meters<sup>2</sup>)
+    ///
+    /// # Example
+    /// ```rust
+    /// use geographiclib_rs::{Geodesic, GeodesicLine, geodesic_capability as caps};
+    /// let g = Geodesic::wgs84();
+    /// let outmask = caps::LATITUDE | caps::LONGITUDE | caps::AZIMUTH | caps::DISTANCE_IN;
+    /// let line = GeodesicLine::new(&g, -11.95887, -116.94513, 92.712619830452549, Some(outmask), None, None);
+    /// let (_, lat2, lon2, azi2, _, _, _, _, _) = line._gen_position(false, 13834722.5801401374, outmask);
+    ///
+    /// use approx::assert_relative_eq;
+    /// assert_relative_eq!(lat2, 4.57352, epsilon=1e-13);
+    /// assert_relative_eq!(lon2, 7.16501, epsilon=1e-13);
+    /// assert_relative_eq!(azi2, 78.64960934409585, epsilon=1e-13);
+    /// ```
     pub fn _gen_position(
         &self,
         arcmode: bool,

@@ -69,7 +69,7 @@ pub struct PolygonArea<'a> {
 /// ```
 impl<'a> PolygonArea<'a> {
     /// Create a new PolygonArea using a Geodesic.
-    pub fn new(geoid: &'a Geodesic, winding: Winding) -> PolygonArea {
+    pub fn new(geoid: &'a Geodesic, winding: Winding) -> Self {
         PolygonArea {
             geoid,
             winding,
