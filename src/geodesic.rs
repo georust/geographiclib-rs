@@ -912,10 +912,10 @@ impl Geodesic {
 /// Place a second point, given the first point, an azimuth, and a distance.
 ///
 /// # Arguments
-///   - lat1 - Latitude of 1st point [degrees] [-90.,90.]
-///   - lon1 - Longitude of 1st point [degrees] [-180., 180.]
-///   - azi1 - Azimuth at 1st point [degrees] [-180., 180.]
-///   - s12 - Distance from 1st to 2nd point [meters] Value may be negative
+///   - lat1 - Latitude of 1st point (degrees) [-90.,90.]
+///   - lon1 - Longitude of 1st point (degrees) [-180., 180.]
+///   - azi1 - Azimuth at 1st point (degrees) [-180., 180.]
+///   - s12 - Distance from 1st to 2nd point (meters) Value may be negative
 ///
 /// # Returns
 ///
