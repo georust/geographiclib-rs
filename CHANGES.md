@@ -1,3 +1,9 @@
+## 0.2.5
+
+* Make `GeodesicLine` public, which can be more efficient when placing multiple points along a single line.
+  * <https://github.com/georust/geographiclib-rs/pull/63>
+  * Thanks to @JMdoubleU for their work here.
+
 ## 0.2.4
 
 * Performance improvements for direct and indirect geodesic calculations
