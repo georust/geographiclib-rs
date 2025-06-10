@@ -1,3 +1,9 @@
+## Unreleased
+
+* Exclude test fixture data from published crate to reduce published crate size by ~10kb
+  * Thanks to @weiznich for the inspiration
+  * <https://github.com/georust/geographiclib-rs/pull/66>
+
 ## 0.2.5
 
 * Make `GeodesicLine` public, which can be more efficient when placing multiple points along a single line.
