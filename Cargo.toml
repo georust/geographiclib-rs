@@ -10,6 +10,7 @@ repository = "https://github.com/georust/geographiclib-rs"
 keywords = ["gis", "geo", "geography", "geospatial"]
 documentation = "https://docs.rs/geographiclib-rs"
 readme = "README.md"
+exclude = ["test_fixtures"]
 
 [features]
 # Run tests against Karney's GeodTest.dat test cases.
