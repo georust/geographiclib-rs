@@ -79,18 +79,9 @@ impl GeodesicLine {
         salp1: Option<f64>,
         calp1: Option<f64>,
     ) -> Self {
-        let caps = match caps {
-            None => caps::STANDARD | caps::DISTANCE_IN,
-            Some(caps) => caps,
-        };
-        let salp1 = match salp1 {
-            None => f64::NAN,
-            Some(salp1) => salp1,
-        };
-        let calp1 = match calp1 {
-            None => f64::NAN,
-            Some(calp1) => calp1,
-        };
+        let caps = caps.unwrap_or(caps::STANDARD | caps::DISTANCE_IN);
+        let salp1 = salp1.unwrap_or(f64::NAN);
+        let calp1 = calp1.unwrap_or(f64::NAN);
 
         // This was taken from geodesic, putting it here for convenience
         let tiny_ = geomath::get_min_val().sqrt();
