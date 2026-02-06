@@ -1,6 +1,6 @@
 [package]
 name = "geographiclib-rs"
-version = "0.2.5"
+version = "0.2.6"
 license = "MIT"
 edition = "2018"
 rust-version = "1.70.0"

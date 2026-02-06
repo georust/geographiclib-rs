@@ -1,8 +1,9 @@
-## Unreleased
+## 0.2.6 - 2026-02-06
 
-* Exclude test fixture data from published crate to reduce published crate size by ~10kb
-  * Thanks to @weiznich for the inspiration
+* Exclude test fixture data and development scripts from published crate to reduce published crate size by ~20kb
+  * Thanks to @weiznich!
   * <https://github.com/georust/geographiclib-rs/pull/66>
+  * <https://github.com/georust/geographiclib-rs/pull/67>
 
 ## 0.2.5
 
