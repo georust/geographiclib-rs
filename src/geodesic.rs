@@ -29,7 +29,6 @@ pub struct Geodesic {
     _C3x: [f64; _nC3x_],
     _C4x: [f64; _nC4x_],
 
-    pub GEODESIC_ORDER: usize,
     _nC3x_: usize,
     _nC4x_: usize,
     maxit1_: u64,
@@ -163,7 +162,6 @@ impl Geodesic {
             _C3x,
             _C4x,
 
-            GEODESIC_ORDER,
             _nC3x_,
             _nC4x_,
             maxit1_,
@@ -179,7 +177,7 @@ impl Geodesic {
     }
 
     pub fn _A3f(&self, eps: f64) -> f64 {
-        geomath::polyval(self.GEODESIC_ORDER - 1, &self._A3x, eps)
+        geomath::polyval(GEODESIC_ORDER - 1, &self._A3x, eps)
     }
 
     pub fn _C3f(&self, eps: f64, c: &mut [f64]) {
@@ -240,11 +238,11 @@ impl Geodesic {
         let mut J12 = 0.0;
 
         if outmask & (caps::DISTANCE | caps::REDUCEDLENGTH | caps::GEODESICSCALE) != 0 {
-            A1 = geomath::_A1m1f(eps, self.GEODESIC_ORDER);
-            geomath::_C1f(eps, C1a, self.GEODESIC_ORDER);
+            A1 = geomath::_A1m1f(eps);
+            geomath::_C1f(eps, C1a);
             if outmask & (caps::REDUCEDLENGTH | caps::GEODESICSCALE) != 0 {
-                A2 = geomath::_A2m1f(eps, self.GEODESIC_ORDER);
-                geomath::_C2f(eps, C2a, self.GEODESIC_ORDER);
+                A2 = geomath::_A2m1f(eps);
+                geomath::_C2f(eps, C2a);
                 m0x = A1 - A2;
                 A2 += 1.0;
             }
@@ -260,7 +258,7 @@ impl Geodesic {
                 J12 = m0x * sig12 + (A1 * B1 - A2 * B2);
             }
         } else if outmask & (caps::REDUCEDLENGTH | caps::GEODESICSCALE) != 0 {
-            for l in 1..=self.GEODESIC_ORDER {
+            for l in 1..=GEODESIC_ORDER {
                 C2a[l] = A1 * C1a[l] - A2 * C2a[l];
             }
             J12 = m0x * sig12

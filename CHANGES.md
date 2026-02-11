@@ -2,6 +2,10 @@
 
 * Prefer built in math methods over custom implementations in geomath module.
   This is an internal refactor and shouldn't affect users.
+* Speed up Direct/Inverse methods by hardcoding GEODESIC_ORDER.
+  In practice this was already hardcoded in some places, so there was no benefit to having it a configurable parameter.
+  Direct bench: -4.4823%
+  Inverse bench: -15.856%
 
 ## 0.2.6 - 2026-02-06
 
