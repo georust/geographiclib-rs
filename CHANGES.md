@@ -1,3 +1,8 @@
+## UNRELEASED
+
+* Prefer built in math methods over custom implementations in geomath module.
+  This is an internal refactor and shouldn't affect users.
+
 ## 0.2.6 - 2026-02-06
 
 * Exclude test fixture data and development scripts from published crate to reduce published crate size by ~20kb
