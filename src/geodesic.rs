@@ -90,8 +90,8 @@ impl Geodesic {
     pub fn new(a: f64, f: f64) -> Self {
         let maxit1_ = 20;
         let maxit2_ = maxit1_ + geomath::DIGITS + 10;
-        let tiny_ = geomath::get_min_val().sqrt();
-        let tol0_ = geomath::get_epsilon();
+        let tiny_ = f64::MIN_POSITIVE.sqrt();
+        let tol0_ = f64::EPSILON;
         let tol1_ = 200.0 * tol0_;
         let _tol2_ = tol0_.sqrt();
         let tolb_ = tol0_ * _tol2_;

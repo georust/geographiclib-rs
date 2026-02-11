@@ -84,7 +84,7 @@ impl GeodesicLine {
         let calp1 = calp1.unwrap_or(f64::NAN);
 
         // This was taken from geodesic, putting it here for convenience
-        let tiny_ = geomath::get_min_val().sqrt();
+        let tiny_ = f64::MIN_POSITIVE.sqrt();
 
         let _a = geod.a;
         let f = geod.f;
