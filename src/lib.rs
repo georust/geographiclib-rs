@@ -74,7 +74,9 @@
 #![allow(clippy::excessive_precision)]
 
 mod geodesic;
+mod gnomonic;
 pub use geodesic::{DirectGeodesic, Geodesic, InverseGeodesic};
+pub use gnomonic::Gnomonic;
 
 pub mod geodesic_capability;
 pub use geodesic_capability as capability;
