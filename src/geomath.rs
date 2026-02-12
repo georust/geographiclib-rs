@@ -213,7 +213,7 @@ pub fn astroid(x: f64, y: f64) -> f64 {
         if disc >= 0.0 {
             let mut t3 = s + r3;
             t3 += if t3 < 0.0 { -disc.sqrt() } else { disc.sqrt() };
-            let t = t3.cbrt(); // we could use built-in T.cbrt
+            let t = t3.cbrt();
             u += t + if t != 0.0 { r2 / t } else { 0.0 };
         } else {
             let ang = (-disc).sqrt().atan2(-(s + r3));
