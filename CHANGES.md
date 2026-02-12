@@ -6,6 +6,12 @@
   In practice this was already hardcoded in some places, so there was no benefit to having it a configurable parameter.
   Direct bench: -4.4823%
   Inverse bench: -15.856%
+  * See https://github.com/georust/geographiclib-rs/pull/70
+* Speed up Direct/Inverse methods a little by simplifying atan2d
+  Direct bench: -2.8%
+  Inverse bench: -2.5%
+  * See https://github.com/georust/geographiclib-rs/pull/71
+
 
 ## 0.2.6 - 2026-02-06
 

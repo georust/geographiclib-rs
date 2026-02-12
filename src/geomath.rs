@@ -140,27 +140,31 @@ pub fn sincosd(x: f64) -> (f64, f64) {
 }
 
 // Compute atan2(y, x) with result in degrees
-pub fn atan2d(y: f64, x: f64) -> f64 {
-    let mut x = x;
-    let mut y = y;
+pub fn atan2d(mut y: f64, mut x: f64) -> f64 {
     let mut q = if y.abs() > x.abs() {
         std::mem::swap(&mut x, &mut y);
-        2.0
+        2
     } else {
-        0.0
+        0
     };
     if x < 0.0 {
-        q += 1.0;
+        q += 1;
         x = -x;
     }
     let mut ang = y.atan2(x).to_degrees();
-    if q == 1.0 {
-        ang = if y >= 0.0 { 180.0 - ang } else { -180.0 - ang };
-    } else if q == 2.0 {
-        ang = 90.0 - ang;
-    } else if q == 3.0 {
-        ang += -90.0;
-    }
+    match q {
+        0 => {}
+        1 => {
+            ang = if y >= 0.0 { 180.0 - ang } else { -180.0 - ang };
+        }
+        2 => {
+            ang = 90.0 - ang;
+        }
+        3 => {
+            ang += -90.0;
+        }
+        _ => unreachable!(),
+    };
     ang
 }
 
