@@ -2,35 +2,10 @@
 #![allow(clippy::excessive_precision)]
 
 pub const DIGITS: u64 = 53;
-pub const TWO: f64 = 2.0;
-
-pub fn get_epsilon() -> f64 {
-    TWO.powi(1 - DIGITS as i32)
-}
-
-pub fn get_min_val() -> f64 {
-    TWO.powi(-1022)
-}
 
 // Square
 pub fn sq(x: f64) -> f64 {
     x.powi(2)
-}
-
-// We use the built-in impl (f64::cbrt) rather than this.
-// Real cube root
-pub fn cbrt(x: f64) -> f64 {
-    // y = math.pow(abs(x), 1/3.0)
-    let y = x.abs().powf(1.0 / 3.0);
-
-    // return y if x > 0 else (-y if x < 0 else x)
-    if x > 0.0 {
-        y
-    } else if x < 0.0 {
-        -y
-    } else {
-        x
-    }
 }
 
 // Normalize a two-vector
@@ -236,7 +211,7 @@ pub fn astroid(x: f64, y: f64) -> f64 {
         if disc >= 0.0 {
             let mut t3 = s + r3;
             t3 += if t3 < 0.0 { -disc.sqrt() } else { disc.sqrt() };
-            let t = cbrt(t3); // we could use built-in T.cbrt
+            let t = t3.cbrt(); // we could use built-in T.cbrt
             u += t + if t != 0.0 { r2 / t } else { 0.0 };
         } else {
             let ang = (-disc).sqrt().atan2(-(s + r3));
