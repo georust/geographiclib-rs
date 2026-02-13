@@ -31,6 +31,7 @@ libm = { version = "0.2.8", default-features = false }
 approx = "0.5.1"
 criterion = "0.4.0"
 geographiclib = "0.1.0"
+geojson = "0.24.2"
 
 [[bench]]
 name = "geodesic_benchmark"
