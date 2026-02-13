@@ -11,6 +11,9 @@
   Direct bench: -2.8%
   Inverse bench: -2.5%
   * See https://github.com/georust/geographiclib-rs/pull/71
+* Speed up Inverse methods a little by using constantly sized arrays, rather than slices.
+  Inverse bench: -5%
+  * See https://github.com/georust/geographiclib-rs/pull/72
 
 
 ## 0.2.6 - 2026-02-06

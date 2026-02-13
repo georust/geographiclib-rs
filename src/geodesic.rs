@@ -182,7 +182,7 @@ impl Geodesic {
         geomath::polyval(GEODESIC_ORDER - 1, &self._A3x, eps)
     }
 
-    pub fn _C3f(&self, eps: f64, c: &mut [f64]) {
+    pub fn _C3f(&self, eps: f64, c: &mut [f64; GEODESIC_ORDER]) {
         let mut mult = 1.0;
         let mut o = 0;
         // Clippy wants us to turn this into `c.iter_mut().enumerate().take(geodesic_order + 1).skip(1)`
@@ -196,7 +196,7 @@ impl Geodesic {
         }
     }
 
-    pub fn _C4f(&self, eps: f64, c: &mut [f64]) {
+    pub fn _C4f(&self, eps: f64, c: &mut [f64; GEODESIC_ORDER]) {
         let mut mult = 1.0;
         let mut o = 0;
         // Clippy wants us to turn this into `c.iter_mut().enumerate().take(geodesic_order + 1).skip(1)`
@@ -224,8 +224,8 @@ impl Geodesic {
         cbet1: f64,
         cbet2: f64,
         outmask: u64,
-        C1a: &mut [f64],
-        C2a: &mut [f64],
+        C1a: &mut [f64; CARR_SIZE],
+        C2a: &mut [f64; CARR_SIZE],
     ) -> (f64, f64, f64, f64, f64) {
         let outmask = outmask & caps::OUT_MASK;
         let mut s12b = f64::NAN;
@@ -293,8 +293,8 @@ impl Geodesic {
         lam12: f64,
         slam12: f64,
         clam12: f64,
-        C1a: &mut [f64],
-        C2a: &mut [f64],
+        C1a: &mut [f64; CARR_SIZE],
+        C2a: &mut [f64; CARR_SIZE],
     ) -> (f64, f64, f64, f64, f64, f64) {
         let mut sig12 = -1.0;
         let mut salp2 = f64::NAN;
@@ -436,9 +436,9 @@ impl Geodesic {
         slam120: f64,
         clam120: f64,
         diffp: bool,
-        C1a: &mut [f64],
-        C2a: &mut [f64],
-        C3a: &mut [f64],
+        C1a: &mut [f64; CARR_SIZE],
+        C2a: &mut [f64; CARR_SIZE],
+        C3a: &mut [f64; GEODESIC_ORDER],
     ) -> (f64, f64, f64, f64, f64, f64, f64, f64, f64, f64, f64) {
         if sbet1 == 0.0 && calp1 == 0.0 {
             calp1 = -self.tiny_;
@@ -1820,8 +1820,8 @@ mod tests {
     fn test_lengths() {
         // Results taken from the python implementation
         let geod = Geodesic::wgs84();
-        let mut c1a = vec![0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0];
-        let mut c2a = vec![0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0];
+        let mut c1a = [0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0];
+        let mut c2a = [0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0];
         let res1 = geod._Lengths(
             0.0008355095326524276,
             0.024682339962725352,
@@ -1958,7 +1958,7 @@ mod tests {
     #[test]
     fn test_goed__C4f() {
         let geod = Geodesic::wgs84();
-        let mut c = vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0];
+        let mut c = [1.0, 2.0, 3.0, 4.0, 5.0, 6.0];
         geod._C4f(0.12, &mut c);
         assert_eq!(
             c,
@@ -1969,7 +1969,6 @@ mod tests {
                 5.778187189466089e-06,
                 3.9979026199316593e-07,
                 3.2140078103714466e-08,
-                7.0
             ]
         );
     }
@@ -1977,9 +1976,8 @@ mod tests {
     #[test]
     fn test_goed__C3f() {
         let geod = Geodesic::wgs84();
-        let mut c = vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0];
+        let mut c = [1.0, 2.0, 3.0, 4.0, 5.0, 6.0];
         geod._C3f(0.12, &mut c);
-
         assert_eq!(
             c,
             [
@@ -1989,7 +1987,6 @@ mod tests {
                 5.0055242248766214e-05,
                 3.1656788204092044e-06,
                 2.0412e-07,
-                7.0
             ]
         );
     }
