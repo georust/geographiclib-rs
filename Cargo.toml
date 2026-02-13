@@ -4,6 +4,7 @@ version = "0.2.6"
 license = "MIT"
 edition = "2018"
 rust-version = "1.70.0"
+autobenches = false
 
 description = "A port of geographiclib in Rust."
 repository = "https://github.com/georust/geographiclib-rs"
@@ -35,4 +36,8 @@ geojson = "0.24.2"
 
 [[bench]]
 name = "geodesic_benchmark"
+harness = false
+
+[[bench]]
+name = "baseline_c_benchmark"
 harness = false
