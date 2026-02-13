@@ -1,5 +1,11 @@
 ## UNRELEASED
 
+This release is mostly around performance improvements.
+
+Overall changes in benchmark performance since v0.2.6:
+  Direct bench: -6.7%
+  Inverse bench: -22.5%
+
 * Prefer built in math methods over custom implementations in geomath module.
   This is an internal refactor and shouldn't affect users.
 * Speed up Direct/Inverse methods by hardcoding GEODESIC_ORDER.

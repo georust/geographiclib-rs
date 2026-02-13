@@ -87,16 +87,13 @@ Which produces output like:
 
 ```text
 direct (c wrapper)/default
-                        time:   [24.046 µs 24.071 µs 24.099 µs]
-
+                        time:   [23.420 µs 23.495 µs 23.578 µs]
 direct (rust impl)/default
-                        time:   [26.129 µs 26.168 µs 26.211 µs]
-
+                        time:   [23.894 µs 23.952 µs 24.017 µs]
 inverse (c wrapper)/default
-                        time:   [45.061 µs 45.141 µs 45.227 µs]
-
+                        time:   [42.505 µs 42.561 µs 42.627 µs]
 inverse (rust impl)/default
-                        time:   [67.739 µs 67.796 µs 67.865 µs]
+                        time:   [51.093 µs 51.174 µs 51.273 µs]
 ```
 
-Showing that, at least in this benchmark, the Rust implementation is 10-50% slower than the c bindings.
+Showing that, at least in this benchmark, the Rust implementation is 2% slower for Direct geodesic calculations and 20% slower for Inverse calculations.
