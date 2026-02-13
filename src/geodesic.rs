@@ -80,6 +80,8 @@ const COEFF_C4: [f64; 77] = [
 ];
 
 pub const GEODESIC_ORDER: usize = 6;
+pub(crate) const CARR_SIZE: usize = GEODESIC_ORDER + 1;
+
 #[allow(non_upper_case_globals)]
 const _nC3x_: usize = 15;
 #[allow(non_upper_case_globals)]
@@ -607,7 +609,6 @@ impl Geodesic {
         let dn1 = (1.0 + self._ep2 * geomath::sq(sbet1)).sqrt();
         let dn2 = (1.0 + self._ep2 * geomath::sq(sbet2)).sqrt();
 
-        const CARR_SIZE: usize = GEODESIC_ORDER + 1;
         let mut C1a: [f64; CARR_SIZE] = [0.0; CARR_SIZE];
         let mut C2a: [f64; CARR_SIZE] = [0.0; CARR_SIZE];
         let mut C3a: [f64; GEODESIC_ORDER] = [0.0; GEODESIC_ORDER];
