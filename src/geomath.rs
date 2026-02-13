@@ -1,7 +1,7 @@
 #![allow(non_snake_case)]
 #![allow(clippy::excessive_precision)]
 
-use crate::geodesic::GEODESIC_ORDER;
+use crate::geodesic::{CARR_SIZE, GEODESIC_ORDER};
 
 pub const DIGITS: u64 = 53;
 
@@ -177,7 +177,7 @@ pub fn eatanhe(x: f64, es: f64) -> f64 {
 }
 
 // Functions that used to be inside Geodesic
-pub fn sin_cos_series(sinp: bool, sinx: f64, cosx: f64, c: &[f64]) -> f64 {
+pub fn sin_cos_series<const N: usize>(sinp: bool, sinx: f64, cosx: f64, c: &[f64; N]) -> f64 {
     let mut k = c.len();
     let mut n: i64 = k as i64 - if sinp { 1 } else { 0 };
     let ar: f64 = 2.0 * (cosx - sinx) * (cosx + sinx);
@@ -239,7 +239,7 @@ pub fn _A1m1f(eps: f64) -> f64 {
     (t + eps) / (1.0 - eps)
 }
 
-pub fn _C1f(eps: f64, c: &mut [f64]) {
+pub fn _C1f(eps: f64, c: &mut [f64; CARR_SIZE]) {
     const COEFF: [f64; 18] = [
         -1.0, 6.0, -16.0, 32.0, -9.0, 64.0, -128.0, 2048.0, 9.0, -16.0, 768.0, 3.0, -5.0, 512.0,
         -7.0, 1280.0, -7.0, 2048.0,
@@ -258,7 +258,7 @@ pub fn _C1f(eps: f64, c: &mut [f64]) {
     }
 }
 
-pub fn _C1pf(eps: f64, c: &mut [f64]) {
+pub fn _C1pf(eps: f64, c: &mut [f64; CARR_SIZE]) {
     const COEFF: [f64; 18] = [
         205.0, -432.0, 768.0, 1536.0, 4005.0, -4736.0, 3840.0, 12288.0, -225.0, 116.0, 384.0,
         -7173.0, 2695.0, 7680.0, 3467.0, 7680.0, 38081.0, 61440.0,
@@ -284,7 +284,7 @@ pub fn _A2m1f(eps: f64) -> f64 {
     (t - eps) / (1.0 + eps)
 }
 
-pub fn _C2f(eps: f64, c: &mut [f64]) {
+pub fn _C2f(eps: f64, c: &mut [f64; CARR_SIZE]) {
     const COEFF: [f64; 18] = [
         1.0, 2.0, 16.0, 32.0, 35.0, 64.0, 384.0, 2048.0, 15.0, 80.0, 768.0, 7.0, 35.0, 512.0, 63.0,
         1280.0, 77.0, 2048.0,
@@ -325,11 +325,11 @@ mod tests {
 
     #[test]
     fn test__C2f() {
-        let mut c = vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0];
+        let mut c = [1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0];
         _C2f(0.12, &mut c);
         assert_eq!(
             c,
-            vec![
+            [
                 1.0,
                 0.0601087776,
                 0.00270653103,
@@ -348,11 +348,11 @@ mod tests {
 
     #[test]
     fn test__C1pf() {
-        let mut c = vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0];
+        let mut c = [1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0];
         _C1pf(0.12, &mut c);
         assert_eq!(
             c,
-            vec![
+            [
                 1.0,
                 0.059517321000000005,
                 0.004421053215,
@@ -366,11 +366,11 @@ mod tests {
 
     #[test]
     fn test__C1f() {
-        let mut c = vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0];
+        let mut c = [1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0];
         _C1f(0.12, &mut c);
         assert_eq!(
             c,
-            vec![
+            [
                 1.0,
                 -0.059676777599999994,
                 -0.000893533122,
