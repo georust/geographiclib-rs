@@ -1,5 +1,9 @@
 ## UNRELEASED
 
+* BREAKING: `PolygonArea::add_edge` and `test_edge` now return `Result` instead of panicking when no points have been added.
+
+## v0.2.7 - 2026-02-17
+
 This release is mostly around performance improvements.
 
 Overall changes in benchmark performance since v0.2.6:

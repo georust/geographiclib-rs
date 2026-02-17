@@ -4,6 +4,19 @@ use crate::Geodesic;
 
 use crate::geodesic_capability as caps;
 
+/// Error returned when [`PolygonArea::add_edge`] or [`PolygonArea::test_edge`]
+/// is called before any points have been added.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct AddEdgeError;
+
+impl std::fmt::Display for AddEdgeError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.write_str("cannot add an edge before any points have been added")
+    }
+}
+
+impl std::error::Error for AddEdgeError {}
+
 const POLYGONAREA_MASK: u64 =
     caps::LATITUDE | caps::LONGITUDE | caps::DISTANCE | caps::AREA | caps::LONG_UNROLL;
 
@@ -117,11 +130,11 @@ impl<'a> PolygonArea<'a> {
 
     /// Add an edge to the polygon using an azimuth (in degrees) and a distance (in meters). This can only be called after at least one point has been added.
     ///
-    /// # Panics
-    /// Panics if no points have been added yet.
-    pub fn add_edge(&mut self, azimuth: f64, distance: f64) {
+    /// # Errors
+    /// Returns [`AddEdgeError`] if no points have been added yet.
+    pub fn add_edge(&mut self, azimuth: f64, distance: f64) -> Result<(), AddEdgeError> {
         if self.num == 0 {
-            panic!("PolygonArea::add_edge: No points added yet");
+            return Err(AddEdgeError);
         }
 
         #[allow(non_snake_case)]
@@ -139,6 +152,7 @@ impl<'a> PolygonArea<'a> {
         self.latest_lat = lat;
         self.latest_lon = lon;
         self.num += 1;
+        Ok(())
     }
 
     /// Consumes the PolygonArea and returns the following tuple:
@@ -219,10 +233,18 @@ impl<'a> PolygonArea<'a> {
     }
 
     /// Check what the perimeter and area would be if this edge was added to the polygon without actually adding it
-    pub fn test_edge(&self, azimuth: f64, distance: f64, sign: bool) -> (f64, f64, usize) {
+    ///
+    /// # Errors
+    /// Returns [`AddEdgeError`] if no points have been added yet.
+    pub fn test_edge(
+        &self,
+        azimuth: f64,
+        distance: f64,
+        sign: bool,
+    ) -> Result<(f64, f64, usize), AddEdgeError> {
         let mut pa = self.clone();
-        pa.add_edge(azimuth, distance);
-        pa.compute(sign)
+        pa.add_edge(azimuth, distance)?;
+        Ok(pa.compute(sign))
     }
 
     // Return 1 or -1 if crossing prime meridian in east or west direction.
@@ -522,10 +544,7 @@ mod tests {
         assert_relative_eq!(perimeter, 0.0);
         assert_relative_eq!(area, 0.0);
 
-        let result = std::panic::catch_unwind(|| {
-            let (_, _, _) = pa.test_edge(90.0, 1000.0, true);
-        });
-        assert!(result.is_err());
+        assert!(pa.test_edge(90.0, 1000.0, true).is_err());
 
         pa.add_point(1.0, 1.0);
         let (perimeter, area, _) = pa.clone().compute(true);
@@ -581,16 +600,16 @@ mod tests {
             let (_, area, _) = pa_clockwise.test_point(lat, -60.0, false);
             assert_relative_eq!(area, (-i as f64 * r) + a0, epsilon = 0.5);
 
-            let (_, area, _) = pa_counter.test_edge(azi, s, true);
+            let (_, area, _) = pa_counter.test_edge(azi, s, true).unwrap();
             assert_relative_eq!(area, i as f64 * r, epsilon = 0.5);
 
-            let (_, area, _) = pa_counter.test_edge(azi, s, false);
+            let (_, area, _) = pa_counter.test_edge(azi, s, false).unwrap();
             assert_relative_eq!(area, i as f64 * r, epsilon = 0.5);
 
-            let (_, area, _) = pa_clockwise.test_edge(azi, s, true);
+            let (_, area, _) = pa_clockwise.test_edge(azi, s, true).unwrap();
             assert_relative_eq!(area, -i as f64 * r, epsilon = 0.5);
 
-            let (_, area, _) = pa_clockwise.test_edge(azi, s, false);
+            let (_, area, _) = pa_clockwise.test_edge(azi, s, false).unwrap();
             assert_relative_eq!(area, (-i as f64 * r) + a0, epsilon = 0.5);
 
             pa_clockwise.add_point(lat, -60.0);
@@ -618,9 +637,9 @@ mod tests {
         let geoid = Geodesic::wgs84();
         let mut pa = PolygonArea::new(&geoid, Winding::CounterClockwise);
         pa.add_point(0.0, 0.0);
-        pa.add_edge(90.0, 1000.0);
-        pa.add_edge(0.0, 1000.0);
-        pa.add_edge(-90.0, 1000.0);
+        pa.add_edge(90.0, 1000.0).unwrap();
+        pa.add_edge(0.0, 1000.0).unwrap();
+        pa.add_edge(-90.0, 1000.0).unwrap();
         let (_, area, _) = pa.compute(true);
         assert_relative_eq!(area, 1000000.0, epsilon = 0.01);
     }

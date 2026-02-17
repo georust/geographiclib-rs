@@ -83,5 +83,6 @@ mod geodesic_line;
 pub use geodesic_line::GeodesicLine;
 mod geomath;
 mod polygon_area;
+pub use polygon_area::AddEdgeError;
 pub use polygon_area::PolygonArea;
 pub use polygon_area::Winding;
