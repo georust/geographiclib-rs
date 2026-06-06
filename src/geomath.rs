@@ -83,11 +83,9 @@ fn remainder(x: f64, y: f64) -> f64 {
 
 /// reduce angle to (-180,180]
 pub fn ang_normalize(x: f64) -> f64 {
-    // y = Math.remainder(x, 360)
-    // return 180 if y == -180 else y
     let y = remainder(x, 360.0);
-    if y == -180.0 {
-        180.0
+    if y.abs() == 180.0 {
+        180.0_f64.copysign(x)
     } else {
         y
     }
@@ -104,13 +102,12 @@ pub fn lat_fix(x: f64) -> f64 {
 
 // compute y - x and reduce to [-180,180] accurately
 pub fn ang_diff(x: f64, y: f64) -> (f64, f64) {
-    let (d, t) = sum(ang_normalize(-x), ang_normalize(y));
-    let d = ang_normalize(d);
-    if d == 180.0 && t > 0.0 {
-        sum(-180.0, t)
-    } else {
-        sum(d, t)
+    let (d, t) = sum(remainder(-x, 360.0), remainder(y, 360.0));
+    let (mut d, t) = sum(remainder(d, 360.0), t);
+    if d == 0.0 || d.abs() == 180.0 {
+        d = d.copysign(if t == 0.0 { y - x } else { -t });
     }
+    (d, t)
 }
 
 /// Compute sine and cosine of x in degrees
@@ -174,6 +171,50 @@ pub fn eatanhe(x: f64, es: f64) -> f64 {
     } else {
         -es * (es * x).atan()
     }
+}
+
+pub fn taupf(tau: f64, es: f64) -> f64 {
+    if !tau.is_finite() {
+        return tau;
+    }
+    let tau1 = f64::hypot(1.0, tau);
+    let sig = eatanhe(tau / tau1, es).sinh();
+    f64::hypot(1.0, sig) * tau - sig * tau1
+}
+
+pub fn tauf(taup: f64, es: f64) -> f64 {
+    const NUMIT: usize = 5;
+    let tol = f64::EPSILON.sqrt() / 10.0;
+    let taumax = 2.0 / f64::EPSILON.sqrt();
+    let e2m = 1.0 - es * es;
+    let mut tau = if taup.abs() > 70.0 {
+        taup * eatanhe(1.0, es).exp()
+    } else {
+        taup / e2m
+    };
+    let stol = tol * 1.0_f64.max(taup.abs());
+    if !tau.is_finite() || tau.abs() >= taumax {
+        return tau;
+    }
+    let mut done = false;
+    for _ in 0..NUMIT {
+        let taupa = taupf(tau, es);
+        let dtau = (taup - taupa) * (1.0 + e2m * tau * tau)
+            / (e2m * f64::hypot(1.0, tau) * f64::hypot(1.0, taupa));
+        tau += dtau;
+        if dtau.is_nan() {
+            // NaN propagates through tau; bail out without claiming convergence.
+            break;
+        }
+        if dtau.abs() < stol {
+            done = true;
+            break;
+        }
+    }
+    // GeographicLib uses GEOGRAPHICLIB_PANIC here, which throws only for
+    // multiprecision builds; default double builds exit cleanly.
+    debug_assert!(done, "Convergence failure in tauf");
+    tau
 }
 
 // Functions that used to be inside Geodesic

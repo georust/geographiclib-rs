@@ -9,4 +9,5 @@ mkdir -p "${OUTPUT_DIR}"
 
 curl -L https://sourceforge.net/projects/geographiclib/files/testdata/GeodTest.dat.gz | gunzip > "${OUTPUT_DIR}/GeodTest.dat"
 curl -L https://sourceforge.net/projects/geographiclib/files/testdata/GeodTest-short.dat.gz | gunzip > "${OUTPUT_DIR}/GeodTest-short.dat"
+curl -L https://sourceforge.net/projects/geographiclib/files/testdata/TMcoords.dat.gz | gunzip > "${OUTPUT_DIR}/TMcoords.dat"
 
