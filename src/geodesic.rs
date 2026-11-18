@@ -844,14 +844,12 @@ impl Geodesic {
 
             // We're diverging from Karney's implementation here
             // which uses the hardcoded constant: -0.7071 for FRAC_1_SQRT_2
-            let alp12: f64;
-            if !meridian && comg12 > -FRAC_1_SQRT_2 && sbet2 - sbet1 < 1.75 {
+            let alp12 = if !meridian && comg12 > -FRAC_1_SQRT_2 && sbet2 - sbet1 < 1.75 {
                 let domg12 = 1.0 + comg12;
                 let dbet1 = 1.0 + cbet1;
                 let dbet2 = 1.0 + cbet2;
-                alp12 = 2.0
-                    * (somg12 * (sbet1 * dbet2 + sbet2 * dbet1))
-                        .atan2(domg12 * (sbet1 * sbet2 + dbet1 * dbet2));
+                2.0 * (somg12 * (sbet1 * dbet2 + sbet2 * dbet1))
+                    .atan2(domg12 * (sbet1 * sbet2 + dbet1 * dbet2))
             } else {
                 let mut salp12 = salp2 * calp1 - calp2 * salp1;
                 let mut calp12 = calp2 * calp1 + salp2 * salp1;
@@ -860,8 +858,8 @@ impl Geodesic {
                     salp12 = self.tiny_ * calp1;
                     calp12 = -1.0;
                 }
-                alp12 = salp12.atan2(calp12);
-            }
+                salp12.atan2(calp12)
+            };
             S12 += self._c2 * alp12;
             S12 *= swapp * lonsign * latsign;
             S12 += 0.0;
