@@ -4,7 +4,11 @@ A subset of [geographiclib](https://geographiclib.sourceforge.io/) implemented i
 
 [Documentation](https://docs.rs/geographiclib-rs)
 
-Currently this implements the direct and the inverse geodesic calculations.
+Currently this implements:
+
+- Geodesic calculations (direct and inverse)
+  - Polygon area
+- Geocentric calculations
 
 If instead you are looking for Rust bindings to [Karney's C++ implementation](https://sourceforge.net/projects/geographiclib/), see [https://crates.io/geographiclib](https://crates.io/crates/geographiclib).
 

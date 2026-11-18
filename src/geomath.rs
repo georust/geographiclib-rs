@@ -147,7 +147,7 @@ pub fn atan2d(mut y: f64, mut x: f64) -> f64 {
     } else {
         0
     };
-    if x < 0.0 {
+    if x.is_sign_negative() {
         q += 1;
         x = -x;
     }
@@ -155,7 +155,7 @@ pub fn atan2d(mut y: f64, mut x: f64) -> f64 {
     match q {
         0 => {}
         1 => {
-            ang = if y >= 0.0 { 180.0 - ang } else { -180.0 - ang };
+            ang = 180.0_f64.copysign(y) - ang;
         }
         2 => {
             ang = 90.0 - ang;
@@ -530,6 +530,14 @@ mod tests {
             check_sincosd!(810.0, 1.0, 0.0);
             check_sincosd!(f64::INFINITY, f64::NAN, f64::NAN);
             check_sincosd!(f64::NAN, f64::NAN, f64::NAN);
+        }
+
+        #[test]
+        fn atan2d_signed_zero() {
+            assert!(is_equiv(atan2d(0.0, -0.0), 180.0));
+            assert!(is_equiv(atan2d(-0.0, -0.0), -180.0));
+            assert!(is_equiv(atan2d(0.0, 0.0), 0.0));
+            assert!(is_equiv(atan2d(-0.0, 0.0), -0.0));
         }
     }
 }
